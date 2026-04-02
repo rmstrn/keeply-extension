@@ -275,11 +275,40 @@ describe('Group header actions', () => {
     expect(chrome.tabs.remove).toHaveBeenCalledWith([1], expect.any(Function))
   })
 
-  it('"Delete group" removes the group', () => {
+  it('"Delete group" shows confirmation dialog instead of deleting immediately', () => {
     render(<DefaultScreen />)
     fireEvent.click(screen.getByLabelText('Group actions'))
     fireEvent.click(screen.getByText('Delete group'))
+    expect(chrome.storage.local.set).not.toHaveBeenCalled()
+    expect(document.querySelector('.confirm-delete')).toBeInTheDocument()
+    expect(screen.getByText('Cancel')).toBeInTheDocument()
+    expect(screen.getByText('Delete')).toBeInTheDocument()
+  })
+
+  it('confirmation dialog shows group name', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    fireEvent.click(screen.getByText('Delete group'))
+    const text = document.querySelector('.confirm-delete-text')!
+    expect(text.textContent).toContain('Work')
+  })
+
+  it('clicking "Cancel" in confirmation closes dialog without deleting', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    fireEvent.click(screen.getByText('Delete group'))
+    fireEvent.click(screen.getByText('Cancel'))
+    expect(document.querySelector('.confirm-delete')).toBeNull()
+    expect(chrome.storage.local.set).not.toHaveBeenCalled()
+  })
+
+  it('clicking "Delete" in confirmation removes the group', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    fireEvent.click(screen.getByText('Delete group'))
+    fireEvent.click(screen.getByText('Delete'))
     expect(chrome.storage.local.set).toHaveBeenCalled()
+    expect(document.querySelector('.confirm-delete')).toBeNull()
   })
 
   it('clicking emoji opens picker without entering rename mode', () => {

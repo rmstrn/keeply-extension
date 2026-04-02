@@ -483,6 +483,33 @@ body {
 .group-menu-item:hover { background: var(--t1); color: var(--t7); }
 .group-menu-item--danger:hover { background: #FFE4E6; color: #DC2626; }
 
+/* Delete confirmation popover */
+.confirm-delete {
+  background: #1A1A1A; border-radius: 8px; padding: 12px 14px;
+  margin: 4px 0; box-shadow: 0 4px 16px rgba(0,0,0,.35);
+  animation: inline-form-in .15s ease-out;
+}
+.confirm-delete-text {
+  font-size: 12px; font-weight: 500; color: #CCCCCC;
+  margin-bottom: 10px; line-height: 1.4;
+}
+.confirm-delete-text strong { color: #F0F0EF; font-weight: 700; }
+.confirm-delete-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.confirm-delete-cancel {
+  font-family: var(--f); font-size: 12px; font-weight: 600;
+  padding: 5px 12px; border-radius: 6px; cursor: pointer;
+  background: #2E2E2E; color: #CCCCCC; border: 1px solid #3A3A3A;
+  transition: all .12s;
+}
+.confirm-delete-cancel:hover { background: #3A3A3A; color: #F0F0EF; }
+.confirm-delete-btn {
+  font-family: var(--f); font-size: 12px; font-weight: 600;
+  padding: 5px 12px; border-radius: 6px; cursor: pointer;
+  background: #DC2626; color: #FFFFFF; border: none;
+  transition: background .12s;
+}
+.confirm-delete-btn:hover { background: #B91C1C; }
+
 /* Closed tabs in groups */
 .tab-closed { opacity: 0.5; }
 .tab-closed:hover { opacity: 0.7; }

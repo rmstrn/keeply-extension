@@ -265,9 +265,11 @@ export function DefaultScreen() {
   const [editName, setEditName] = useState('')
   const [emojiPickerGroupId, setEmojiPickerGroupId] = useState<string | null>(null)
   const [menuOpenGroupId, setMenuOpenGroupId] = useState<string | null>(null)
+  const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState<string | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
   const editEmojiRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const confirmRef = useRef<HTMLDivElement>(null)
 
   const toggleGroup = (id: string) => {
     setExpandedGroups((prev) => {
@@ -358,6 +360,18 @@ export function DefaultScreen() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [menuOpenGroupId])
+
+  // Close delete confirmation on outside click
+  useEffect(() => {
+    if (!confirmDeleteGroupId) return
+    const handler = (e: MouseEvent) => {
+      if (confirmRef.current && !confirmRef.current.contains(e.target as Node)) {
+        setConfirmDeleteGroupId(null)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [confirmDeleteGroupId])
 
   // Move tab into a Keeply group (storage-only)
   const handleDropOnGroup = (e: React.DragEvent, group: KeeplyGroup) => {
@@ -646,7 +660,7 @@ export function DefaultScreen() {
                     )}
                     <button
                       className="group-menu-item group-menu-item--danger"
-                      onClick={(e) => { deleteGroup(e, group); setMenuOpenGroupId(null) }}
+                      onClick={(e) => { e.stopPropagation(); setMenuOpenGroupId(null); setConfirmDeleteGroupId(group.id) }}
                     >
                       Delete group
                     </button>
@@ -658,6 +672,28 @@ export function DefaultScreen() {
                 <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
+
+            {confirmDeleteGroupId === group.id && (
+              <div className="confirm-delete" ref={confirmRef}>
+                <div className="confirm-delete-text">
+                  Delete <strong>{group.emoji ? `${group.emoji} ` : ''}{group.name}</strong>?
+                </div>
+                <div className="confirm-delete-actions">
+                  <button
+                    className="confirm-delete-cancel"
+                    onClick={() => setConfirmDeleteGroupId(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="confirm-delete-btn"
+                    onClick={(e) => { deleteGroup(e, group); setConfirmDeleteGroupId(null) }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
 
             {isExpanded && (
               <div className="group-tabs-list">
