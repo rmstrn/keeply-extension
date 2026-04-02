@@ -17,6 +17,20 @@
   --bd: #E4E5E0;
 }
 
+/* ── DARK THEME TOKENS ──────────────────── */
+html.dark {
+  --w:  #15160F;
+  --n0: #1E1F17;
+  --n1: #2C2D26;
+  --n9: #EDEEE6;
+  --n7: #C8C9BF;
+  --n5: #6B6D64;
+  --n3: #4E5046;
+  --bd: #2C2D26;
+  --t1: #1A3328;
+  --t2: #1F5A40;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -380,3 +394,33 @@ body {
 }
 .group-header:hover .group-delete-btn { opacity: 1; }
 .group-delete-btn:hover { background: #FFE4E6; color: #DC2626; }
+
+/* ── THEME PICKER ─── */
+.theme-picker { display: flex; gap: 4px; }
+.theme-btn {
+  width: 28px; height: 28px; border-radius: 7px;
+  border: 1.5px solid var(--bd); background: var(--n0);
+  cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.theme-btn:hover { border-color: var(--t7); background: var(--t1); }
+.theme-btn.active { border-color: var(--t7); background: var(--t1); }
+
+/* ── DARK MODE OVERRIDES ─── */
+html.dark .settings-btn { background: #22231C; border-color: var(--n1); }
+html.dark .settings-btn:hover { background: var(--t1); border-color: var(--t7); }
+html.dark .pill-free { background: var(--t1); color: var(--t7); border-color: var(--t2); }
+html.dark .done-chip { background: #153D2C; border-color: #1F5A40; }
+html.dark .done-text { color: #7DD4B0; }
+html.dark .ract { background: var(--n0); border-color: var(--n1); color: var(--n5); }
+html.dark .ract:hover { background: var(--t1); border-color: var(--t7); color: #13A07C; }
+html.dark .toggle { background: #3A3C32; border-color: #4E5046; }
+html.dark .toggle::after { background: #E8E9E2; }
+html.dark .plan { background: var(--n0); border-color: var(--n1); }
+html.dark .plan:hover { border-color: var(--t7); background: var(--t1); }
+html.dark .plan.best { background: var(--t1); border-color: var(--t7); }
+html.dark .tab-close-btn:hover { background: #3D1C1E; color: #EF4444; }
+html.dark .group-delete-btn:hover { background: #3D1C1E; color: #EF4444; }
+html.dark .manual-input { background: var(--n0); border-color: var(--n1); color: var(--n9); }
+html.dark .manual-input:focus { border-color: var(--t7); }

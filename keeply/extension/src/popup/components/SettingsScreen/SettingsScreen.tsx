@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import type { Theme } from '@/shared/types'
 
 interface ToggleSwitchProps {
   readonly id: string
@@ -21,11 +22,49 @@ function ToggleSwitch({ id, checked, onChange }: ToggleSwitchProps) {
 
 export function SettingsScreen() {
   const [showDev, setShowDev] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState<Theme>('system')
   const tapCountRef = useRef(0)
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  useEffect(() => {
+    try {
+      chrome.storage.local.get('keeply_settings', (result) => {
+        if (chrome.runtime.lastError) return
+        const settings = result['keeply_settings'] as { theme?: Theme } | undefined
+        if (settings?.theme) setCurrentTheme(settings.theme)
+      })
+    } catch {
+      // Extension not loaded properly
+    }
+  }, [])
+
   const openUpgrade = () => {
     chrome.tabs.create({ url: 'https://keeply.app/pricing' })
+  }
+
+  const handleThemeChange = (newTheme: Theme) => {
+    setCurrentTheme(newTheme)
+
+    // Apply immediately
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else if (newTheme === 'light') {
+      document.documentElement.classList.remove('dark')
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      document.documentElement.classList.toggle('dark', prefersDark)
+    }
+
+    // Save to storage
+    try {
+      chrome.storage.local.get('keeply_settings', (result) => {
+        if (chrome.runtime.lastError) return
+        const updated = { ...(result['keeply_settings'] as Record<string, unknown> ?? {}), theme: newTheme }
+        chrome.storage.local.set({ keeply_settings: updated })
+      })
+    } catch {
+      // Extension not loaded properly
+    }
   }
 
   const handleVersionTap = () => {
@@ -77,9 +116,19 @@ export function SettingsScreen() {
           <p className="sr-label">Theme</p>
           <p className="sr-sub">Light, dark, or follow system</p>
         </div>
-        <span className="sr-val" role="button" tabIndex={0}>
-          System ›
-        </span>
+        <div className="theme-picker">
+          {(['light', 'system', 'dark'] as const).map((t) => (
+            <button
+              key={t}
+              className={`theme-btn${currentTheme === t ? ' active' : ''}`}
+              onClick={() => handleThemeChange(t)}
+              aria-label={t}
+              title={t.charAt(0).toUpperCase() + t.slice(1)}
+            >
+              {t === 'light' ? '\u2600' : t === 'dark' ? '\u263E' : '\u2699'}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="sr">
