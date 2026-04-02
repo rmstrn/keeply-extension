@@ -317,6 +317,22 @@ export function DefaultScreen() {
     }
   }
 
+  const closeAllOpen = (e: React.MouseEvent, group: KeeplyGroup) => {
+    e.stopPropagation()
+    const openTabs = group.tabs.filter((t) => t.tabId !== undefined)
+    if (openTabs.length === 0) return
+    const tabIds = openTabs.map((t) => t.tabId!)
+    chrome.tabs.remove(tabIds, () => {
+      if (chrome.runtime.lastError) return
+      const updated = keeplyGroups.map((g) =>
+        g.id === group.id
+          ? { ...g, tabs: g.tabs.map((t) => ({ ...t, tabId: undefined })) }
+          : g,
+      )
+      saveGroups(updated)
+    })
+  }
+
   // Close edit emoji picker on outside click
   useEffect(() => {
     if (!editEmojiOpen) return
@@ -561,16 +577,25 @@ export function DefaultScreen() {
                   </span>
                 </>
               )}
-              <TabCountBadge count={group.tabs.length} />
               {closedCount > 0 && (
                 <button
-                  className="group-open-all-btn"
+                  className="group-action-btn"
                   title="Open all closed tabs"
                   onClick={(e) => openAllClosed(e, group)}
                 >
                   Open all
                 </button>
               )}
+              {group.tabs.length - closedCount > 0 && (
+                <button
+                  className="group-action-btn"
+                  title="Close all open tabs"
+                  onClick={(e) => closeAllOpen(e, group)}
+                >
+                  Close all
+                </button>
+              )}
+              <TabCountBadge count={group.tabs.length} />
               <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

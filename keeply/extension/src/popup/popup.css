@@ -456,15 +456,15 @@ body {
   border: 1.5px solid var(--t7); border-radius: 5px;
   padding: 2px 6px; outline: none;
 }
-.group-open-all-btn {
-  font-size: 10px; font-weight: 600; color: var(--n4);
+.group-action-btn {
+  font-size: 10px; font-weight: 600; color: var(--n5);
   background: none; border: none; cursor: pointer;
   font-family: var(--f); padding: 1px 5px;
   border-radius: 4px; white-space: nowrap;
   opacity: 0; transition: opacity .12s;
 }
-.group-header:hover .group-open-all-btn { opacity: 1; }
-.group-open-all-btn:hover { color: var(--t7); background: var(--t1); }
+.group-header:hover .group-action-btn { opacity: 1; }
+.group-action-btn:hover { color: var(--t7); background: var(--t1); }
 .group-header:hover .group-delete-btn { opacity: 1; }
 .group-delete-btn:hover { background: #FFE4E6; color: #DC2626; }
 
@@ -587,7 +587,7 @@ html.dark .tab-group-badge { background: #222222; color: #707070; }
 html.dark .tab-close-btn:hover,
 html.dark .group-delete-btn:hover { background: #2A1515; color: #E24B4A; }
 html.dark .group-rename-input { background: #1A1A1A; border-color: #0D7A5F; color: #F0F0EF; }
-html.dark .group-open-all-btn:hover { color: #0D7A5F; background: #0D2420; }
+html.dark .group-action-btn:hover { color: #0D7A5F; background: #0D2420; }
 
 /* ── CUSTOM SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }

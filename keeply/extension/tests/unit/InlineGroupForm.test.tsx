@@ -203,4 +203,61 @@ describe('Group tab rendering', () => {
     // Second tab is closed
     expect(rows[1]).toHaveClass('tab-closed')
   })
+
+  it('shows "Open all" button on hover when closed tabs exist', () => {
+    render(<DefaultScreen />)
+    const btn = screen.getByTitle('Open all closed tabs')
+    expect(btn).toBeInTheDocument()
+    expect(btn.textContent).toBe('Open all')
+  })
+
+  it('"Open all" creates tabs for closed URLs', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByTitle('Open all closed tabs'))
+    expect(chrome.tabs.create).toHaveBeenCalledWith({ url: 'https://closed.example.com' })
+    expect(chrome.tabs.create).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows "Close all" button when open tabs exist', () => {
+    render(<DefaultScreen />)
+    const btn = screen.getByTitle('Close all open tabs')
+    expect(btn).toBeInTheDocument()
+    expect(btn.textContent).toBe('Close all')
+  })
+
+  it('"Close all" removes open tabs via chrome API', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByTitle('Close all open tabs'))
+    expect(chrome.tabs.remove).toHaveBeenCalledWith([1], expect.any(Function))
+  })
+})
+
+describe('Group with all tabs open', () => {
+  const allOpenGroup = [
+    {
+      id: 'g2',
+      name: 'Dev',
+      color: 'blue' as const,
+      tabs: [
+        { url: 'https://github.com/keeply', title: 'GitHub', favIconUrl: undefined, tabId: 3 },
+        { url: 'https://linear.app/q4', title: 'Linear', favIconUrl: undefined, tabId: 1 },
+      ],
+    },
+  ]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockHookData = { tabCount: 2, keeplyGroups: allOpenGroup, allTabs: mockTabs, ungroupedTabs: [] }
+    setupChromeMock()
+  })
+
+  it('does not show "Open all" when no closed tabs', () => {
+    render(<DefaultScreen />)
+    expect(screen.queryByTitle('Open all closed tabs')).toBeNull()
+  })
+
+  it('shows "Close all" when open tabs exist', () => {
+    render(<DefaultScreen />)
+    expect(screen.getByTitle('Close all open tabs')).toBeInTheDocument()
+  })
 })
