@@ -23,6 +23,11 @@ interface GroupWithTabs {
   readonly tabs: readonly TabInfoWithWindow[]
 }
 
+interface DragData {
+  readonly tabId: number
+  readonly sourceGroupId: string
+}
+
 // =============================================================================
 // COLOR MAP
 // =============================================================================
@@ -58,6 +63,18 @@ const SKIP_PREFIXES = ['chrome://', 'chrome-extension://'] as const
 function isGroupableUrl(url: string | undefined): boolean {
   if (!url) return false
   return !SKIP_PREFIXES.some((p) => url.startsWith(p))
+}
+
+function parseDragData(e: React.DragEvent): DragData | null {
+  const raw = e.dataTransfer.getData('text/plain')
+  try {
+    const data = JSON.parse(raw) as DragData
+    if (data.tabId) return data
+  } catch {
+    const tabId = Number(raw)
+    if (tabId) return { tabId, sourceGroupId: 'inbox' }
+  }
+  return null
 }
 
 // =============================================================================
@@ -100,7 +117,6 @@ export function DefaultScreen() {
       chrome.tabs.onRemoved.addListener(updateCount)
       chrome.tabs.onUpdated.addListener(updateCount)
     } catch {
-      // Extension not loaded properly
       return
     }
 
@@ -194,12 +210,40 @@ export function DefaultScreen() {
     })
   }
 
-  const handleDrop = (e: React.DragEvent, group: GroupWithTabs) => {
+  const handleDropOnGroup = (e: React.DragEvent, group: GroupWithTabs) => {
     e.preventDefault()
     setIsDragOver(null)
-    const tabId = Number(e.dataTransfer.getData('text/plain'))
-    if (!tabId) return
-    chrome.tabs.group({ tabIds: [tabId], groupId: Number(group.id) }, () => {
+    const data = parseDragData(e)
+    if (!data || data.sourceGroupId === group.id) return
+    chrome.tabs.group({ tabIds: [data.tabId], groupId: Number(group.id) }, () => {
+      if (chrome.runtime.lastError) return
+      triggerRefresh()
+    })
+  }
+
+  const handleDropOnInbox = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(null)
+    const data = parseDragData(e)
+    if (!data || data.sourceGroupId === 'inbox') return
+    chrome.tabs.ungroup([data.tabId], () => {
+      if (chrome.runtime.lastError) return
+      triggerRefresh()
+    })
+  }
+
+  const makeDragData = (tabId: number, sourceGroupId: string): string => {
+    return JSON.stringify({ tabId, sourceGroupId })
+  }
+
+  const closeTab = (e: React.MouseEvent, tabId: number) => {
+    e.stopPropagation()
+    chrome.tabs.remove(tabId, () => triggerRefresh())
+  }
+
+  const ungroupAll = (e: React.MouseEvent, group: GroupWithTabs) => {
+    e.stopPropagation()
+    chrome.tabs.ungroup([...group.tabIds], () => {
       if (chrome.runtime.lastError) return
       triggerRefresh()
     })
@@ -277,7 +321,7 @@ export function DefaultScreen() {
               onClick={() => toggleGroup(group.id)}
               onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
               onDragLeave={() => setIsDragOver(null)}
-              onDrop={(e) => handleDrop(e, group)}
+              onDrop={(e) => handleDropOnGroup(e, group)}
             >
               <div className="rdot" style={{ background: GROUP_COLORS[group.color] ?? '#6B7280' }} aria-hidden="true" />
               <span className="rn">{group.name}</span>
@@ -289,6 +333,13 @@ export function DefaultScreen() {
                 <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3"
                   strokeLinecap="round" strokeLinejoin="round" />
               </svg>
+              <button
+                className="group-delete-btn"
+                title="Ungroup all tabs"
+                onClick={(e) => ungroupAll(e, group)}
+              >
+                ×
+              </button>
             </div>
 
             {isExpanded && (
@@ -297,6 +348,11 @@ export function DefaultScreen() {
                   <div
                     key={tab.id}
                     className="tab-row group-tab-row"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('text/plain', makeDragData(tab.id, group.id))
+                      e.dataTransfer.effectAllowed = 'move'
+                    }}
                     onClick={() => {
                       chrome.tabs.update(tab.id, { active: true })
                       if (tab.windowId !== undefined) {
@@ -306,10 +362,13 @@ export function DefaultScreen() {
                   >
                     <TabFavicon url={tab.favIconUrl} />
                     <span className="tab-title">{tab.title}</span>
-                    <svg className="tab-goto" width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M2 8L8 2M8 2H4.5M8 2v3.5" stroke="currentColor"
-                        strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <button
+                      className="tab-close-btn"
+                      title="Close tab"
+                      onClick={(e) => closeTab(e, tab.id)}
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
               </div>
@@ -318,9 +377,14 @@ export function DefaultScreen() {
         )
       })}
 
-      {/* Inbox — draggable ungrouped tabs */}
+      {/* Inbox — draggable ungrouped tabs, also a drop target */}
       {inboxTabs.length > 0 && (
-        <div className="inbox-section">
+        <div
+          className={`inbox-section${isDragOver === 'inbox' ? ' drag-over' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver('inbox') }}
+          onDragLeave={() => setIsDragOver(null)}
+          onDrop={handleDropOnInbox}
+        >
           <div className="slbl" style={{ color: '#9B9C96' }}>
             Inbox · {inboxTabs.length} ungrouped
           </div>
@@ -330,15 +394,34 @@ export function DefaultScreen() {
               className="tab-row inbox-tab"
               draggable
               onDragStart={(e) => {
-                e.dataTransfer.setData('text/plain', String(tab.id))
+                e.dataTransfer.setData('text/plain', makeDragData(tab.id, 'inbox'))
                 e.dataTransfer.effectAllowed = 'move'
               }}
             >
               <TabFavicon url={tab.favIconUrl} />
               <span className="tab-title">{tab.title}</span>
+              <button
+                className="tab-close-btn"
+                title="Close tab"
+                onClick={(e) => closeTab(e, tab.id)}
+              >
+                ×
+              </button>
               <span className="drag-hint" aria-hidden="true">&#x2807;</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Show inbox drop target even when empty, if dragging from a group */}
+      {inboxTabs.length === 0 && isDragOver === 'inbox' && (
+        <div
+          className="inbox-section drag-over"
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver('inbox') }}
+          onDragLeave={() => setIsDragOver(null)}
+          onDrop={handleDropOnInbox}
+        >
+          <div className="slbl" style={{ color: '#9B9C96' }}>Drop here to ungroup</div>
         </div>
       )}
 

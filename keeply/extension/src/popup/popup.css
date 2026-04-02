@@ -133,7 +133,7 @@ body {
 .gdot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
 .gn { font-size: 13px; font-weight: 700; color: var(--n9); flex: 1; transition: color .12s; }
 .gbadge { font-size: 10px; font-weight: 600; color: var(--n5); background: var(--n0); border-radius: 20px; padding: 2px 7px; }
-.gtabs { padding: 1px 0 5px 26px; }
+.gtabs { padding: 1px 0 5px 8px; }
 .gtab { font-size: 11px; color: var(--n5); padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
 .res-acts { display: flex; gap: 6px; margin-top: 13px; }
 .ract { flex: 1; padding: 9px; border-radius: 9px; font-family: var(--f); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; border: 1px solid #DDDDD8; background: var(--n0); color: var(--n5); text-align: center; }
@@ -267,18 +267,17 @@ body {
 /* ── EXPANDABLE GROUPS ─── */
 .group-item { margin-bottom: 1px; }
 .group-tabs-list {
-  padding: 2px 0 6px 26px;
+  padding: 2px 0 4px 8px;
   border-left: 1.5px solid var(--n1);
   margin-left: 11px;
 }
 .group-tab-row {
   display: flex; align-items: center; gap: 7px;
-  padding: 4px 7px; border-radius: 6px; cursor: pointer;
+  padding: 4px 7px; border-radius: 6px; cursor: grab;
   transition: background .12s; margin: 0 -7px;
 }
+.group-tab-row:active { cursor: grabbing; }
 .group-tab-row:hover { background: var(--t1); }
-.group-tab-row:hover .tab-goto { opacity: 1; }
-.tab-goto { opacity: 0; transition: opacity .12s; color: var(--n5); flex-shrink: 0; }
 .expand-arrow { color: var(--n5); flex-shrink: 0; transition: transform .2s; }
 .expand-arrow.expanded { transform: rotate(180deg); }
 
@@ -297,3 +296,30 @@ body {
   outline: 1.5px dashed var(--t7);
   outline-offset: -2px;
 }
+.inbox-section.drag-over {
+  outline: 1.5px dashed var(--t7);
+  outline-offset: -2px;
+  border-radius: 8px;
+  background: var(--t1);
+  padding: 6px 7px;
+}
+
+/* ── CLOSE / DELETE BUTTONS ─── */
+.tab-close-btn {
+  opacity: 0; background: none; border: none; cursor: pointer;
+  color: var(--n5); font-size: 14px; line-height: 1;
+  padding: 0 2px; border-radius: 3px;
+  transition: all .12s; flex-shrink: 0; margin-left: auto;
+}
+.tab-row:hover .tab-close-btn,
+.group-tab-row:hover .tab-close-btn { opacity: 1; }
+.tab-close-btn:hover { background: #FFE4E6; color: #DC2626; }
+
+.group-delete-btn {
+  opacity: 0; background: none; border: none; cursor: pointer;
+  color: var(--n5); font-size: 15px; line-height: 1;
+  padding: 0 3px; border-radius: 3px;
+  transition: all .12s; flex-shrink: 0;
+}
+.group-header:hover .group-delete-btn { opacity: 1; }
+.group-delete-btn:hover { background: #FFE4E6; color: #DC2626; }
