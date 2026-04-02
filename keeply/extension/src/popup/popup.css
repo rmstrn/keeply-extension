@@ -59,15 +59,15 @@ body {
 }
 .logo-name { font-size: 15px; font-weight: 700; color: var(--n9); letter-spacing: -.5px; }
 .hdr-right { display: flex; align-items: center; gap: 6px; }
-.pill { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 20px; line-height: 1.4; }
-.pill-free { background: var(--t1); color: var(--t7); border: 1px solid var(--t2); }
-.pill-pro  { background: var(--t7); color: white; }
+.pill { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 0; line-height: 1.4; background: none; border: none; }
+.pill-free { color: #0D7A5F; }
+.pill-pro  { color: #0D7A5F; }
 .settings-btn {
-  width: 28px; height: 28px; border-radius: 7px; border: 1px solid #DDDDD8;
-  background: var(--n0); display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all .15s; color: var(--n5);
+  width: 28px; height: 28px; border: none; background: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: color .15s; color: #6B6D64;
 }
-.settings-btn:hover { background: var(--t1); border-color: var(--t7); color: var(--t7); }
+.settings-btn:hover { color: #0D7A5F; }
 
 /* ── BODY ─── */
 .body { padding: 14px 15px; }
@@ -547,8 +547,8 @@ html.dark .divider { background: #0F1A18; }
 html.dark .sr { border-bottom-color: #0F1A18; }
 
 /* Settings button */
-html.dark .settings-btn { background: #0A0F0F; border-color: #173330; color: #6B8F89; }
-html.dark .settings-btn:hover { background: #0F1A18; border-color: #0D7A5F; color: var(--t-hover); }
+html.dark .settings-btn { color: #6B8F89; }
+html.dark .settings-btn:hover { color: #10A37F; }
 
 /* Stats */
 html.dark .stat { background: #0A0F0F; border-color: #173330; }
@@ -582,7 +582,8 @@ html.dark .done-chip { background: #0F1A18; border-color: #164B46; }
 html.dark .done-text { color: var(--t-hover); }
 
 /* Pill */
-html.dark .pill-free { background: #0F1A18; color: var(--t-hover); border-color: #164B46; }
+html.dark .pill-free { color: #10A37F; }
+html.dark .pill-pro { color: #10A37F; }
 
 /* Search input */
 html.dark .tab-search { background: #0A0F0F; border-color: #173330; color: #F0F0EF; }
