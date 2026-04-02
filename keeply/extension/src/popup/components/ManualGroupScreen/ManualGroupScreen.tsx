@@ -48,7 +48,7 @@ export function ManualGroupScreen() {
   const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
   const [showAllTabs, setShowAllTabs] = useState(false)
   const [search, setSearch] = useState('')
-  const [groupMap, setGroupMap] = useState<Record<number, string>>({})
+  const [groupMap, setGroupMap] = useState<Record<number, { name: string; color: ChromeTabGroupColor }>>({})
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['inbox']))
 
   // Fetch tabs based on showAllTabs toggle
@@ -89,9 +89,9 @@ export function ManualGroupScreen() {
     try {
       chrome.tabGroups.query({}, (groups) => {
         if (chrome.runtime.lastError) return
-        const map: Record<number, string> = {}
+        const map: Record<number, { name: string; color: ChromeTabGroupColor }> = {}
         for (const g of groups) {
-          map[g.id] = g.title ?? 'Unnamed'
+          map[g.id] = { name: g.title ?? 'Unnamed', color: g.color as ChromeTabGroupColor }
         }
         setGroupMap(map)
       })
@@ -121,12 +121,13 @@ export function ManualGroupScreen() {
   const sections = useMemo(() => {
     if (!showAllTabs) return null
 
-    const grouped: Record<string, { name: string; tabs: TabInfoWithGroup[] }> = {}
+    const grouped: Record<string, { name: string; color?: ChromeTabGroupColor; tabs: TabInfoWithGroup[] }> = {}
 
     for (const tab of allTabs) {
-      if (tab.chromeGroupId !== undefined && groupMap[tab.chromeGroupId]) {
+      const gInfo = tab.chromeGroupId !== undefined ? groupMap[tab.chromeGroupId] : undefined
+      if (gInfo) {
         const key = String(tab.chromeGroupId)
-        if (!grouped[key]) grouped[key] = { name: groupMap[tab.chromeGroupId]!, tabs: [] }
+        if (!grouped[key]) grouped[key] = { name: gInfo.name, color: gInfo.color, tabs: [] }
         grouped[key]!.tabs.push(tab)
       } else {
         if (!grouped['inbox']) grouped['inbox'] = { name: 'Ungrouped', tabs: [] }
@@ -271,6 +272,12 @@ export function ManualGroupScreen() {
               return (
                 <div key={key} className="manual-group-section">
                   <div className="manual-section-header" onClick={() => toggleSection(key)}>
+                    {section.color && (
+                      <div
+                        className="manual-section-dot"
+                        style={{ background: GROUP_COLOR_HEX[section.color] }}
+                      />
+                    )}
                     <span className="manual-section-name">{section.name}</span>
                     <span className="manual-section-count">{tabCountLabel(sectionTabs.length)}</span>
                     <svg

@@ -340,6 +340,9 @@ html.dark .color-swatch.selected .color-swatch-circle {
   user-select: none;
 }
 .manual-section-header:hover { color: var(--n9); }
+.manual-section-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
 .manual-section-name { flex: 1; }
 .manual-section-count {
   font-size: 10px; background: var(--n1); color: var(--n5);
