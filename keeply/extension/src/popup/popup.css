@@ -265,7 +265,15 @@ body {
 .manual-create-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ── EXPANDABLE GROUPS ─── */
-.group-item { margin-bottom: 1px; }
+.group-item {
+  margin-bottom: 1px; border-radius: 8px;
+  transition: background .12s;
+}
+.group-item.drag-over {
+  outline: 1.5px dashed var(--t7);
+  outline-offset: -2px;
+  background: var(--t1);
+}
 .group-tabs-list {
   padding: 2px 0 4px 8px;
   border-left: 1.5px solid var(--n1);
@@ -291,11 +299,6 @@ body {
 .inbox-tab:hover { background: var(--n0); }
 .inbox-tab:active { cursor: grabbing; }
 .drag-hint { color: var(--n3); font-size: 14px; margin-left: auto; }
-.group-header.drag-over {
-  background: var(--t1) !important;
-  outline: 1.5px dashed var(--t7);
-  outline-offset: -2px;
-}
 .inbox-section.drag-over {
   outline: 1.5px dashed var(--t7);
   outline-offset: -2px;

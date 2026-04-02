@@ -77,6 +77,33 @@ function parseDragData(e: React.DragEvent): DragData | null {
   return null
 }
 
+/** Remove a group by name from recent sessions storage, then triggerRefresh */
+function removeGroupFromRecent(groupName: string, onDone: () => void): void {
+  chrome.storage.local.get(STORAGE_KEYS.RECENT_GROUPS, (result) => {
+    const existing = (result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined) ?? []
+    const updated = existing.filter(
+      (session) => !session.groups.some((g) => g.name === groupName),
+    )
+    chrome.storage.local.set({ [STORAGE_KEYS.RECENT_GROUPS]: updated }, onDone)
+  })
+}
+
+/** Remove a tabId from all recent sessions, pruning empty groups/sessions */
+function removeTabFromRecent(tabId: number, onDone: () => void): void {
+  chrome.storage.local.get(STORAGE_KEYS.RECENT_GROUPS, (result) => {
+    const existing = (result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined) ?? []
+    const updated = existing
+      .map((session) => ({
+        ...session,
+        groups: session.groups
+          .map((g) => ({ ...g, tabIds: g.tabIds.filter((id) => id !== tabId) }))
+          .filter((g) => g.tabIds.length > 0),
+      }))
+      .filter((session) => session.groups.length > 0)
+    chrome.storage.local.set({ [STORAGE_KEYS.RECENT_GROUPS]: updated }, onDone)
+  })
+}
+
 // =============================================================================
 // DEFAULT SCREEN
 // =============================================================================
@@ -232,20 +259,29 @@ export function DefaultScreen() {
     })
   }
 
+  const handleGroupDragLeave = (e: React.DragEvent, groupId: string) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      if (isDragOver === groupId) setIsDragOver(null)
+    }
+  }
+
   const makeDragData = (tabId: number, sourceGroupId: string): string => {
     return JSON.stringify({ tabId, sourceGroupId })
   }
 
   const closeTab = (e: React.MouseEvent, tabId: number) => {
     e.stopPropagation()
-    chrome.tabs.remove(tabId, () => triggerRefresh())
+    chrome.tabs.remove(tabId, () => {
+      if (chrome.runtime.lastError) return
+      removeTabFromRecent(tabId, () => triggerRefresh())
+    })
   }
 
   const ungroupAll = (e: React.MouseEvent, group: GroupWithTabs) => {
     e.stopPropagation()
     chrome.tabs.ungroup([...group.tabIds], () => {
       if (chrome.runtime.lastError) return
-      triggerRefresh()
+      removeGroupFromRecent(group.name, () => triggerRefresh())
     })
   }
 
@@ -300,7 +336,7 @@ export function DefaultScreen() {
         </div>
       </div>
 
-      {/* Current Chrome groups — expandable */}
+      {/* Current Chrome groups — expandable, full-area drop target */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="slbl">Groups</div>
         <button className="new-group-btn" onClick={() => setScreen('manual')}>+ New</button>
@@ -315,13 +351,16 @@ export function DefaultScreen() {
       {currentGroups.map((group) => {
         const isExpanded = expandedGroups.has(group.id)
         return (
-          <div key={group.id} className="group-item">
+          <div
+            key={group.id}
+            className={`group-item${isDragOver === group.id ? ' drag-over' : ''}`}
+            onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
+            onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
+            onDrop={(e) => handleDropOnGroup(e, group)}
+          >
             <div
-              className={`rr group-header${isDragOver === group.id ? ' drag-over' : ''}`}
+              className="rr group-header"
               onClick={() => toggleGroup(group.id)}
-              onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
-              onDragLeave={() => setIsDragOver(null)}
-              onDrop={(e) => handleDropOnGroup(e, group)}
             >
               <div className="rdot" style={{ background: GROUP_COLORS[group.color] ?? '#6B7280' }} aria-hidden="true" />
               <span className="rn">{group.name}</span>
@@ -350,6 +389,7 @@ export function DefaultScreen() {
                     className="tab-row group-tab-row"
                     draggable
                     onDragStart={(e) => {
+                      e.stopPropagation()
                       e.dataTransfer.setData('text/plain', makeDragData(tab.id, group.id))
                       e.dataTransfer.effectAllowed = 'move'
                     }}
@@ -382,7 +422,11 @@ export function DefaultScreen() {
         <div
           className={`inbox-section${isDragOver === 'inbox' ? ' drag-over' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver('inbox') }}
-          onDragLeave={() => setIsDragOver(null)}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setIsDragOver(null)
+            }
+          }}
           onDrop={handleDropOnInbox}
         >
           <div className="slbl" style={{ color: '#9B9C96' }}>
@@ -394,6 +438,7 @@ export function DefaultScreen() {
               className="tab-row inbox-tab"
               draggable
               onDragStart={(e) => {
+                e.stopPropagation()
                 e.dataTransfer.setData('text/plain', makeDragData(tab.id, 'inbox'))
                 e.dataTransfer.effectAllowed = 'move'
               }}
