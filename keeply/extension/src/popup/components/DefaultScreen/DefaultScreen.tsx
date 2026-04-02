@@ -115,7 +115,6 @@ export function DefaultScreen() {
       <div className={`section-body${sectionsOpen.groups ? ' open' : ''}`}>
       {showInlineForm && (
         <InlineGroupForm
-          ungroupedTabs={ungroupedTabs}
           onCreated={() => setShowInlineForm(false)}
           onCancel={() => setShowInlineForm(false)}
         />
