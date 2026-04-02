@@ -9,7 +9,7 @@ export function Header() {
   const setScreen = useTabStore((s) => s.setScreen)
   const isPro = false // TODO: подключить proStore когда будет Stripe
 
-  const showBack = screen === 'settings' || screen === 'manual'
+  const showBack = screen === 'settings'
 
   return (
     <header className="hdr">

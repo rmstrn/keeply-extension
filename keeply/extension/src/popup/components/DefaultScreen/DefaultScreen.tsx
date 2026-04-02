@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
@@ -9,7 +9,7 @@ import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
 import { GROUP_COLOR_HEX, STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
-import type { KeeplyGroup } from '@/shared/types'
+import type { GroupColor, KeeplyGroup, RecentGroup } from '@/shared/types'
 
 // =============================================================================
 // HELPERS
@@ -37,6 +37,244 @@ function makeDragData(tabId: number, sourceGroupId: string): string {
 }
 
 // =============================================================================
+// INLINE GROUP FORM
+// =============================================================================
+
+const COLOR_SWATCHES: { color: GroupColor; label: string }[] = [
+  { color: 'blue',   label: 'Blue'   },
+  { color: 'purple', label: 'Purple' },
+  { color: 'green',  label: 'Green'  },
+  { color: 'cyan',   label: 'Cyan'   },
+  { color: 'yellow', label: 'Yellow' },
+  { color: 'red',    label: 'Red'    },
+  { color: 'pink',   label: 'Pink'   },
+  { color: 'grey',   label: 'Grey'   },
+]
+
+const EMOJI_CATEGORIES = [
+  { label: 'Work',  emojis: ['💼', '📊', '📝', '💡', '🖥️', '📱', '🔧', '⚙️'] },
+  { label: 'Media', emojis: ['🎬', '🎵', '🎮', '📚', '🎨', '🎭', '📷', '🎙️'] },
+  { label: 'Life',  emojis: ['🛒', '🏠', '🚗', '✈️', '🍕', '☕', '💪', '🧘'] },
+  { label: 'Other', emojis: ['⭐', '🔥', '💎', '🚀', '❤️', '🌿', '🎯', '💰'] },
+] as const
+
+const LEADING_EMOJI_RE = /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\u200D(\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*/u
+
+interface InlineGroupFormProps {
+  ungroupedTabs: TabInfoWithWindow[]
+  onCreated: () => void
+  onCancel: () => void
+}
+
+function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupFormProps) {
+  const triggerRefresh = useTabStore((s) => s.triggerRefresh)
+
+  const [groupName, setGroupName] = useState('')
+  const [selectedColor, setSelectedColor] = useState<GroupColor>('blue')
+  const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
+  const [emojiOpen, setEmojiOpen] = useState(false)
+
+  const formRef = useRef<HTMLDivElement>(null)
+  const emojiRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Focus input on mount
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (formRef.current && !formRef.current.contains(e.target as Node)) {
+        onCancel()
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [onCancel])
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (emojiOpen) setEmojiOpen(false)
+        else onCancel()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onCancel, emojiOpen])
+
+  // Close emoji picker on outside click
+  useEffect(() => {
+    if (!emojiOpen) return
+    const handler = (e: MouseEvent) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
+        setEmojiOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [emojiOpen])
+
+  const pickEmoji = (emoji: string) => {
+    setGroupName((prev) => {
+      const match = prev.match(LEADING_EMOJI_RE)
+      const base = match ? prev.slice(match[0].length).trimStart() : prev
+      return `${emoji} ${base}`
+    })
+    setEmojiOpen(false)
+    inputRef.current?.focus()
+  }
+
+  const toggleTab = (tabId: number) => {
+    setSelectedTabIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(tabId)) next.delete(tabId)
+      else next.add(tabId)
+      return next
+    })
+  }
+
+  const canCreate = groupName.trim().length > 0 && selectedTabIds.size > 0
+
+  const handleCreate = () => {
+    if (!canCreate) return
+
+    const tabIds = [...selectedTabIds]
+
+    const newGroup: KeeplyGroup = {
+      id: crypto.randomUUID(),
+      name: groupName.trim(),
+      color: selectedColor,
+      tabIds,
+    }
+
+    const newEntry: RecentGroup = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      groups: [{ name: newGroup.name, color: newGroup.color, tabIds }],
+      totalTabs: tabIds.length,
+    }
+
+    chrome.storage.local.get(
+      [STORAGE_KEYS.KEEPLY_GROUPS, STORAGE_KEYS.RECENT_GROUPS],
+      (result) => {
+        const existingGroups = (result[STORAGE_KEYS.KEEPLY_GROUPS] as KeeplyGroup[] | undefined) ?? []
+        const existingRecent = (result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined) ?? []
+
+        chrome.storage.local.set({
+          [STORAGE_KEYS.KEEPLY_GROUPS]: [...existingGroups, newGroup],
+          [STORAGE_KEYS.RECENT_GROUPS]: [newEntry, ...existingRecent].slice(0, 10),
+        }, () => {
+          triggerRefresh()
+          onCreated()
+        })
+      },
+    )
+  }
+
+  return (
+    <div className="inline-group-form" ref={formRef}>
+      {/* Name row: emoji + input + confirm */}
+      <div className="inline-form-name-row">
+        <div className="emoji-picker-wrapper" ref={emojiRef}>
+          <button
+            type="button"
+            className="emoji-trigger"
+            onClick={() => setEmojiOpen((o) => !o)}
+            aria-label="Pick emoji"
+            aria-expanded={emojiOpen}
+          >
+            😀
+          </button>
+          {emojiOpen && (
+            <div className="emoji-dropdown">
+              {EMOJI_CATEGORIES.map((cat) => (
+                <div key={cat.label} className="emoji-cat">
+                  <div className="emoji-cat-label">{cat.label}</div>
+                  <div className="emoji-grid">
+                    {cat.emojis.map((e) => (
+                      <button
+                        key={e}
+                        type="button"
+                        className="emoji-cell"
+                        onClick={() => pickEmoji(e)}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <input
+          ref={inputRef}
+          className="manual-input"
+          type="text"
+          placeholder="Group name..."
+          value={groupName}
+          onChange={(e) => setGroupName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleCreate() }}
+          maxLength={50}
+        />
+        <button
+          type="button"
+          className="inline-form-confirm"
+          onClick={handleCreate}
+          disabled={!canCreate}
+          aria-label="Create group"
+          title="Create group"
+        >
+          ✓
+        </button>
+      </div>
+
+      {/* Color swatches */}
+      <div className="inline-form-colors">
+        {COLOR_SWATCHES.map(({ color, label }) => (
+          <button
+            key={color}
+            className={`color-swatch${selectedColor === color ? ' selected' : ''}`}
+            onClick={() => setSelectedColor(color)}
+            title={label}
+            aria-label={label}
+            aria-pressed={selectedColor === color}
+          >
+            <div className="color-swatch-circle" style={{ background: GROUP_COLOR_HEX[color] }} />
+          </button>
+        ))}
+      </div>
+
+      {/* Tab selection */}
+      {ungroupedTabs.length > 0 && (
+        <div className="inline-form-tabs" role="listbox" aria-label="Select tabs">
+          {ungroupedTabs.map((tab) => (
+            <div
+              key={tab.id}
+              className="tab-row"
+              onClick={() => toggleTab(tab.id)}
+              role="option"
+              aria-selected={selectedTabIds.has(tab.id)}
+            >
+              <div
+                className={`tab-checkbox${selectedTabIds.has(tab.id) ? ' checked' : ''}`}
+                aria-hidden="true"
+              >
+                {selectedTabIds.has(tab.id) && <CheckIcon />}
+              </div>
+              <TabFavicon url={tab.favIconUrl} />
+              <span className="tab-title">{tab.title}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// =============================================================================
 // DEFAULT SCREEN
 // =============================================================================
 
@@ -44,13 +282,13 @@ export function DefaultScreen() {
   const { groupTabs } = useTabGroups()
   const status = useUsageStore((s) => s.status)
   const isLoading = useUsageStore((s) => s.isLoading)
-  const setScreen = useTabStore((s) => s.setScreen)
   const triggerRefresh = useTabStore((s) => s.triggerRefresh)
 
   const { tabCount, keeplyGroups, allTabs, ungroupedTabs } = useDefaultScreenData()
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState<string | null>(null)
+  const [showInlineForm, setShowInlineForm] = useState(false)
 
   const toggleGroup = (id: string) => {
     setExpandedGroups((prev) => {
@@ -174,11 +412,19 @@ export function DefaultScreen() {
       {/* Groups section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="slbl">Groups</div>
-        <button className="new-group-btn" onClick={() => setScreen('manual')}>+ Add Group</button>
+        <button className="new-group-btn" onClick={() => setShowInlineForm((v) => !v)}>+ Add Group</button>
       </div>
 
-      {keeplyGroups.length === 0 && (
-        <div className="rr empty" onClick={() => setScreen('manual')} style={{ cursor: 'pointer' }}>
+      {showInlineForm && (
+        <InlineGroupForm
+          ungroupedTabs={ungroupedTabs}
+          onCreated={() => setShowInlineForm(false)}
+          onCancel={() => setShowInlineForm(false)}
+        />
+      )}
+
+      {keeplyGroups.length === 0 && !showInlineForm && (
+        <div className="rr empty" onClick={() => setShowInlineForm(true)} style={{ cursor: 'pointer' }}>
           <span className="rm">No groups yet. Click <strong>Add Group</strong> to start.</span>
         </div>
       )}
@@ -309,6 +555,14 @@ function ExternalIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
       <path d="M2 8L8 2M8 2H4.5M8 2v3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
