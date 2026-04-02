@@ -47,6 +47,7 @@ export interface KeeplyGroup {
   readonly id: string
   readonly name: string
   readonly color: GroupColor
+  readonly emoji?: string | undefined
   readonly tabIds: readonly number[]
 }
 

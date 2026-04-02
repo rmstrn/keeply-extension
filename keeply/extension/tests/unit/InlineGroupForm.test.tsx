@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { DefaultScreen } from '@/popup/components/DefaultScreen/DefaultScreen'
 
 // =============================================================================
@@ -124,16 +124,19 @@ describe('InlineGroupForm', () => {
     expect(document.querySelector('.emoji-dropdown')).toBeInTheDocument()
   })
 
-  it('inserts emoji into group name', () => {
+  it('shows selected emoji on button without modifying input', () => {
     render(<DefaultScreen />)
     clickAddGroup()
     const input = screen.getByPlaceholderText('Group name...') as HTMLInputElement
     fireEvent.change(input, { target: { value: 'Work' } })
+    expect(screen.getByLabelText('Pick emoji').textContent).toBe('😀')
     fireEvent.click(screen.getByLabelText('Pick emoji'))
-    // Click first emoji in the grid
-    const emojiCells = document.querySelectorAll('.emoji-cell')
-    fireEvent.click(emojiCells[0]!)
-    expect(input.value).toMatch(/^\S+ Work$/)
+    expect(document.querySelector('.emoji-dropdown')).toBeInTheDocument()
+    const emojiCell = document.querySelectorAll('.emoji-cell')[0]! as HTMLButtonElement
+    act(() => { emojiCell.click() })
+    // Button shows selected emoji, input unchanged
+    expect(screen.getByLabelText('Pick emoji').textContent).toBe('💼')
+    expect(input.value).toBe('Work')
   })
 
   it('closes form on Escape', () => {

@@ -2,6 +2,10 @@ node_modules/
 dist/
 .claude/
 
+# Compiled JS alongside TS sources (build output goes to dist/)
+src/**/*.js
+tests/**/*.js
+
 *.log
 .env
 .env.*

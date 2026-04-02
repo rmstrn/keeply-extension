@@ -47,8 +47,6 @@ const EMOJI_CATEGORIES = [
   { label: 'Other', emojis: ['⭐', '🔥', '💎', '🚀', '❤️', '🌿', '🎯', '💰'] },
 ] as const
 
-const LEADING_EMOJI_RE = /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\u200D(\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*/u
-
 interface InlineGroupFormProps {
   ungroupedTabs: TabInfoWithWindow[]
   onCreated: () => void
@@ -59,6 +57,7 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
   const triggerRefresh = useTabStore((s) => s.triggerRefresh)
 
   const [groupName, setGroupName] = useState('')
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null)
   const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
   const [emojiOpen, setEmojiOpen] = useState(false)
 
@@ -105,11 +104,7 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
   }, [emojiOpen])
 
   const pickEmoji = (emoji: string) => {
-    setGroupName((prev) => {
-      const match = prev.match(LEADING_EMOJI_RE)
-      const base = match ? prev.slice(match[0].length).trimStart() : prev
-      return `${emoji} ${base}`
-    })
+    setSelectedEmoji(emoji)
     setEmojiOpen(false)
     inputRef.current?.focus()
   }
@@ -134,6 +129,7 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
       id: crypto.randomUUID(),
       name: groupName.trim(),
       color: 'blue',
+      ...(selectedEmoji ? { emoji: selectedEmoji } : {}),
       tabIds,
     }
 
@@ -173,7 +169,7 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
             aria-label="Pick emoji"
             aria-expanded={emojiOpen}
           >
-            😀
+            {selectedEmoji ?? '😀'}
           </button>
           {emojiOpen && (
             <div className="emoji-dropdown">
@@ -413,6 +409,7 @@ export function DefaultScreen() {
             onDrop={(e) => handleDropOnGroup(e, group)}
           >
             <div className="rr group-header" onClick={() => toggleGroup(group.id)}>
+              {group.emoji && <span className="group-emoji" aria-hidden="true">{group.emoji}</span>}
               <span className="rn">{group.name}</span>
               <TabCountBadge count={tabs.length} />
               <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
