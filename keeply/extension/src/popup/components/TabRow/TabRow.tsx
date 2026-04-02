@@ -22,7 +22,7 @@ export function TabRow({ tab, selected, onToggle, showCheckbox }: TabRowProps) {
   )
 }
 
-function TabFavicon({ url }: { readonly url?: string | undefined }) {
+export function TabFavicon({ url }: { readonly url?: string | undefined }) {
   const [error, setError] = useState(false)
 
   if (!url || error) {

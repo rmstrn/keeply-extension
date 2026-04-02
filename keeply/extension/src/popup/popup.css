@@ -263,3 +263,37 @@ body {
 }
 
 .manual-create-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── EXPANDABLE GROUPS ─── */
+.group-item { margin-bottom: 1px; }
+.group-tabs-list {
+  padding: 2px 0 6px 26px;
+  border-left: 1.5px solid var(--n1);
+  margin-left: 11px;
+}
+.group-tab-row {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 7px; border-radius: 6px; cursor: pointer;
+  transition: background .12s; margin: 0 -7px;
+}
+.group-tab-row:hover { background: var(--t1); }
+.group-tab-row:hover .tab-goto { opacity: 1; }
+.tab-goto { opacity: 0; transition: opacity .12s; color: var(--n5); flex-shrink: 0; }
+.expand-arrow { color: var(--n5); flex-shrink: 0; transition: transform .2s; }
+.expand-arrow.expanded { transform: rotate(180deg); }
+
+/* ── INBOX DRAG & DROP ─── */
+.inbox-section { margin-top: 10px; }
+.inbox-tab {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 7px; border-radius: 6px;
+  cursor: grab; transition: background .12s; margin: 0 -7px;
+}
+.inbox-tab:hover { background: var(--n0); }
+.inbox-tab:active { cursor: grabbing; }
+.drag-hint { color: var(--n3); font-size: 14px; margin-left: auto; }
+.group-header.drag-over {
+  background: var(--t1) !important;
+  outline: 1.5px dashed var(--t7);
+  outline-offset: -2px;
+}

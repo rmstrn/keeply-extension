@@ -3,11 +3,28 @@ import { useTabStore } from '@/popup/stores/tabStore'
 import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
+import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { STORAGE_KEYS } from '@/shared/constants'
-import type { BackgroundMessage, PopupMessage, RecentGroup, TabInfo } from '@/shared/types'
+import type { ChromeTabGroupColor, RecentGroup, TabInfo } from '@/shared/types'
 
 // =============================================================================
-// COLOR MAP — hex values for display
+// TYPES
+// =============================================================================
+
+interface TabInfoWithWindow extends TabInfo {
+  readonly windowId?: number | undefined
+}
+
+interface GroupWithTabs {
+  readonly id: string
+  readonly name: string
+  readonly color: ChromeTabGroupColor
+  readonly tabIds: readonly number[]
+  readonly tabs: readonly TabInfoWithWindow[]
+}
+
+// =============================================================================
+// COLOR MAP
 // =============================================================================
 
 const GROUP_COLORS: Record<string, string> = {
@@ -22,7 +39,7 @@ const GROUP_COLORS: Record<string, string> = {
 }
 
 // =============================================================================
-// TIME AGO HELPER
+// HELPERS
 // =============================================================================
 
 function timeAgo(timestamp: number): string {
@@ -36,13 +53,11 @@ function timeAgo(timestamp: number): string {
   return `${days}d ago`
 }
 
-function sendMessage(message: BackgroundMessage): Promise<PopupMessage> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(message, (response: PopupMessage) => {
-      if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message))
-      else resolve(response)
-    })
-  })
+const SKIP_PREFIXES = ['chrome://', 'chrome-extension://'] as const
+
+function isGroupableUrl(url: string | undefined): boolean {
+  if (!url) return false
+  return !SKIP_PREFIXES.some((p) => url.startsWith(p))
 }
 
 // =============================================================================
@@ -55,23 +70,46 @@ export function DefaultScreen() {
   const isLoading = useUsageStore((s) => s.isLoading)
   const setScreen = useTabStore((s) => s.setScreen)
   const lastRefresh = useTabStore((s) => s.lastRefresh)
+  const triggerRefresh = useTabStore((s) => s.triggerRefresh)
 
   const [tabCount, setTabCount] = useState(0)
   const [recentGroups, setRecentGroups] = useState<RecentGroup[]>([])
   const [totalTabsGrouped, setTotalTabsGrouped] = useState(0)
-  const [inboxTabs, setInboxTabs] = useState<TabInfo[]>([])
+  const [currentGroups, setCurrentGroups] = useState<GroupWithTabs[]>([])
+  const [inboxTabs, setInboxTabs] = useState<TabInfoWithWindow[]>([])
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [isDragOver, setIsDragOver] = useState<string | null>(null)
 
-  // Fetch real tab count
+  // Live tab count with listeners
   useEffect(() => {
+    const updateCount = () => {
+      try {
+        chrome.tabs.query({}, (tabs) => {
+          if (chrome.runtime.lastError) return
+          setTabCount(tabs.filter((t) => isGroupableUrl(t.url)).length)
+        })
+      } catch {
+        // Extension not loaded properly
+      }
+    }
+
+    updateCount()
+
     try {
-      chrome.tabs.query({}, (tabs) => {
-        if (chrome.runtime.lastError) return
-        setTabCount(tabs.length)
-      })
+      chrome.tabs.onCreated.addListener(updateCount)
+      chrome.tabs.onRemoved.addListener(updateCount)
+      chrome.tabs.onUpdated.addListener(updateCount)
     } catch {
       // Extension not loaded properly
+      return
     }
-  }, [lastRefresh])
+
+    return () => {
+      chrome.tabs.onCreated.removeListener(updateCount)
+      chrome.tabs.onRemoved.removeListener(updateCount)
+      chrome.tabs.onUpdated.removeListener(updateCount)
+    }
+  }, [])
 
   // Load recent groups and total counter from storage
   useEffect(() => {
@@ -91,19 +129,83 @@ export function DefaultScreen() {
     }
   }, [lastRefresh])
 
-  // Load current groups to detect inbox tabs
+  // Load current Chrome groups with their tabs
   useEffect(() => {
-    void (async () => {
-      try {
-        const response = await sendMessage({ type: 'GET_CURRENT_GROUPS' })
-        if (response.type === 'CURRENT_GROUPS_RESPONSE') {
-          setInboxTabs([...response.payload.inboxTabs])
-        }
-      } catch {
-        // Extension not loaded properly
-      }
-    })()
+    try {
+      chrome.tabGroups.query({}, (groups) => {
+        if (chrome.runtime.lastError) return
+        const promises = groups.map(
+          (group) =>
+            new Promise<GroupWithTabs>((resolve) => {
+              chrome.tabs.query({ groupId: group.id }, (tabs) => {
+                resolve({
+                  id: String(group.id),
+                  name: group.title ?? 'Unnamed',
+                  color: group.color as ChromeTabGroupColor,
+                  tabIds: tabs.map((t) => t.id).filter((id): id is number => id !== undefined),
+                  tabs: tabs
+                    .filter((t) => t.id && isGroupableUrl(t.url))
+                    .map((t) => ({
+                      id: t.id!,
+                      title: t.title ?? t.url ?? '',
+                      url: t.url ?? '',
+                      favIconUrl: t.favIconUrl,
+                      windowId: t.windowId,
+                    })),
+                })
+              })
+            }),
+        )
+        Promise.all(promises).then(setCurrentGroups)
+      })
+    } catch {
+      // Extension not loaded properly
+    }
   }, [lastRefresh])
+
+  // Load inbox (ungrouped) tabs
+  useEffect(() => {
+    try {
+      chrome.tabs.query({ groupId: chrome.tabGroups.TAB_GROUP_ID_NONE }, (tabs) => {
+        if (chrome.runtime.lastError) return
+        setInboxTabs(
+          tabs
+            .filter((t) => t.id && isGroupableUrl(t.url))
+            .map((t) => ({
+              id: t.id!,
+              title: t.title ?? '',
+              url: t.url ?? '',
+              favIconUrl: t.favIconUrl,
+              windowId: t.windowId,
+            })),
+        )
+      })
+    } catch {
+      // Extension not loaded properly
+    }
+  }, [lastRefresh])
+
+  const toggleGroup = (id: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const handleDrop = (e: React.DragEvent, group: GroupWithTabs) => {
+    e.preventDefault()
+    setIsDragOver(null)
+    const tabId = Number(e.dataTransfer.getData('text/plain'))
+    if (!tabId) return
+    chrome.tabs.group({ tabIds: [tabId], groupId: Number(group.id) }, () => {
+      if (chrome.runtime.lastError) return
+      triggerRefresh()
+    })
+  }
+
+  const hasGroups = currentGroups.length > 0
 
   return (
     <div className="body">
@@ -122,7 +224,6 @@ export function DefaultScreen() {
         </button>
       </div>
 
-      {/* CTA — always solid teal via inline style */}
       <button
         className="cta-btn"
         style={{ background: '#0D7A5F', color: '#FFFFFF', border: 'none' }}
@@ -155,42 +256,118 @@ export function DefaultScreen() {
         </div>
       </div>
 
-      {inboxTabs.length > 0 && (
-        <div className="inbox-hint">
-          {inboxTabs.length} tabs in Inbox — not grouped yet
-        </div>
-      )}
-
+      {/* Current Chrome groups — expandable */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="slbl" aria-label="Recent groups section">Groups</div>
+        <div className="slbl">Groups</div>
         <button className="new-group-btn" onClick={() => setScreen('manual')}>+ New</button>
       </div>
-      {recentGroups.length === 0 ? (
+
+      {!hasGroups && (
         <div className="rr empty">
           <span className="rm">No groups yet. Click Group tabs to start.</span>
         </div>
-      ) : (
-        recentGroups.map((entry) => (
-          <div key={entry.id} className="rr" role="button" tabIndex={0}>
+      )}
+
+      {currentGroups.map((group) => {
+        const isExpanded = expandedGroups.has(group.id)
+        return (
+          <div key={group.id} className="group-item">
             <div
-              className="rdot"
-              style={{ background: GROUP_COLORS[entry.groups[0]?.color ?? 'grey'] ?? '#6B7280' }}
-              aria-hidden="true"
-            />
-            <span className="rn">
-              {entry.groups.map((g) => g.name).join(', ')}
-            </span>
-            <span className="rm">
-              {entry.totalTabs} tabs · {timeAgo(entry.timestamp)}
-            </span>
+              className={`rr group-header${isDragOver === group.id ? ' drag-over' : ''}`}
+              onClick={() => toggleGroup(group.id)}
+              onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
+              onDragLeave={() => setIsDragOver(null)}
+              onDrop={(e) => handleDrop(e, group)}
+            >
+              <div className="rdot" style={{ background: GROUP_COLORS[group.color] ?? '#6B7280' }} aria-hidden="true" />
+              <span className="rn">{group.name}</span>
+              <span className="rm">{group.tabs.length} tabs</span>
+              <svg
+                className={`expand-arrow${isExpanded ? ' expanded' : ''}`}
+                width="10" height="10" viewBox="0 0 10 10" fill="none"
+              >
+                <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3"
+                  strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {isExpanded && (
+              <div className="group-tabs-list">
+                {group.tabs.map((tab) => (
+                  <div
+                    key={tab.id}
+                    className="tab-row group-tab-row"
+                    onClick={() => {
+                      chrome.tabs.update(tab.id, { active: true })
+                      if (tab.windowId !== undefined) {
+                        chrome.windows.update(tab.windowId, { focused: true })
+                      }
+                    }}
+                  >
+                    <TabFavicon url={tab.favIconUrl} />
+                    <span className="tab-title">{tab.title}</span>
+                    <svg className="tab-goto" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 8L8 2M8 2H4.5M8 2v3.5" stroke="currentColor"
+                        strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        ))
+        )
+      })}
+
+      {/* Inbox — draggable ungrouped tabs */}
+      {inboxTabs.length > 0 && (
+        <div className="inbox-section">
+          <div className="slbl" style={{ color: '#9B9C96' }}>
+            Inbox · {inboxTabs.length} ungrouped
+          </div>
+          {inboxTabs.map((tab) => (
+            <div
+              key={tab.id}
+              className="tab-row inbox-tab"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData('text/plain', String(tab.id))
+                e.dataTransfer.effectAllowed = 'move'
+              }}
+            >
+              <TabFavicon url={tab.favIconUrl} />
+              <span className="tab-title">{tab.title}</span>
+              <span className="drag-hint" aria-hidden="true">&#x2807;</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Recent AI grouping sessions */}
+      {recentGroups.length > 0 && (
+        <>
+          <div className="slbl" style={{ marginTop: 10 }}>Recent sessions</div>
+          {recentGroups.map((entry) => (
+            <div key={entry.id} className="rr" tabIndex={0}>
+              <div
+                className="rdot"
+                style={{ background: GROUP_COLORS[entry.groups[0]?.color ?? 'grey'] ?? '#6B7280' }}
+                aria-hidden="true"
+              />
+              <span className="rn">
+                {entry.groups.map((g) => g.name).join(', ')}
+              </span>
+              <span className="rm">
+                {entry.totalTabs} tabs · {timeAgo(entry.timestamp)}
+              </span>
+            </div>
+          ))}
+        </>
       )}
     </div>
   )
 }
 
-// Inline SVG icons для чистоты компонента
+// Inline SVG icons
 function TabIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">

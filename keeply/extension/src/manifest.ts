@@ -26,6 +26,7 @@ export default defineManifest({
     'tabs',
     'tabGroups',
     'storage',
+    'windows',
   ],
 
   host_permissions: [
