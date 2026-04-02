@@ -7,9 +7,9 @@ import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
-import { GROUP_COLOR_HEX, STORAGE_KEYS } from '@/shared/constants'
+import { STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
-import type { GroupColor, KeeplyGroup, RecentGroup } from '@/shared/types'
+import type { KeeplyGroup, RecentGroup } from '@/shared/types'
 
 // =============================================================================
 // HELPERS
@@ -40,17 +40,6 @@ function makeDragData(tabId: number, sourceGroupId: string): string {
 // INLINE GROUP FORM
 // =============================================================================
 
-const COLOR_SWATCHES: { color: GroupColor; label: string }[] = [
-  { color: 'blue',   label: 'Blue'   },
-  { color: 'purple', label: 'Purple' },
-  { color: 'green',  label: 'Green'  },
-  { color: 'cyan',   label: 'Cyan'   },
-  { color: 'yellow', label: 'Yellow' },
-  { color: 'red',    label: 'Red'    },
-  { color: 'pink',   label: 'Pink'   },
-  { color: 'grey',   label: 'Grey'   },
-]
-
 const EMOJI_CATEGORIES = [
   { label: 'Work',  emojis: ['💼', '📊', '📝', '💡', '🖥️', '📱', '🔧', '⚙️'] },
   { label: 'Media', emojis: ['🎬', '🎵', '🎮', '📚', '🎨', '🎭', '📷', '🎙️'] },
@@ -70,7 +59,6 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
   const triggerRefresh = useTabStore((s) => s.triggerRefresh)
 
   const [groupName, setGroupName] = useState('')
-  const [selectedColor, setSelectedColor] = useState<GroupColor>('blue')
   const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
   const [emojiOpen, setEmojiOpen] = useState(false)
 
@@ -145,7 +133,7 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
     const newGroup: KeeplyGroup = {
       id: crypto.randomUUID(),
       name: groupName.trim(),
-      color: selectedColor,
+      color: 'blue',
       tabIds,
     }
 
@@ -229,22 +217,6 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
         >
           ✓
         </button>
-      </div>
-
-      {/* Color swatches */}
-      <div className="inline-form-colors">
-        {COLOR_SWATCHES.map(({ color, label }) => (
-          <button
-            key={color}
-            className={`color-swatch${selectedColor === color ? ' selected' : ''}`}
-            onClick={() => setSelectedColor(color)}
-            title={label}
-            aria-label={label}
-            aria-pressed={selectedColor === color}
-          >
-            <div className="color-swatch-circle" style={{ background: GROUP_COLOR_HEX[color] }} />
-          </button>
-        ))}
       </div>
 
       {/* Tab selection */}

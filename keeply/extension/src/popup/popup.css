@@ -289,37 +289,11 @@ body {
 .inline-form-confirm:hover { background: #0A5C47; }
 .inline-form-confirm:disabled { opacity: .35; cursor: default; }
 .inline-form-confirm:disabled:hover { background: #0D7A5F; }
-.inline-form-colors {
-  display: flex; gap: 6px; margin: 8px 0;
-}
 .inline-form-tabs {
   max-height: 160px; overflow-y: auto; margin: 0 -4px;
   border-top: 1px solid var(--bd); padding-top: 6px;
 }
 .inline-form-tabs .tab-row { margin: 0; padding: 4px 4px; }
-
-/* Color picker — compact 4-column grid */
-.color-picker-label {
-  font-size: 11px; font-weight: 600; color: var(--n5); margin-bottom: 8px;
-}
-.color-picker-grid {
-  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; position: relative;
-}
-.color-swatch {
-  display: flex; align-items: center; justify-content: center;
-  width: 20px; height: 20px; border-radius: 50%; border: none;
-  background: transparent; cursor: pointer; transition: all .12s;
-  padding: 0; position: relative;
-}
-.color-swatch-circle {
-  width: 20px; height: 20px; border-radius: 50%;
-}
-.color-swatch.selected .color-swatch-circle {
-  box-shadow: 0 0 0 2px var(--w), 0 0 0 4px var(--n9);
-}
-html.dark .color-swatch.selected .color-swatch-circle {
-  box-shadow: 0 0 0 2px #111111, 0 0 0 4px #F0F0EF;
-}
 
 
 

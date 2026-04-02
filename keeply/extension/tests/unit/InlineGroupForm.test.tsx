@@ -83,13 +83,6 @@ describe('InlineGroupForm', () => {
     expect(screen.getByLabelText('Pick emoji')).toBeInTheDocument()
   })
 
-  it('renders 8 color swatches', () => {
-    render(<DefaultScreen />)
-    clickAddGroup()
-    const swatches = document.querySelectorAll('.inline-form-colors .color-swatch')
-    expect(swatches).toHaveLength(8)
-  })
-
   it('confirm button is disabled when name is empty', () => {
     render(<DefaultScreen />)
     clickAddGroup()
@@ -151,15 +144,4 @@ describe('InlineGroupForm', () => {
     expect(document.querySelector('.inline-group-form')).toBeNull()
   })
 
-  it('selects color swatch on click', () => {
-    render(<DefaultScreen />)
-    clickAddGroup()
-    const swatches = document.querySelectorAll('.inline-form-colors .color-swatch')
-    // First swatch (blue) should be selected by default
-    expect(swatches[0]).toHaveClass('selected')
-    // Click the second swatch (purple)
-    fireEvent.click(swatches[1]!)
-    expect(swatches[1]).toHaveClass('selected')
-    expect(swatches[0]).not.toHaveClass('selected')
-  })
 })
