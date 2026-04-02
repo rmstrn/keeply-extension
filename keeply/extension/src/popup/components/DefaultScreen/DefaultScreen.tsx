@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
@@ -8,7 +8,7 @@ import { useGroupActions } from '@/popup/hooks/useGroupActions'
 import { useTheme } from '@/popup/hooks/useTheme'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
-import { UNGROUPED_ID, makeDragData } from '@/shared/utils/dragUtils'
+import { UNGROUPED_ID, makeDragData, makeSingleDragData } from '@/shared/utils/dragUtils'
 import { TabIcon, ExternalIcon, ChevronIcon, LightningIcon } from './Icons'
 import { InlineGroupForm } from './InlineGroupForm'
 import { GroupRow } from './GroupRow'
@@ -31,6 +31,27 @@ export function DefaultScreen() {
   const [isDragging, setIsDragging] = useState(false)
   const [showInlineForm, setShowInlineForm] = useState(false)
   const [sectionsOpen, setSectionsOpen] = useState({ groups: true, ungrouped: true })
+  const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
+
+  const clearSelection = useCallback(() => setSelectedTabIds(new Set()), [])
+
+  const toggleTabSelection = (tabId: number) => {
+    setSelectedTabIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(tabId)) next.delete(tabId)
+      else next.add(tabId)
+      return next
+    })
+  }
+
+  // ESC clears selection
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedTabIds.size > 0) clearSelection()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [selectedTabIds.size, clearSelection])
 
   const editInputRef = useRef<HTMLInputElement>(null)
   const editEmojiRef = useRef<HTMLDivElement>(null)
@@ -144,7 +165,7 @@ export function DefaultScreen() {
           onToggleExpand={() => toggleGroup(group.id)}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
           onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
-          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnGroup(e, group) }}
+          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnGroup(e, group); clearSelection() }}
           onStartEditing={() => actions.startEditing(group)}
           onEditNameChange={actions.setEditName}
           onCommitRename={() => actions.commitRename(group.id)}
@@ -168,7 +189,7 @@ export function DefaultScreen() {
             }
           }}
           onTabDragStart={(e, gt) => {
-            e.dataTransfer.setData('text/plain', makeDragData(gt.tabId ?? 0, gt.url, group.id))
+            e.dataTransfer.setData('text/plain', makeSingleDragData(gt.tabId ?? 0, gt.url, group.id))
             e.dataTransfer.effectAllowed = 'move'
           }}
         />
@@ -183,7 +204,7 @@ export function DefaultScreen() {
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
           }}
-          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnUngrouped(e) }}
+          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnUngrouped(e); clearSelection() }}
         >
           <div
             className="section-header"
@@ -191,7 +212,10 @@ export function DefaultScreen() {
           >
             <span className="section-label">Ungrouped · {tabCountLabel(ungroupedTabs.length)}</span>
             <span className="section-line" />
-            {duplicateTabIds.length > 0 && (
+            {selectedTabIds.size > 0 && (
+              <span className="selection-count">{selectedTabIds.size} selected</span>
+            )}
+            {selectedTabIds.size === 0 && duplicateTabIds.length > 0 && (
               <button
                 className="dedup-btn"
                 onClick={(e) => {
@@ -204,24 +228,47 @@ export function DefaultScreen() {
             )}
             <ChevronIcon expanded={sectionsOpen.ungrouped} />
           </div>
-          <div className={`section-body${sectionsOpen.ungrouped ? ' open' : ''}`}>
-          {ungroupedTabs.map((tab) => (
-            <div
-              key={tab.id}
-              className="tab-row inbox-tab"
-              draggable
-              onDragStart={(e) => {
-                e.stopPropagation()
-                e.dataTransfer.setData('text/plain', makeDragData(tab.id, tab.url, UNGROUPED_ID))
-                e.dataTransfer.effectAllowed = 'move'
-              }}
-            >
-              <TabFavicon url={tab.favIconUrl} />
-              <span className="tab-title">{tab.title}</span>
-              <button className="tab-close-btn" title="Close tab" onClick={(e) => actions.closeUngroupedTab(e, tab.id)}>×</button>
-              <span className="drag-hint" aria-hidden="true">&#x2807;</span>
-            </div>
-          ))}
+          <div
+            className={`section-body${sectionsOpen.ungrouped ? ' open' : ''}`}
+            onClick={(e) => { if (e.target === e.currentTarget) clearSelection() }}
+          >
+          {ungroupedTabs.map((tab) => {
+            const isSelected = selectedTabIds.has(tab.id)
+            return (
+              <div
+                key={tab.id}
+                className={`tab-row inbox-tab${isSelected ? ' tab-selected' : ''}`}
+                draggable
+                onClick={(e) => { e.stopPropagation(); toggleTabSelection(tab.id) }}
+                onDragStart={(e) => {
+                  e.stopPropagation()
+                  if (isSelected && selectedTabIds.size > 1) {
+                    // Drag all selected tabs
+                    const tabs = ungroupedTabs
+                      .filter((t) => selectedTabIds.has(t.id))
+                      .map((t) => ({ tabId: t.id, url: t.url }))
+                    e.dataTransfer.setData('text/plain', makeDragData(tabs, UNGROUPED_ID))
+                    // Custom drag ghost
+                    const ghost = document.createElement('div')
+                    ghost.textContent = `Moving ${tabs.length} tabs`
+                    ghost.style.cssText = 'position:fixed;top:-100px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;background:#333;color:#fff;'
+                    document.body.appendChild(ghost)
+                    e.dataTransfer.setDragImage(ghost, 0, 0)
+                    setTimeout(() => ghost.remove(), 0)
+                  } else {
+                    e.dataTransfer.setData('text/plain', makeSingleDragData(tab.id, tab.url, UNGROUPED_ID))
+                  }
+                  e.dataTransfer.effectAllowed = 'move'
+                }}
+              >
+                {isSelected && <span className="tab-select-dot" />}
+                <TabFavicon url={tab.favIconUrl} />
+                <span className="tab-title">{tab.title}</span>
+                <button className="tab-close-btn" title="Close tab" onClick={(e) => { e.stopPropagation(); actions.closeUngroupedTab(e, tab.id) }}>×</button>
+                <span className="drag-hint" aria-hidden="true">&#x2807;</span>
+              </div>
+            )
+          })}
           </div>
         </div>
       )}

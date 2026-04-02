@@ -438,6 +438,12 @@ body {
   cursor: grab; transition: background .15s ease; margin: 0;
 }
 .inbox-tab:hover { background: var(--hover-bg); }
+.inbox-tab.tab-selected { background: var(--hover-bg); }
+.tab-select-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary);
+}
+.selection-count { font-size: 11px; color: var(--text-muted); flex-shrink: 0; white-space: nowrap; }
 .inbox-tab:active { cursor: grabbing; }
 .drag-hint { color: var(--text-2); font-size: 14px; margin-left: auto; opacity: 0; transition: opacity .15s ease; }
 .inbox-tab:hover .drag-hint { opacity: 1; }

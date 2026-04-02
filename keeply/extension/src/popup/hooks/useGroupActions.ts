@@ -119,23 +119,21 @@ export function useGroupActions(
     const data = parseDragData(e)
     if (!data || data.sourceGroupId === group.id) return
 
-    // Find tab info from allTabs (open) or source group (closed)
-    const openTab = allTabs.find((t) => t.url === data.url)
+    const droppedUrls = new Set(data.tabs.map((t) => t.url))
     const sourceGroup = keeplyGroups.find((g) => g.id === data.sourceGroupId)
-    const closedTab = sourceGroup?.tabs.find((t) => t.url === data.url)
-    if (!openTab && !closedTab) return
 
-    const newGroupTab: GroupTab = openTab
-      ? { url: openTab.url, title: openTab.title, favIconUrl: openTab.favIconUrl, tabId: openTab.id }
-      : { url: closedTab!.url, title: closedTab!.title, favIconUrl: closedTab!.favIconUrl, tabId: undefined }
+    // Build new GroupTab entries from open tabs or source group
+    const newGroupTabs: GroupTab[] = data.tabs.map((dt) => {
+      const openTab = allTabs.find((t) => t.url === dt.url)
+      const closedTab = sourceGroup?.tabs.find((t) => t.url === dt.url)
+      if (openTab) return { url: openTab.url, title: openTab.title, favIconUrl: openTab.favIconUrl, tabId: openTab.id }
+      if (closedTab) return { url: closedTab.url, title: closedTab.title, favIconUrl: closedTab.favIconUrl, tabId: undefined }
+      return { url: dt.url, title: dt.url, favIconUrl: undefined, tabId: dt.tabId || undefined }
+    })
 
     const updated = keeplyGroups.map((g) => {
-      if (g.id === group.id) {
-        return { ...g, tabs: [...g.tabs, newGroupTab] }
-      }
-      if (g.id === data.sourceGroupId) {
-        return { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
-      }
+      if (g.id === group.id) return { ...g, tabs: [...g.tabs, ...newGroupTabs] }
+      if (g.id === data.sourceGroupId) return { ...g, tabs: g.tabs.filter((t) => !droppedUrls.has(t.url)) }
       return g
     })
 
@@ -147,9 +145,10 @@ export function useGroupActions(
     const data = parseDragData(e)
     if (!data || data.sourceGroupId === UNGROUPED_ID) return
 
+    const droppedUrls = new Set(data.tabs.map((t) => t.url))
     const updated = keeplyGroups.map((g) =>
       g.id === data.sourceGroupId
-        ? { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
+        ? { ...g, tabs: g.tabs.filter((t) => !droppedUrls.has(t.url)) }
         : g,
     )
 
