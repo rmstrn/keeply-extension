@@ -91,13 +91,11 @@ export function useGroupActions(
         saveGroups(updated)
       })
     } else {
-      const updated = keeplyGroups
-        .map((g) =>
-          g.id === groupId
-            ? { ...g, tabs: g.tabs.filter((t) => t.url !== groupTab.url) }
-            : g,
-        )
-        .filter((g) => g.tabs.length > 0)
+      const updated = keeplyGroups.map((g) =>
+        g.id === groupId
+          ? { ...g, tabs: g.tabs.filter((t) => t.url !== groupTab.url) }
+          : g,
+      )
       saveGroups(updated)
     }
   }
@@ -139,7 +137,7 @@ export function useGroupActions(
         return { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
       }
       return g
-    }).filter((g) => g.tabs.length > 0)
+    })
 
     saveGroups(updated)
   }
@@ -149,13 +147,11 @@ export function useGroupActions(
     const data = parseDragData(e)
     if (!data || data.sourceGroupId === UNGROUPED_ID) return
 
-    const updated = keeplyGroups
-      .map((g) =>
-        g.id === data.sourceGroupId
-          ? { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
-          : g,
-      )
-      .filter((g) => g.tabs.length > 0)
+    const updated = keeplyGroups.map((g) =>
+      g.id === data.sourceGroupId
+        ? { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
+        : g,
+    )
 
     saveGroups(updated)
   }

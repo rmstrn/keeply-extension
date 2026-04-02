@@ -415,6 +415,11 @@ body {
   padding: 4px 4px; border-radius: 6px; cursor: grab;
   transition: background .15s ease; margin: 0;
 }
+.group-empty-hint {
+  padding: 8px 12px; margin: 2px 0;
+  border: 1.5px dashed var(--border); border-radius: 6px;
+  text-align: center; font-size: 11px; color: var(--text-muted);
+}
 .group-tab-row:active { cursor: grabbing; }
 .group-tab-row:hover { background: var(--hover-bg); }
 

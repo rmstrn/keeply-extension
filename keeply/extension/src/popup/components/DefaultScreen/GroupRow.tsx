@@ -181,7 +181,7 @@ export function GroupRow({
             )
           })}
           {group.tabs.length === 0 && (
-            <div className="tab-row empty"><span className="rm">No tabs in this group</span></div>
+            <div className="group-empty-hint"><span className="rm">Drop tabs here</span></div>
           )}
         </div>
       )}
