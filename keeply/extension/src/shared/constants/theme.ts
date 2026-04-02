@@ -76,7 +76,7 @@ export const plumWineTheme: ThemeTokens = {
   text2: '#C8C9B8',
   textMuted: '#9B8FAA',
   primary: '#F8F9ED',
-  primaryHover: '#E8E9DD',
+  primaryHover: '#C5C8B8',
   primaryText: '#3A2650',
   danger: '#E57373',
   dangerBg: '#4A2040',
