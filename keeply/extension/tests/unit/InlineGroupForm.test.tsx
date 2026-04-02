@@ -69,7 +69,8 @@ vi.mock('@/popup/hooks/useDefaultScreenData', () => ({
 // =============================================================================
 
 function clickAddGroup() {
-  fireEvent.click(screen.getByText('+ Add group'))
+  const btn = screen.queryByText('+ Add group') ?? screen.getByText('× Cancel')
+  fireEvent.click(btn)
 }
 
 function setupChromeMock() {

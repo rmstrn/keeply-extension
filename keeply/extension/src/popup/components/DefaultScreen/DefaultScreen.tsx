@@ -120,7 +120,7 @@ export function DefaultScreen() {
           className="new-group-btn"
           onClick={(e) => { e.stopPropagation(); setShowInlineForm((v) => !v) }}
         >
-          + Add group
+          {showInlineForm ? '× Cancel' : '+ Add group'}
         </button>
         <ChevronIcon expanded={sectionsOpen.groups} />
       </div>
