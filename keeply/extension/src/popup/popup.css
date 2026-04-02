@@ -254,19 +254,12 @@ body {
   width: 20px; height: 20px; border-radius: 50%;
 }
 .color-swatch.selected .color-swatch-circle {
-  box-shadow: 0 0 0 1px var(--w), 0 0 0 3px currentColor;
+  box-shadow: 0 0 0 2px var(--w), 0 0 0 4px var(--n9);
 }
 html.dark .color-swatch.selected .color-swatch-circle {
-  box-shadow: 0 0 0 1px #111111, 0 0 0 3px currentColor;
+  box-shadow: 0 0 0 2px #111111, 0 0 0 4px #F0F0EF;
 }
 
-/* Group name preview */
-.group-name-preview {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px; border-radius: 7px;
-  background: var(--n0); margin-top: -6px; margin-bottom: 12px;
-  border: 1px solid var(--n1);
-}
 
 
 /* Tab list */

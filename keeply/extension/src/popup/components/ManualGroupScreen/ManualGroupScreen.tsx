@@ -207,14 +207,6 @@ export function ManualGroupScreen() {
         />
       </div>
 
-      {/* Live preview */}
-      {groupName.trim() && (
-        <div className="group-name-preview">
-          <div className="gdot" style={{ background: GROUP_COLOR_HEX[selectedColor] }} />
-          <span className="gn">{groupName}</span>
-        </div>
-      )}
-
       {/* Color picker */}
       <div className="color-picker-label">Color</div>
       <div className="color-picker-grid">
