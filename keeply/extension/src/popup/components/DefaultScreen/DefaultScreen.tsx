@@ -275,9 +275,9 @@ export function DefaultScreen() {
 
       <button
         className="cta-btn"
-        style={{ background: theme.primary, color: theme.primaryText, border: 'none' }}
-        onMouseOver={(e) => { e.currentTarget.style.background = theme.primaryHover }}
-        onMouseOut={(e) => { e.currentTarget.style.background = theme.primary }}
+        style={{ background: theme.ctaBg, border: `1.5px solid ${theme.ctaBorder}`, color: theme.primaryText }}
+        onMouseOver={(e) => { e.currentTarget.style.background = theme.primaryText; e.currentTarget.style.color = theme.primary }}
+        onMouseOut={(e) => { e.currentTarget.style.background = theme.ctaBg; e.currentTarget.style.color = theme.primaryText }}
         onClick={() => void groupTabs()}
         disabled={!isLoading && status.isLimitReached}
         aria-label="Group tabs with AI"

@@ -56,7 +56,7 @@ body {
   align-items: center; justify-content: center; gap: 8px;
   border-radius: 10px; cursor: pointer;
   font-family: var(--f); font-size: 14px; font-weight: 700; letter-spacing: -.2px;
-  transition: transform .1s;
+  transition: all .15s ease;
 }
 .cta-btn:hover { transform: translateY(-1px); }
 .cta-btn:active { transform: translateY(0); }
