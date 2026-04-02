@@ -184,7 +184,6 @@ describe('Group tab rendering', () => {
 
   it('renders closed tabs with dimmed class', () => {
     render(<DefaultScreen />)
-    // Click expand arrow (not name) to toggle group
     const arrow = document.querySelector('.group-header .expand-arrow')!
     fireEvent.click(arrow)
     const closedRow = document.querySelector('.tab-closed')
@@ -198,37 +197,107 @@ describe('Group tab rendering', () => {
     fireEvent.click(arrow)
     const rows = document.querySelectorAll('.group-tab-row')
     expect(rows).toHaveLength(2)
-    // First tab is open
     expect(rows[0]).not.toHaveClass('tab-closed')
-    // Second tab is closed
     expect(rows[1]).toHaveClass('tab-closed')
   })
+})
 
-  it('shows "Open all" button on hover when closed tabs exist', () => {
-    render(<DefaultScreen />)
-    const btn = screen.getByTitle('Open all closed tabs')
-    expect(btn).toBeInTheDocument()
-    expect(btn.textContent).toBe('Open all')
+// =============================================================================
+// TESTS — GROUP HEADER UI
+// =============================================================================
+
+describe('Group header actions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockHookData = {
+      tabCount: 1,
+      keeplyGroups: mockGroupsWithClosedTab,
+      allTabs: mockTabs.slice(0, 1),
+      ungroupedTabs: [],
+    }
+    setupChromeMock()
   })
 
-  it('"Open all" creates tabs for closed URLs', () => {
+  it('shows pencil edit button on group header', () => {
     render(<DefaultScreen />)
-    fireEvent.click(screen.getByTitle('Open all closed tabs'))
+    expect(screen.getByLabelText('Rename group')).toBeInTheDocument()
+  })
+
+  it('clicking pencil enters rename mode with input', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Rename group'))
+    const input = document.querySelector('.group-rename-input') as HTMLInputElement
+    expect(input).toBeInTheDocument()
+    expect(input.value).toBe('Work')
+  })
+
+  it('shows ⋯ menu button on group header', () => {
+    render(<DefaultScreen />)
+    expect(screen.getByLabelText('Group actions')).toBeInTheDocument()
+  })
+
+  it('clicking ⋯ opens dropdown menu', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    expect(document.querySelector('.group-menu-dropdown')).toBeInTheDocument()
+  })
+
+  it('menu shows "Open all tabs" when closed tabs exist', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    expect(screen.getByText('Open all tabs')).toBeInTheDocument()
+  })
+
+  it('menu shows "Close all tabs" when open tabs exist', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    expect(screen.getByText('Close all tabs')).toBeInTheDocument()
+  })
+
+  it('menu shows "Delete group" option', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    expect(screen.getByText('Delete group')).toBeInTheDocument()
+  })
+
+  it('"Open all tabs" creates tabs for closed URLs', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    fireEvent.click(screen.getByText('Open all tabs'))
     expect(chrome.tabs.create).toHaveBeenCalledWith({ url: 'https://closed.example.com' })
     expect(chrome.tabs.create).toHaveBeenCalledTimes(1)
   })
 
-  it('shows "Close all" button when open tabs exist', () => {
+  it('"Close all tabs" removes open tabs via chrome API', () => {
     render(<DefaultScreen />)
-    const btn = screen.getByTitle('Close all open tabs')
-    expect(btn).toBeInTheDocument()
-    expect(btn.textContent).toBe('Close all')
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    fireEvent.click(screen.getByText('Close all tabs'))
+    expect(chrome.tabs.remove).toHaveBeenCalledWith([1], expect.any(Function))
   })
 
-  it('"Close all" removes open tabs via chrome API', () => {
+  it('"Delete group" removes the group', () => {
     render(<DefaultScreen />)
-    fireEvent.click(screen.getByTitle('Close all open tabs'))
-    expect(chrome.tabs.remove).toHaveBeenCalledWith([1], expect.any(Function))
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    fireEvent.click(screen.getByText('Delete group'))
+    expect(chrome.storage.local.set).toHaveBeenCalled()
+  })
+
+  it('clicking emoji opens picker without entering rename mode', () => {
+    render(<DefaultScreen />)
+    const emoji = screen.getByLabelText('Change emoji')
+    fireEvent.click(emoji)
+    expect(document.querySelector('.emoji-dropdown')).toBeInTheDocument()
+    expect(document.querySelector('.group-rename-input')).toBeNull()
+  })
+
+  it('clicking group row toggles expand/collapse', () => {
+    render(<DefaultScreen />)
+    expect(document.querySelector('.group-tabs-list')).toBeNull()
+    const header = document.querySelector('.group-header')!
+    fireEvent.click(header)
+    expect(document.querySelector('.group-tabs-list')).toBeInTheDocument()
+    fireEvent.click(header)
+    expect(document.querySelector('.group-tabs-list')).toBeNull()
   })
 })
 
@@ -251,13 +320,15 @@ describe('Group with all tabs open', () => {
     setupChromeMock()
   })
 
-  it('does not show "Open all" when no closed tabs', () => {
+  it('menu does not show "Open all tabs" when no closed tabs', () => {
     render(<DefaultScreen />)
-    expect(screen.queryByTitle('Open all closed tabs')).toBeNull()
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    expect(screen.queryByText('Open all tabs')).toBeNull()
   })
 
-  it('shows "Close all" when open tabs exist', () => {
+  it('menu shows "Close all tabs" when open tabs exist', () => {
     render(<DefaultScreen />)
-    expect(screen.getByTitle('Close all open tabs')).toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('Group actions'))
+    expect(screen.getByText('Close all tabs')).toBeInTheDocument()
   })
 })

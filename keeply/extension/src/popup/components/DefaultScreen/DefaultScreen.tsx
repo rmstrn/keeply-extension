@@ -263,9 +263,11 @@ export function DefaultScreen() {
   const [showInlineForm, setShowInlineForm] = useState(false)
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
-  const [editEmojiOpen, setEditEmojiOpen] = useState(false)
+  const [emojiPickerGroupId, setEmojiPickerGroupId] = useState<string | null>(null)
+  const [menuOpenGroupId, setMenuOpenGroupId] = useState<string | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
   const editEmojiRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const toggleGroup = (id: string) => {
     setExpandedGroups((prev) => {
@@ -279,7 +281,7 @@ export function DefaultScreen() {
   const startEditing = (group: KeeplyGroup) => {
     setEditingGroupId(group.id)
     setEditName(group.name)
-    setEditEmojiOpen(false)
+    setEmojiPickerGroupId(null)
   }
 
   const commitRename = (groupId: string) => {
@@ -297,7 +299,7 @@ export function DefaultScreen() {
 
   const cancelRename = () => {
     setEditingGroupId(null)
-    setEditEmojiOpen(false)
+    setEmojiPickerGroupId(null)
   }
 
   const pickEditEmoji = (emoji: string, groupId: string) => {
@@ -305,7 +307,7 @@ export function DefaultScreen() {
       g.id === groupId ? { ...g, emoji } : g,
     )
     saveGroups(updated)
-    setEditEmojiOpen(false)
+    setEmojiPickerGroupId(null)
   }
 
   const openAllClosed = (e: React.MouseEvent, group: KeeplyGroup) => {
@@ -333,17 +335,29 @@ export function DefaultScreen() {
     })
   }
 
-  // Close edit emoji picker on outside click
+  // Close emoji picker on outside click
   useEffect(() => {
-    if (!editEmojiOpen) return
+    if (!emojiPickerGroupId) return
     const handler = (e: MouseEvent) => {
       if (editEmojiRef.current && !editEmojiRef.current.contains(e.target as Node)) {
-        setEditEmojiOpen(false)
+        setEmojiPickerGroupId(null)
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [editEmojiOpen])
+  }, [emojiPickerGroupId])
+
+  // Close group menu on outside click
+  useEffect(() => {
+    if (!menuOpenGroupId) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpenGroupId(null)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuOpenGroupId])
 
   // Move tab into a Keeply group (storage-only)
   const handleDropOnGroup = (e: React.DragEvent, group: KeeplyGroup) => {
@@ -498,7 +512,9 @@ export function DefaultScreen() {
       {keeplyGroups.map((group) => {
         const isExpanded = expandedGroups.has(group.id)
         const isEditing = editingGroupId === group.id
+        const isMenuOpen = menuOpenGroupId === group.id
         const closedCount = group.tabs.filter((t) => t.tabId === undefined).length
+        const openCount = group.tabs.length - closedCount
         return (
           <div
             key={group.id}
@@ -514,12 +530,12 @@ export function DefaultScreen() {
                     <button
                       type="button"
                       className="group-emoji-btn"
-                      onClick={(e) => { e.stopPropagation(); setEditEmojiOpen((o) => !o) }}
+                      onClick={(e) => { e.stopPropagation(); setEmojiPickerGroupId(emojiPickerGroupId === group.id ? null : group.id) }}
                       aria-label="Change emoji"
                     >
                       {group.emoji ?? '😀'}
                     </button>
-                    {editEmojiOpen && (
+                    {emojiPickerGroupId === group.id && (
                       <div className="emoji-dropdown">
                         {EMOJI_CATEGORIES.map((cat) => (
                           <div key={cat.label} className="emoji-cat">
@@ -559,47 +575,88 @@ export function DefaultScreen() {
                 </>
               ) : (
                 <>
-                  {group.emoji && (
+                  <div className="emoji-picker-wrapper" ref={emojiPickerGroupId === group.id ? editEmojiRef : undefined}>
                     <span
                       className="group-emoji"
                       role="button"
                       aria-label="Change emoji"
-                      onClick={(e) => { e.stopPropagation(); startEditing(group) }}
+                      onClick={(e) => { e.stopPropagation(); setEmojiPickerGroupId(emojiPickerGroupId === group.id ? null : group.id) }}
                     >
-                      {group.emoji}
+                      {group.emoji ?? '😀'}
                     </span>
-                  )}
-                  <span
-                    className="rn"
+                    {emojiPickerGroupId === group.id && (
+                      <div className="emoji-dropdown">
+                        {EMOJI_CATEGORIES.map((cat) => (
+                          <div key={cat.label} className="emoji-cat">
+                            <div className="emoji-cat-label">{cat.label}</div>
+                            <div className="emoji-grid">
+                              {cat.emojis.map((em) => (
+                                <button
+                                  key={em}
+                                  type="button"
+                                  className="emoji-cell"
+                                  onClick={(ev) => { ev.stopPropagation(); pickEditEmoji(em, group.id) }}
+                                >
+                                  {em}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <span className="rn">{group.name}</span>
+                  <button
+                    className="group-edit-btn"
+                    title="Rename group"
                     onClick={(e) => { e.stopPropagation(); startEditing(group) }}
+                    aria-label="Rename group"
                   >
-                    {group.name}
-                  </span>
+                    <PencilIcon />
+                  </button>
                 </>
               )}
-              {closedCount > 0 && (
+              <div className="group-menu-wrapper" ref={isMenuOpen ? menuRef : undefined}>
                 <button
-                  className="group-action-btn"
-                  title="Open all closed tabs"
-                  onClick={(e) => openAllClosed(e, group)}
+                  className="group-menu-btn"
+                  title="Group actions"
+                  aria-label="Group actions"
+                  onClick={(e) => { e.stopPropagation(); setMenuOpenGroupId(isMenuOpen ? null : group.id) }}
                 >
-                  Open all
+                  ⋯
                 </button>
-              )}
-              {group.tabs.length - closedCount > 0 && (
-                <button
-                  className="group-action-btn"
-                  title="Close all open tabs"
-                  onClick={(e) => closeAllOpen(e, group)}
-                >
-                  Close all
-                </button>
-              )}
+                {isMenuOpen && (
+                  <div className="group-menu-dropdown">
+                    {closedCount > 0 && (
+                      <button
+                        className="group-menu-item"
+                        onClick={(e) => { openAllClosed(e, group); setMenuOpenGroupId(null) }}
+                      >
+                        Open all tabs
+                      </button>
+                    )}
+                    {openCount > 0 && (
+                      <button
+                        className="group-menu-item"
+                        onClick={(e) => { closeAllOpen(e, group); setMenuOpenGroupId(null) }}
+                      >
+                        Close all tabs
+                      </button>
+                    )}
+                    <button
+                      className="group-menu-item group-menu-item--danger"
+                      onClick={(e) => { deleteGroup(e, group); setMenuOpenGroupId(null) }}
+                    >
+                      Delete group
+                    </button>
+                  </div>
+                )}
+              </div>
               <TabCountBadge count={group.tabs.length} />
               <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <button className="group-delete-btn" title="Delete group" onClick={(e) => deleteGroup(e, group)}>×</button>
             </div>
 
             {isExpanded && (
@@ -721,6 +778,14 @@ function ExternalIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
       <path d="M2 8L8 2M8 2H4.5M8 2v3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function PencilIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M8.5 1.5l2 2L4 10H2v-2l6.5-6.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

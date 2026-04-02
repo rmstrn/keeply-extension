@@ -439,12 +439,6 @@ body {
 .group-tab-row:hover .tab-close-btn { opacity: 1; }
 .tab-close-btn:hover { background: #FFE4E6; color: #DC2626; }
 
-.group-delete-btn {
-  opacity: 0; background: none; border: none; cursor: pointer;
-  color: var(--n5); font-size: 15px; line-height: 1;
-  padding: 0 3px; border-radius: 3px;
-  transition: all .12s; flex-shrink: 0;
-}
 .group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; cursor: pointer; }
 .group-emoji-btn {
   font-size: 14px; line-height: 1; flex-shrink: 0; border: none;
@@ -456,17 +450,38 @@ body {
   border: 1.5px solid var(--t7); border-radius: 5px;
   padding: 2px 6px; outline: none;
 }
-.group-action-btn {
-  font-size: 10px; font-weight: 600; color: var(--n5);
-  background: none; border: none; cursor: pointer;
-  font-family: var(--f); padding: 1px 5px;
-  border-radius: 4px; white-space: nowrap;
-  opacity: 0; transition: opacity .12s;
+.group-edit-btn {
+  opacity: 0; background: none; border: none; cursor: pointer;
+  color: var(--n5); padding: 1px 2px; border-radius: 3px;
+  transition: all .12s; flex-shrink: 0; display: flex; align-items: center;
 }
-.group-header:hover .group-action-btn { opacity: 1; }
-.group-action-btn:hover { color: var(--t7); background: var(--t1); }
-.group-header:hover .group-delete-btn { opacity: 1; }
-.group-delete-btn:hover { background: #FFE4E6; color: #DC2626; }
+.group-header:hover .group-edit-btn { opacity: 1; }
+.group-edit-btn:hover { color: var(--t7); }
+
+/* ⋯ menu button + dropdown */
+.group-menu-wrapper { position: relative; flex-shrink: 0; }
+.group-menu-btn {
+  opacity: 0; background: none; border: none; cursor: pointer;
+  color: var(--n5); font-size: 14px; font-weight: 700; line-height: 1;
+  padding: 0 3px; border-radius: 3px;
+  transition: all .12s; letter-spacing: 1px;
+}
+.group-header:hover .group-menu-btn { opacity: 1; }
+.group-menu-btn:hover { color: var(--t7); }
+.group-menu-dropdown {
+  position: absolute; top: calc(100% + 4px); right: 0; z-index: 100;
+  background: var(--w); border: 1px solid var(--bd); border-radius: 7px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  min-width: 140px; padding: 4px 0;
+}
+.group-menu-item {
+  display: block; width: 100%; text-align: left;
+  font-family: var(--f); font-size: 12px; font-weight: 500;
+  color: var(--n7); background: none; border: none;
+  padding: 6px 12px; cursor: pointer; transition: background .12s;
+}
+.group-menu-item:hover { background: var(--t1); color: var(--t7); }
+.group-menu-item--danger:hover { background: #FFE4E6; color: #DC2626; }
 
 /* Closed tabs in groups */
 .tab-closed { opacity: 0.5; }
@@ -584,10 +599,14 @@ html.dark .tab-count-badge { background: #222222; color: #707070; }
 html.dark .tab-group-badge { background: #222222; color: #707070; }
 
 /* Delete buttons */
-html.dark .tab-close-btn:hover,
-html.dark .group-delete-btn:hover { background: #2A1515; color: #E24B4A; }
+html.dark .tab-close-btn:hover { background: #2A1515; color: #E24B4A; }
 html.dark .group-rename-input { background: #1A1A1A; border-color: #0D7A5F; color: #F0F0EF; }
-html.dark .group-action-btn:hover { color: #0D7A5F; background: #0D2420; }
+html.dark .group-edit-btn:hover { color: var(--t-hover); }
+html.dark .group-menu-btn:hover { color: var(--t-hover); }
+html.dark .group-menu-dropdown { background: #1A1A1A; border-color: #2E2E2E; box-shadow: 0 4px 14px rgba(0,0,0,.45); }
+html.dark .group-menu-item { color: #CCCCCC; }
+html.dark .group-menu-item:hover { background: #0D2420; color: var(--t-hover); }
+html.dark .group-menu-item--danger:hover { background: #2A1515; color: #E24B4A; }
 
 /* ── CUSTOM SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
