@@ -122,7 +122,7 @@ body {
 .section-body.open { max-height: 2000px; opacity: 1; overflow: visible; }
 
 /* ── RECENT ROWS ─── */
-.rr { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0; }
+.rr { display: flex; align-items: center; gap: 8px; padding: 6px 6px; border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0; }
 .rr:hover { background: var(--hover-bg); }
 .rr:hover .rn { color: var(--primary); }
 .rn { font-size: 13px; font-weight: 600; color: var(--text-2); flex: 1; transition: color .12s; }
@@ -394,7 +394,7 @@ body {
 
 /* ── EXPANDABLE GROUPS ─── */
 .group-item {
-  border-radius: 8px; padding: 0 4px;
+  border-radius: 8px; padding: 1px 0;
   transition: background .15s ease, box-shadow .15s ease;
 }
 .drop-zone-active {
@@ -404,7 +404,7 @@ body {
 .group-tabs-list {
   padding: 2px 0 4px 12px;
   border-left: 1.5px solid var(--elevated);
-  margin-left: calc(var(--emoji-center) + 4px);
+  margin-left: calc(var(--emoji-center) + 6px);
 }
 .group-tab-row {
   display: flex; align-items: center; gap: 7px;
@@ -415,10 +415,10 @@ body {
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { padding: 0 4px; min-height: 40px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
+.inbox-section { padding: 0; min-height: 40px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
 .inbox-tab {
-  display: flex; align-items: center; gap: 7px;
-  padding: 4px 4px; border-radius: 6px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 6px; border-radius: 6px;
   cursor: grab; transition: background .15s ease; margin: 0;
 }
 .inbox-tab:hover { background: var(--hover-bg); }
