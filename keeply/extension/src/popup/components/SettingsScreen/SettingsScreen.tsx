@@ -1,5 +1,3 @@
-import { useTabStore } from '@/popup/stores/tabStore'
-
 interface ToggleSwitchProps {
   readonly id: string
   readonly checked: boolean
@@ -20,8 +18,6 @@ function ToggleSwitch({ id, checked, onChange }: ToggleSwitchProps) {
 }
 
 export function SettingsScreen() {
-  const setScreen = useTabStore((s) => s.setScreen)
-
   const openUpgrade = () => {
     chrome.tabs.create({ url: 'https://keeply.app/pricing' })
   }

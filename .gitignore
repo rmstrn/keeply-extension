@@ -2,8 +2,13 @@ node_modules/
 dist/
 .claude/
 
+# Compiled JS from TypeScript (tsc output in src/tests)
+keeply/extension/src/**/*.js
+keeply/extension/tests/**/*.js
+
 *.log
 .env
+.env.local
 .env.*
 .DS_Store
 Thumbs.db

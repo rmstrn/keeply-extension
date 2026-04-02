@@ -1,27 +1,88 @@
+import { useState, useEffect } from 'react'
 import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
+import { STORAGE_KEYS } from '@/shared/constants'
+import type { RecentGroup } from '@/shared/types'
+
+// =============================================================================
+// COLOR MAP — hex values for display
+// =============================================================================
+
+const GROUP_COLORS: Record<string, string> = {
+  green: '#1D9E75',
+  blue: '#2563EB',
+  purple: '#6D4AFF',
+  yellow: '#D97706',
+  red: '#DC2626',
+  pink: '#D4537E',
+  cyan: '#0891B2',
+  grey: '#6B7280',
+}
+
+// =============================================================================
+// TIME AGO HELPER
+// =============================================================================
+
+function timeAgo(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
 
 // =============================================================================
 // DEFAULT SCREEN
 // =============================================================================
 
-const RECENT_MOCK = [
-  { name: 'Work', color: '#1D9E75', tabCount: 8, ago: '2h ago' },
-  { name: 'Research', color: '#6D4AFF', tabCount: 5, ago: 'yesterday' },
-  { name: 'Shopping', color: '#D97706', tabCount: 3, ago: '2d ago' },
-]
-
 export function DefaultScreen() {
   const { groupTabs } = useTabGroups()
   const status = useUsageStore((s) => s.status)
+
+  const [tabCount, setTabCount] = useState(0)
+  const [recentGroups, setRecentGroups] = useState<RecentGroup[]>([])
+  const [totalTabsGrouped, setTotalTabsGrouped] = useState(0)
+
+  // Fetch real tab count
+  useEffect(() => {
+    try {
+      chrome.tabs.query({}, (tabs) => {
+        if (chrome.runtime.lastError) return
+        setTabCount(tabs.length)
+      })
+    } catch {
+      // Extension not loaded properly
+    }
+  }, [])
+
+  // Load recent groups and total counter from storage
+  useEffect(() => {
+    try {
+      chrome.storage.local.get(
+        [STORAGE_KEYS.RECENT_GROUPS, STORAGE_KEYS.TOTAL_TABS_GROUPED],
+        (result) => {
+          if (chrome.runtime.lastError) return
+          const groups = result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined
+          if (groups) setRecentGroups(groups)
+          const total = result[STORAGE_KEYS.TOTAL_TABS_GROUPED] as number | undefined
+          if (typeof total === 'number') setTotalTabsGrouped(total)
+        },
+      )
+    } catch {
+      // Extension not loaded properly
+    }
+  }, [])
 
   return (
     <div className="body">
       <div className="tab-meta">
         <span className="tab-ct">
           <TabIcon />
-          24 tabs open
+          {tabCount} tabs open
         </span>
         <button
           className="fullpage-btn"
@@ -53,27 +114,41 @@ export function DefaultScreen() {
 
       <div className="stats" role="region" aria-label="Tab statistics">
         <div className="stat">
-          <span className="sn">24</span>
+          <span className="sn">{tabCount}</span>
           <span className="sl">Open tabs</span>
         </div>
         <div className="stat">
-          <span className="sn">12</span>
+          <span className="sn">{recentGroups.length}</span>
           <span className="sl">Sessions</span>
         </div>
         <div className="stat">
-          <span className="sn">47</span>
+          <span className="sn">{totalTabsGrouped}</span>
           <span className="sl">All time</span>
         </div>
       </div>
 
       <div className="slbl" aria-label="Recent groups section">Recent groups</div>
-      {RECENT_MOCK.map((group) => (
-        <div key={group.name} className="rr" role="button" tabIndex={0}>
-          <div className="rdot" style={{ background: group.color }} aria-hidden="true" />
-          <span className="rn">{group.name}</span>
-          <span className="rm">{group.tabCount} tabs · {group.ago}</span>
+      {recentGroups.length === 0 ? (
+        <div className="rr empty">
+          <span className="rm">No groups yet. Click Group tabs to start.</span>
         </div>
-      ))}
+      ) : (
+        recentGroups.map((entry) => (
+          <div key={entry.id} className="rr" role="button" tabIndex={0}>
+            <div
+              className="rdot"
+              style={{ background: GROUP_COLORS[entry.groups[0]?.color ?? 'grey'] ?? '#6B7280' }}
+              aria-hidden="true"
+            />
+            <span className="rn">
+              {entry.groups.map((g) => g.name).join(', ')}
+            </span>
+            <span className="rm">
+              {entry.totalTabs} tabs · {timeAgo(entry.timestamp)}
+            </span>
+          </div>
+        ))
+      )}
     </div>
   )
 }

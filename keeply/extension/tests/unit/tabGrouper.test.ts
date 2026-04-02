@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TabGrouper, callAIProxy } from '@/background/tabGrouper'
 import { StorageService } from '@/shared/services/storageService'
 import { STORAGE_KEYS } from '@/shared/constants'
-import { createInitialUsage } from '@/shared/utils/usageUtils'
-import type { UsageState, Settings } from '@/shared/types'
+import type { UsageState } from '@/shared/types'
 import { DEFAULT_SETTINGS } from '@/shared/constants'
 
 // =============================================================================

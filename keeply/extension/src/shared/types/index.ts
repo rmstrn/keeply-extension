@@ -128,6 +128,7 @@ export const STORAGE_KEYS = {
   SETTINGS: 'keeply_settings',
   RECENT_GROUPS: 'keeply_recent_groups',
   PRO_TOKEN: 'keeply_pro_token',
+  TOTAL_TABS_GROUPED: 'keeply_total_tabs_grouped',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]

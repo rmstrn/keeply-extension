@@ -2,9 +2,10 @@ import { extractGroupableTabs, parseAIResponse } from '@/shared/utils/tabUtils'
 import { buildPrompt } from '@/shared/utils/promptBuilder'
 import { recordUsage, getUsageStatus, createInitialUsage } from '@/shared/utils/usageUtils'
 import { ok, err } from '@/shared/types'
-import { STORAGE_KEYS, EDGE_FUNCTION_URL, AI_REQUEST_TIMEOUT_MS } from '@/shared/constants'
+import { STORAGE_KEYS, EDGE_FUNCTION_URL, AI_REQUEST_TIMEOUT_MS, MAX_RECENT_GROUPS } from '@/shared/constants'
 import type {
   GroupingResult,
+  RecentGroup,
   TabGroup,
   UsageState,
   Settings,
@@ -114,6 +115,9 @@ export class TabGrouper {
     const applyResult = await this.applyGroups(parseResult.value.groups)
     if (!applyResult.ok) return applyResult
 
+    // 8. Сохраняем в историю и обновляем счётчик
+    await this.saveRecentGroup(parseResult.value)
+
     return parseResult
   }
 
@@ -154,6 +158,36 @@ export class TabGrouper {
   }
 
   /**
+   * Сохраняет результат группировки в историю и обновляет общий счётчик
+   */
+  private async saveRecentGroup(result: GroupingResult): Promise<void> {
+    const recentGroups = await this.storage.getOrDefault<RecentGroup[]>(
+      STORAGE_KEYS.RECENT_GROUPS,
+      [],
+    )
+
+    const newEntry: RecentGroup = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      groups: result.groups,
+      totalTabs: result.totalTabsGrouped,
+    }
+
+    const updated = [newEntry, ...recentGroups].slice(0, MAX_RECENT_GROUPS)
+    await this.storage.set(STORAGE_KEYS.RECENT_GROUPS, updated)
+
+    // Increment total tabs grouped counter
+    const totalTabsGrouped = await this.storage.getOrDefault<number>(
+      STORAGE_KEYS.TOTAL_TABS_GROUPED,
+      0,
+    )
+    await this.storage.set(
+      STORAGE_KEYS.TOTAL_TABS_GROUPED,
+      totalTabsGrouped + result.totalTabsGrouped,
+    )
+  }
+
+  /**
    * Применяет группы через chrome.tabGroups API
    */
   private async applyGroups(groups: readonly TabGroup[]): Promise<Result<void>> {
@@ -163,11 +197,10 @@ export class TabGrouper {
         chrome.tabGroups.query({}, resolve)
       })
 
-      for (const group of existingGroups) {
+      for (const existingGroup of existingGroups) {
         await new Promise<void>((resolve) => {
           chrome.tabs.ungroup(
-            // Получаем все tabIds из этой группы
-            [] as number[],
+            existingGroup.id ? [existingGroup.id] : [],
             resolve,
           )
         })
