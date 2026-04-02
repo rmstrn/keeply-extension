@@ -15,10 +15,10 @@ function applyThemeVars(tokens: ThemeTokens): void {
   s.setProperty('--primary', tokens.primary)
   s.setProperty('--primary-hover', tokens.primaryHover)
   s.setProperty('--primary-text', tokens.primaryText)
+  s.setProperty('--danger', tokens.danger)
   s.setProperty('--danger-bg', tokens.dangerBg)
-  s.setProperty('--danger-text', tokens.dangerText)
-  s.setProperty('--warn-text', tokens.warnText)
-  s.setProperty('--error-text', tokens.errorText)
+  s.setProperty('--warning', tokens.warning)
+  s.setProperty('--success', tokens.success)
 }
 
 /**

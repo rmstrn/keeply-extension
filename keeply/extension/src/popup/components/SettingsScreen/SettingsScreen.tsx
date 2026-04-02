@@ -162,12 +162,12 @@ export function SettingsScreen() {
       {showDev && (
         <div className="sr" style={{ borderTop: `1px dashed ${theme.border}`, marginTop: 8 }}>
           <div>
-            <p className="sr-label" style={{ color: theme.errorText }}>Dev Tools</p>
+            <p className="sr-label" style={{ color: theme.danger }}>Dev Tools</p>
             <p className="sr-sub">Reset AI usage counter</p>
           </div>
           <button
             className="sr-val"
-            style={{ color: theme.errorText }}
+            style={{ color: theme.danger }}
             onClick={() => {
               chrome.storage.local.remove('keeply_usage', () => {
                 window.location.reload()

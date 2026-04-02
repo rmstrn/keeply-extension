@@ -72,8 +72,8 @@ body {
 .dot.used { background: var(--primary); }
 .dot.free { background: var(--elevated); border: 1.5px solid var(--border); }
 .usage-num { font-size: 11px; font-weight: 700; color: var(--primary); }
-.usage-num.warn { color: var(--warn-text); }
-.usage-num.out { color: var(--error-text); }
+.usage-num.warn { color: var(--warning); }
+.usage-num.out { color: var(--danger); }
 
 /* ── DIVIDER ─── */
 .divider { height: 1px; background: var(--elevated); margin: 13px 0; }
@@ -429,7 +429,7 @@ body {
 }
 .tab-row:hover .tab-close-btn,
 .group-tab-row:hover .tab-close-btn { opacity: 1; }
-.tab-close-btn:hover { background: var(--danger-bg); color: var(--danger-text); }
+.tab-close-btn:hover { background: var(--danger-bg); color: var(--danger); }
 
 .group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; cursor: pointer; }
 .group-emoji-btn {
@@ -473,7 +473,7 @@ body {
   padding: 6px 12px; cursor: pointer; transition: background .12s;
 }
 .group-menu-item:hover { background: var(--hover-bg); color: var(--primary); }
-.group-menu-item--danger:hover { background: var(--danger-bg); color: var(--danger-text); }
+.group-menu-item--danger:hover { background: var(--danger-bg); color: var(--danger); }
 
 /* Delete confirmation popover */
 .confirm-delete {
@@ -498,7 +498,7 @@ body {
 .confirm-delete-btn {
   font-family: var(--f); font-size: 12px; font-weight: 600;
   padding: 5px 12px; border-radius: 6px; cursor: pointer;
-  background: var(--danger-text); color: #FFFFFF; border: none;
+  background: var(--danger); color: #FFFFFF; border: none;
   transition: background .12s;
 }
 .confirm-delete-btn:hover { background: #B91C1C; }
