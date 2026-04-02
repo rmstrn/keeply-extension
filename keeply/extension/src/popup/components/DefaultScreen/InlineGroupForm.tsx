@@ -137,7 +137,7 @@ export function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGr
           disabled={!canCreate}
           aria-label="Create group"
         >
-          ✓
+          Add
         </button>
       </div>
 
