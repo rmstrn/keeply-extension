@@ -11,7 +11,7 @@ import type {
   GroupingResult,
   RawAIResponse,
   RawAIGroup,
-  ChromeTabGroupColor,
+  GroupColor,
   Result,
 } from '@/shared/types'
 
@@ -66,7 +66,7 @@ export function extractGroupableTabs(tabs: chrome.tabs.Tab[]): TabInfo[] {
 /**
  * Проверяет валидность цвета из AI ответа
  */
-export function isValidColor(color: string): color is ChromeTabGroupColor {
+export function isValidColor(color: string): color is GroupColor {
   return (VALID_COLORS as readonly string[]).includes(color)
 }
 
@@ -74,7 +74,7 @@ export function isValidColor(color: string): color is ChromeTabGroupColor {
  * Выбирает цвет по имени группы (эвристика)
  * Fallback → DEFAULT_COLOR
  */
-export function pickColorForGroup(groupName: string): ChromeTabGroupColor {
+export function pickColorForGroup(groupName: string): GroupColor {
   const lower = groupName.toLowerCase()
   for (const [keyword, color] of Object.entries(CATEGORY_COLOR_MAP)) {
     if (lower.includes(keyword)) return color
@@ -123,7 +123,6 @@ export function parseAIResponse(
     groups,
     totalTabsGrouped,
     timestamp: Date.now(),
-    inboxTabs: [],
   })
 }
 
@@ -140,7 +139,7 @@ function isRawAIResponse(value: unknown): value is RawAIResponse {
 function resolveGroup(raw: RawAIGroup, sourceTabs: TabInfo[]): TabGroup | null {
   if (!raw.name || typeof raw.name !== 'string') return null
 
-  const color: ChromeTabGroupColor = isValidColor(raw.color)
+  const color: GroupColor = isValidColor(raw.color)
     ? raw.color
     : pickColorForGroup(raw.name)
 

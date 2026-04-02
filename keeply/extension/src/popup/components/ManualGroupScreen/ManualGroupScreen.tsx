@@ -3,21 +3,21 @@ import { useTabStore } from '@/popup/stores/tabStore'
 import { STORAGE_KEYS, GROUP_COLOR_HEX } from '@/shared/constants'
 import { isGroupableUrl, tabCountLabel } from '@/shared/utils/chromeUtils'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
-import type { ChromeTabGroupColor, RecentGroup, TabInfo } from '@/shared/types'
+import type { GroupColor, KeeplyGroup, RecentGroup, TabInfo } from '@/shared/types'
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-interface TabInfoWithGroup extends TabInfo {
-  readonly chromeGroupId?: number | undefined
+interface TabInfoExtended extends TabInfo {
+  readonly keeplyGroupId?: string | undefined
 }
 
 // =============================================================================
-// COLOR OPTIONS — only valid Chrome tab group colors
+// COLOR OPTIONS
 // =============================================================================
 
-const COLOR_SWATCHES: { color: ChromeTabGroupColor; label: string }[] = [
+const COLOR_SWATCHES: { color: GroupColor; label: string }[] = [
   { color: 'blue',   label: 'Blue'   },
   { color: 'purple', label: 'Purple' },
   { color: 'green',  label: 'Green'  },
@@ -43,62 +43,54 @@ export function ManualGroupScreen() {
   const triggerRefresh = useTabStore((s) => s.triggerRefresh)
 
   const [groupName, setGroupName] = useState('')
-  const [selectedColor, setSelectedColor] = useState<ChromeTabGroupColor>('blue')
-  const [allTabs, setAllTabs] = useState<TabInfoWithGroup[]>([])
+  const [selectedColor, setSelectedColor] = useState<GroupColor>('blue')
+  const [allTabs, setAllTabs] = useState<TabInfoExtended[]>([])
   const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
   const [showAllTabs, setShowAllTabs] = useState(false)
   const [search, setSearch] = useState('')
-  const [groupMap, setGroupMap] = useState<Record<number, { name: string; color: ChromeTabGroupColor }>>({})
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['inbox']))
+  const [keeplyGroups, setKeplyGroups] = useState<KeeplyGroup[]>([])
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['ungrouped']))
 
-  // Fetch tabs based on showAllTabs toggle
+  // Load Keeply groups from storage
   useEffect(() => {
     try {
-      const query: chrome.tabs.QueryInfo = showAllTabs
-        ? {}
-        : { groupId: chrome.tabGroups.TAB_GROUP_ID_NONE }
-
-      chrome.tabs.query(query, (tabs) => {
+      chrome.storage.local.get(STORAGE_KEYS.KEEPLY_GROUPS, (result) => {
         if (chrome.runtime.lastError) return
+        setKeplyGroups((result[STORAGE_KEYS.KEEPLY_GROUPS] as KeeplyGroup[] | undefined) ?? [])
+      })
+    } catch {
+      // Extension not loaded properly
+    }
+  }, [])
+
+  // Fetch tabs — all or ungrouped only
+  useEffect(() => {
+    try {
+      chrome.tabs.query({}, (tabs) => {
+        if (chrome.runtime.lastError) return
+        const groupedTabIds = new Set(keeplyGroups.flatMap((g) => [...g.tabIds]))
+
+        const filtered = tabs
+          .filter((t) => t.id && isGroupableUrl(t.url))
+          .filter((t) => showAllTabs || !groupedTabIds.has(t.id!))
+
         setAllTabs(
-          tabs
-            .filter((t) => t.id && isGroupableUrl(t.url))
-            .map((t) => ({
+          filtered.map((t) => {
+            const kg = keeplyGroups.find((g) => g.tabIds.includes(t.id!))
+            return {
               id: t.id!,
               title: t.title ?? t.url ?? '',
               url: t.url ?? '',
               favIconUrl: t.favIconUrl,
-              chromeGroupId:
-                t.groupId !== undefined && t.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE
-                  ? t.groupId
-                  : undefined,
-            })),
+              keeplyGroupId: kg?.id,
+            }
+          }),
         )
       })
     } catch {
       // Extension not loaded properly
     }
-  }, [showAllTabs])
-
-  // Load group name map when showing all tabs
-  useEffect(() => {
-    if (!showAllTabs) {
-      setGroupMap({})
-      return
-    }
-    try {
-      chrome.tabGroups.query({}, (groups) => {
-        if (chrome.runtime.lastError) return
-        const map: Record<number, { name: string; color: ChromeTabGroupColor }> = {}
-        for (const g of groups) {
-          map[g.id] = { name: g.title ?? 'Unnamed', color: g.color as ChromeTabGroupColor }
-        }
-        setGroupMap(map)
-      })
-    } catch {
-      // Extension not loaded properly
-    }
-  }, [showAllTabs])
+  }, [showAllTabs, keeplyGroups])
 
   const toggleTab = (tabId: number) => {
     setSelectedTabIds((prev) => {
@@ -121,22 +113,21 @@ export function ManualGroupScreen() {
   const sections = useMemo(() => {
     if (!showAllTabs) return null
 
-    const grouped: Record<string, { name: string; color?: ChromeTabGroupColor; tabs: TabInfoWithGroup[] }> = {}
+    const grouped: Record<string, { name: string; color?: GroupColor; tabs: TabInfoExtended[] }> = {}
 
     for (const tab of allTabs) {
-      const gInfo = tab.chromeGroupId !== undefined ? groupMap[tab.chromeGroupId] : undefined
-      if (gInfo) {
-        const key = String(tab.chromeGroupId)
-        if (!grouped[key]) grouped[key] = { name: gInfo.name, color: gInfo.color, tabs: [] }
-        grouped[key]!.tabs.push(tab)
+      const kg = tab.keeplyGroupId ? keeplyGroups.find((g) => g.id === tab.keeplyGroupId) : undefined
+      if (kg) {
+        if (!grouped[kg.id]) grouped[kg.id] = { name: kg.name, color: kg.color, tabs: [] }
+        grouped[kg.id]!.tabs.push(tab)
       } else {
-        if (!grouped['inbox']) grouped['inbox'] = { name: 'Ungrouped', tabs: [] }
-        grouped['inbox']!.tabs.push(tab)
+        if (!grouped['ungrouped']) grouped['ungrouped'] = { name: 'Ungrouped', tabs: [] }
+        grouped['ungrouped']!.tabs.push(tab)
       }
     }
 
     return grouped
-  }, [allTabs, groupMap, showAllTabs])
+  }, [allTabs, keeplyGroups, showAllTabs])
 
   const visibleTabs = allTabs.filter((tab) => matchesSearch(tab, search))
 
@@ -147,32 +138,38 @@ export function ManualGroupScreen() {
 
     const tabIds = [...selectedTabIds]
 
-    chrome.tabs.group({ tabIds }, (groupId) => {
-      if (chrome.runtime.lastError) return
-      chrome.tabGroups.update(
-        groupId,
-        { title: groupName.trim(), color: selectedColor, collapsed: false },
-        () => {
-          const newEntry: RecentGroup = {
-            id: crypto.randomUUID(),
-            timestamp: Date.now(),
-            groups: [{ name: groupName.trim(), color: selectedColor, tabIds }],
-            totalTabs: tabIds.length,
-          }
-          chrome.storage.local.get(STORAGE_KEYS.RECENT_GROUPS, (result) => {
-            const existing = (result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined) ?? []
-            const updated = [newEntry, ...existing].slice(0, 10)
-            chrome.storage.local.set({ [STORAGE_KEYS.RECENT_GROUPS]: updated }, () => {
-              triggerRefresh()
-              setScreen('default')
-            })
-          })
-        },
-      )
-    })
+    const newGroup: KeeplyGroup = {
+      id: crypto.randomUUID(),
+      name: groupName.trim(),
+      color: selectedColor,
+      tabIds,
+    }
+
+    const newEntry: RecentGroup = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      groups: [{ name: newGroup.name, color: newGroup.color, tabIds }],
+      totalTabs: tabIds.length,
+    }
+
+    chrome.storage.local.get(
+      [STORAGE_KEYS.KEEPLY_GROUPS, STORAGE_KEYS.RECENT_GROUPS],
+      (result) => {
+        const existingGroups = (result[STORAGE_KEYS.KEEPLY_GROUPS] as KeeplyGroup[] | undefined) ?? []
+        const existingRecent = (result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined) ?? []
+
+        chrome.storage.local.set({
+          [STORAGE_KEYS.KEEPLY_GROUPS]: [...existingGroups, newGroup],
+          [STORAGE_KEYS.RECENT_GROUPS]: [newEntry, ...existingRecent].slice(0, 10),
+        }, () => {
+          triggerRefresh()
+          setScreen('default')
+        })
+      },
+    )
   }
 
-  const renderTabRow = (tab: TabInfoWithGroup) => (
+  const renderTabRow = (tab: TabInfoExtended) => (
     <div
       key={tab.id}
       className="tab-row"
@@ -217,7 +214,7 @@ export function ManualGroupScreen() {
         </div>
       )}
 
-      {/* Color picker — Chrome-supported colors only */}
+      {/* Color picker */}
       <div className="color-picker-label">Color</div>
       <div className="color-picker-grid">
         {COLOR_SWATCHES.map(({ color, label }) => (

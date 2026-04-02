@@ -31,12 +31,6 @@ describe('ManualGroupScreen', () => {
     vi.stubGlobal('chrome', {
       tabs: {
         query: vi.fn((_: unknown, cb: (tabs: typeof mockTabs) => void) => cb(mockTabs)),
-        group: vi.fn(),
-      },
-      tabGroups: {
-        query: vi.fn((_: unknown, cb: (groups: never[]) => void) => cb([])),
-        update: vi.fn(),
-        TAB_GROUP_ID_NONE: -1,
       },
       storage: {
         local: {

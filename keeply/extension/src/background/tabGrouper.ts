@@ -1,14 +1,13 @@
-import { extractGroupableTabs, parseAIResponse, toTabInfo } from '@/shared/utils/tabUtils'
+import { extractGroupableTabs, parseAIResponse } from '@/shared/utils/tabUtils'
 import { buildPrompt } from '@/shared/utils/promptBuilder'
 import { recordUsage, getUsageStatus, createInitialUsage } from '@/shared/utils/usageUtils'
 import { ok, err } from '@/shared/types'
 import { STORAGE_KEYS, EDGE_FUNCTION_URL, AI_REQUEST_TIMEOUT_MS, MAX_RECENT_GROUPS } from '@/shared/constants'
 import type {
-  CurrentGroupsPayload,
   GroupingResult,
+  KeeplyGroup,
   RecentGroup,
   TabInfo,
-  TabGroup,
   UsageState,
   Settings,
   Result,
@@ -24,10 +23,6 @@ interface AIGroupResponse {
   readonly content: string
 }
 
-/**
- * Вызывает Edge Function прокси
- * Отдельная функция для тестирования через мок
- */
 export async function callAIProxy(
   systemPrompt: string,
   userMessage: string,
@@ -60,21 +55,18 @@ export async function callAIProxy(
 }
 
 // =============================================================================
-// TAB GROUPER — оркестрация всего флоу
+// TAB GROUPER — orchestrates AI grouping, saves to Keeply storage only
 // =============================================================================
 
 export class TabGrouper {
   constructor(private readonly storage: StorageService) {}
 
-  /**
-   * Главный метод: читает вкладки → вызывает AI → применяет группы
-   */
   async groupTabs(): Promise<Result<GroupingResult>> {
-    // 1. Проверяем лимит
+    // 1. Check usage limit
     const usageResult = await this.checkAndRecordUsage()
     if (!usageResult.ok) return usageResult
 
-    // 2. Читаем все вкладки
+    // 2. Fetch all open tabs
     const tabsResult = await this.fetchTabs()
     if (!tabsResult.ok) return tabsResult
 
@@ -83,19 +75,19 @@ export class TabGrouper {
       return err(new Error('No groupable tabs found'))
     }
 
-    // 3. Получаем настройки
+    // 3. Get settings
     const settings = await this.storage.getOrDefault<Settings>(
       STORAGE_KEYS.SETTINGS,
       DEFAULT_SETTINGS,
     )
 
-    // 4. Строим промпт
+    // 4. Build prompt
     const { systemPrompt, userMessage } = buildPrompt(tabs, {
       language: settings.language,
       maxGroups: settings.maxGroups,
     })
 
-    // 5. Вызываем AI
+    // 5. Call AI
     const proToken = await this.storage.getOrDefault<string | null>(
       STORAGE_KEYS.PRO_TOKEN,
       null,
@@ -109,31 +101,33 @@ export class TabGrouper {
 
     if (!aiResult.ok) return aiResult
 
-    // 6. Парсим ответ
+    // 6. Parse AI response
     const parseResult = parseAIResponse(aiResult.value, tabs)
     if (!parseResult.ok) return parseResult
 
-    // 7. Применяем группы в браузере
-    const applyResult = await this.applyGroups(parseResult.value.groups)
-    if (!applyResult.ok) return applyResult
+    // 7. Save groups to Keeply storage (no Chrome tab groups API)
+    const keeplyGroups: KeeplyGroup[] = parseResult.value.groups.map((g) => ({
+      id: crypto.randomUUID(),
+      name: g.name,
+      color: g.color,
+      tabIds: [...g.tabIds],
+    }))
+    await this.storage.set(STORAGE_KEYS.KEEPLY_GROUPS, keeplyGroups)
 
-    // 8. Собираем ungrouped tabs (Inbox)
-    const inboxTabs = await this.getUngroupedTabs()
+    // 8. Save to history
+    await this.saveRecentGroup(parseResult.value)
 
-    const resultWithInbox: GroupingResult = {
-      ...parseResult.value,
-      inboxTabs,
-    }
-
-    // 9. Сохраняем в историю и обновляем счётчик
-    await this.saveRecentGroup(resultWithInbox)
-
-    return ok(resultWithInbox)
+    return ok(parseResult.value)
   }
 
-  /**
-   * Снимает использование из free лимита
-   */
+  async getGroups(): Promise<KeeplyGroup[]> {
+    return this.storage.getOrDefault<KeeplyGroup[]>(STORAGE_KEYS.KEEPLY_GROUPS, [])
+  }
+
+  async saveGroups(groups: readonly KeeplyGroup[]): Promise<void> {
+    await this.storage.set(STORAGE_KEYS.KEEPLY_GROUPS, [...groups])
+  }
+
   private async checkAndRecordUsage(): Promise<Result<void>> {
     const currentUsage = await this.storage.getOrDefault<UsageState>(
       STORAGE_KEYS.USAGE,
@@ -147,14 +141,10 @@ export class TabGrouper {
     }
 
     const newUsage = recordUsage(currentUsage)
-    const saveResult = await this.storage.set(STORAGE_KEYS.USAGE, newUsage)
-    return saveResult
+    return this.storage.set(STORAGE_KEYS.USAGE, newUsage)
   }
 
-  /**
-   * Читает все открытые вкладки через Chrome API
-   */
-  private async fetchTabs(): Promise<Result<import('@/shared/types').TabInfo[]>> {
+  private async fetchTabs(): Promise<Result<TabInfo[]>> {
     return new Promise((resolve) => {
       chrome.tabs.query({}, (chromeTabs) => {
         if (chrome.runtime.lastError) {
@@ -167,56 +157,6 @@ export class TabGrouper {
     })
   }
 
-  /**
-   * Возвращает текущие группы и ungrouped tabs из Chrome
-   */
-  async getCurrentGroups(): Promise<Result<CurrentGroupsPayload>> {
-    try {
-      const chromeGroups = await new Promise<chrome.tabGroups.TabGroup[]>((resolve) => {
-        chrome.tabGroups.query({}, resolve)
-      })
-
-      const groups: TabGroup[] = []
-      for (const cg of chromeGroups) {
-        const tabsInGroup = await new Promise<chrome.tabs.Tab[]>((resolve) => {
-          chrome.tabs.query({ groupId: cg.id }, resolve)
-        })
-        groups.push({
-          name: cg.title ?? 'Untitled',
-          color: (cg.color ?? 'grey') as TabGroup['color'],
-          tabIds: tabsInGroup.map((t) => t.id).filter((id): id is number => id !== undefined),
-        })
-      }
-
-      const inboxTabs = await this.getUngroupedTabs()
-
-      return ok({ groups, inboxTabs })
-    } catch (e) {
-      return err(e instanceof Error ? e : new Error(String(e)))
-    }
-  }
-
-  /**
-   * Возвращает вкладки, не принадлежащие ни одной группе
-   */
-  private async getUngroupedTabs(): Promise<TabInfo[]> {
-    return new Promise((resolve) => {
-      chrome.tabs.query({ groupId: chrome.tabGroups.TAB_GROUP_ID_NONE }, (tabs) => {
-        if (chrome.runtime.lastError) {
-          resolve([])
-          return
-        }
-        const infos = tabs
-          .map((t) => toTabInfo(t))
-          .filter((t): t is TabInfo => t !== null)
-        resolve(infos)
-      })
-    })
-  }
-
-  /**
-   * Сохраняет результат группировки в историю и обновляет общий счётчик
-   */
   private async saveRecentGroup(result: GroupingResult): Promise<void> {
     const recentGroups = await this.storage.getOrDefault<RecentGroup[]>(
       STORAGE_KEYS.RECENT_GROUPS,
@@ -233,7 +173,6 @@ export class TabGrouper {
     const updated = [newEntry, ...recentGroups].slice(0, MAX_RECENT_GROUPS)
     await this.storage.set(STORAGE_KEYS.RECENT_GROUPS, updated)
 
-    // Increment total tabs grouped counter
     const totalTabsGrouped = await this.storage.getOrDefault<number>(
       STORAGE_KEYS.TOTAL_TABS_GROUPED,
       0,
@@ -242,57 +181,5 @@ export class TabGrouper {
       STORAGE_KEYS.TOTAL_TABS_GROUPED,
       totalTabsGrouped + result.totalTabsGrouped,
     )
-  }
-
-  /**
-   * Применяет группы через chrome.tabGroups API
-   */
-  private async applyGroups(groups: readonly TabGroup[]): Promise<Result<void>> {
-    try {
-      // Сначала убираем существующие группы
-      const existingGroups = await new Promise<chrome.tabGroups.TabGroup[]>((resolve) => {
-        chrome.tabGroups.query({}, resolve)
-      })
-
-      for (const existingGroup of existingGroups) {
-        await new Promise<void>((resolve) => {
-          chrome.tabs.ungroup(
-            existingGroup.id ? [existingGroup.id] : [],
-            resolve,
-          )
-        })
-      }
-
-      // Применяем новые группы
-      for (const group of groups) {
-        const groupId = await new Promise<number>((resolve, reject) => {
-          chrome.tabs.group({ tabIds: [...group.tabIds] }, (id) => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message))
-            } else {
-              resolve(id)
-            }
-          })
-        })
-
-        await new Promise<void>((resolve, reject) => {
-          chrome.tabGroups.update(
-            groupId,
-            { title: group.name, color: group.color, collapsed: false },
-            () => {
-              if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError.message))
-              } else {
-                resolve()
-              }
-            },
-          )
-        })
-      }
-
-      return ok(undefined)
-    } catch (e) {
-      return err(e instanceof Error ? e : new Error(String(e)))
-    }
   }
 }

@@ -25,8 +25,8 @@ export interface TabInfo {
   readonly favIconUrl?: string | undefined
 }
 
-// Chrome TabGroup colors — точно те что поддерживает chrome.tabGroups API
-export type ChromeTabGroupColor =
+// Keeply color palette — visual only, not tied to Chrome API
+export type GroupColor =
   | 'grey'
   | 'blue'
   | 'red'
@@ -38,7 +38,15 @@ export type ChromeTabGroupColor =
 
 export interface TabGroup {
   readonly name: string
-  readonly color: ChromeTabGroupColor
+  readonly color: GroupColor
+  readonly tabIds: readonly number[]
+}
+
+// Keeply group stored in chrome.storage.local
+export interface KeeplyGroup {
+  readonly id: string
+  readonly name: string
+  readonly color: GroupColor
   readonly tabIds: readonly number[]
 }
 
@@ -46,7 +54,6 @@ export interface GroupingResult {
   readonly groups: readonly TabGroup[]
   readonly totalTabsGrouped: number
   readonly timestamp: number
-  readonly inboxTabs: readonly TabInfo[]
 }
 
 // AI ответ до парсинга
@@ -112,12 +119,8 @@ export type BackgroundMessage =
   | { readonly type: 'GET_USAGE' }
   | { readonly type: 'GET_SETTINGS' }
   | { readonly type: 'SAVE_SETTINGS'; readonly payload: Partial<Settings> }
-  | { readonly type: 'GET_CURRENT_GROUPS' }
-
-export interface CurrentGroupsPayload {
-  readonly groups: readonly TabGroup[]
-  readonly inboxTabs: readonly TabInfo[]
-}
+  | { readonly type: 'GET_KEEPLY_GROUPS' }
+  | { readonly type: 'SAVE_KEEPLY_GROUPS'; readonly payload: readonly KeeplyGroup[] }
 
 export type PopupMessage =
   | { readonly type: 'GROUPING_STARTED' }
@@ -125,7 +128,7 @@ export type PopupMessage =
   | { readonly type: 'GROUPING_ERROR'; readonly payload: { readonly message: string } }
   | { readonly type: 'USAGE_RESPONSE'; readonly payload: UsageStatus }
   | { readonly type: 'SETTINGS_RESPONSE'; readonly payload: Settings }
-  | { readonly type: 'CURRENT_GROUPS_RESPONSE'; readonly payload: CurrentGroupsPayload }
+  | { readonly type: 'KEEPLY_GROUPS_RESPONSE'; readonly payload: readonly KeeplyGroup[] }
 
 // -----------------------------------------------------------------------------
 // Storage Keys — type-safe ключи для chrome.storage
@@ -135,6 +138,7 @@ export const STORAGE_KEYS = {
   USAGE: 'keeply_usage',
   SETTINGS: 'keeply_settings',
   RECENT_GROUPS: 'keeply_recent_groups',
+  KEEPLY_GROUPS: 'keeply_groups',
   PRO_TOKEN: 'keeply_pro_token',
   TOTAL_TABS_GROUPED: 'keeply_total_tabs_grouped',
 } as const

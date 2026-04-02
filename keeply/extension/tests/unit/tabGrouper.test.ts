@@ -153,24 +153,12 @@ describe('TabGrouper', () => {
       json: async () => ({ content: validAIResponse }),
     }))
 
-    // Setup chrome mock
+    // Setup chrome mock — no tabGroups API needed
     mockChrome = {
       tabs: {
-        query: vi.fn((filter: Record<string, unknown>, cb: (tabs: chrome.tabs.Tab[]) => void) => {
-          // Return empty for inbox query (groupId filter), normal tabs otherwise
-          if ('groupId' in filter) {
-            cb([])
-          } else {
-            cb(makeChromeTabs(3))
-          }
+        query: vi.fn((_: unknown, cb: (tabs: chrome.tabs.Tab[]) => void) => {
+          cb(makeChromeTabs(3))
         }),
-        group: vi.fn((_, cb) => cb(1)),
-        ungroup: vi.fn((_, cb) => cb()),
-      },
-      tabGroups: {
-        query: vi.fn((_, cb) => cb([])),
-        update: vi.fn((_, __, cb) => cb()),
-        TAB_GROUP_ID_NONE: -1,
       },
       runtime: {
         lastError: null,

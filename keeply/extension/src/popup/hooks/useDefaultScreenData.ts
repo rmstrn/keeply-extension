@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
+import { STORAGE_KEYS } from '@/shared/constants'
 import { isGroupableUrl } from '@/shared/utils/chromeUtils'
-import type { ChromeTabGroupColor, TabInfo } from '@/shared/types'
+import type { KeeplyGroup, TabInfo } from '@/shared/types'
 
 // =============================================================================
 // TYPES
@@ -9,14 +10,6 @@ import type { ChromeTabGroupColor, TabInfo } from '@/shared/types'
 
 export interface TabInfoWithWindow extends TabInfo {
   readonly windowId?: number | undefined
-}
-
-export interface GroupWithTabs {
-  readonly id: string
-  readonly name: string
-  readonly color: ChromeTabGroupColor
-  readonly tabIds: readonly number[]
-  readonly tabs: readonly TabInfoWithWindow[]
 }
 
 // =============================================================================
@@ -27,8 +20,8 @@ export function useDefaultScreenData() {
   const lastRefresh = useTabStore((s) => s.lastRefresh)
 
   const [tabCount, setTabCount] = useState(0)
-  const [currentGroups, setCurrentGroups] = useState<GroupWithTabs[]>([])
-  const [inboxTabs, setInboxTabs] = useState<TabInfoWithWindow[]>([])
+  const [keeplyGroups, setKeplyGroups] = useState<KeeplyGroup[]>([])
+  const [allTabs, setAllTabs] = useState<TabInfoWithWindow[]>([])
 
   // Live tab count with listeners
   useEffect(() => {
@@ -60,46 +53,25 @@ export function useDefaultScreenData() {
     }
   }, [])
 
-  // Load current Chrome groups with their tabs
+  // Load Keeply groups from storage
   useEffect(() => {
     try {
-      chrome.tabGroups.query({}, (groups) => {
+      chrome.storage.local.get(STORAGE_KEYS.KEEPLY_GROUPS, (result) => {
         if (chrome.runtime.lastError) return
-        const promises = groups.map(
-          (group) =>
-            new Promise<GroupWithTabs>((resolve) => {
-              chrome.tabs.query({ groupId: group.id }, (tabs) => {
-                resolve({
-                  id: String(group.id),
-                  name: group.title ?? 'Unnamed',
-                  color: group.color as ChromeTabGroupColor,
-                  tabIds: tabs.map((t) => t.id).filter((id): id is number => id !== undefined),
-                  tabs: tabs
-                    .filter((t) => t.id && isGroupableUrl(t.url))
-                    .map((t) => ({
-                      id: t.id!,
-                      title: t.title ?? t.url ?? '',
-                      url: t.url ?? '',
-                      favIconUrl: t.favIconUrl,
-                      windowId: t.windowId,
-                    })),
-                })
-              })
-            }),
-        )
-        Promise.all(promises).then(setCurrentGroups)
+        const groups = result[STORAGE_KEYS.KEEPLY_GROUPS] as KeeplyGroup[] | undefined
+        setKeplyGroups(groups ?? [])
       })
     } catch {
       // Extension not loaded properly
     }
   }, [lastRefresh])
 
-  // Load inbox (ungrouped) tabs
+  // Load all open tabs (for display inside groups and ungrouped section)
   useEffect(() => {
     try {
-      chrome.tabs.query({ groupId: chrome.tabGroups.TAB_GROUP_ID_NONE }, (tabs) => {
+      chrome.tabs.query({}, (tabs) => {
         if (chrome.runtime.lastError) return
-        setInboxTabs(
+        setAllTabs(
           tabs
             .filter((t) => t.id && isGroupableUrl(t.url))
             .map((t) => ({
@@ -116,5 +88,9 @@ export function useDefaultScreenData() {
     }
   }, [lastRefresh])
 
-  return { tabCount, currentGroups, inboxTabs }
+  // Compute ungrouped tabs (tabs not in any Keeply group)
+  const groupedTabIds = new Set(keeplyGroups.flatMap((g) => [...g.tabIds]))
+  const ungroupedTabs = allTabs.filter((t) => !groupedTabIds.has(t.id))
+
+  return { tabCount, keeplyGroups, allTabs, ungroupedTabs }
 }

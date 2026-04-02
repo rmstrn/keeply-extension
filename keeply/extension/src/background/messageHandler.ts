@@ -2,7 +2,7 @@ import { TabGrouper } from './tabGrouper'
 import { storageService } from '@/shared/services/storageService'
 import { getUsageStatus, createInitialUsage } from '@/shared/utils/usageUtils'
 import { STORAGE_KEYS, DEFAULT_SETTINGS } from '@/shared/constants'
-import type { BackgroundMessage, PopupMessage, UsageState, Settings } from '@/shared/types'
+import type { BackgroundMessage, PopupMessage, KeeplyGroup, UsageState, Settings } from '@/shared/types'
 
 const grouper = new TabGrouper(storageService)
 
@@ -35,8 +35,12 @@ export function handleMessage(
       // TODO: implement undo logic
       break
 
-    case 'GET_CURRENT_GROUPS':
-      handleGetCurrentGroups(sendResponse)
+    case 'GET_KEEPLY_GROUPS':
+      handleGetKeplyGroups(sendResponse)
+      break
+
+    case 'SAVE_KEEPLY_GROUPS':
+      handleSaveKeplyGroups(message.payload, sendResponse)
       break
   }
 }
@@ -95,16 +99,17 @@ async function handleSaveSettings(
   sendResponse({ type: 'SETTINGS_RESPONSE', payload: updated })
 }
 
-async function handleGetCurrentGroups(
+async function handleGetKeplyGroups(
   sendResponse: (response: PopupMessage) => void,
 ): Promise<void> {
-  const result = await grouper.getCurrentGroups()
-  if (result.ok) {
-    sendResponse({ type: 'CURRENT_GROUPS_RESPONSE', payload: result.value })
-  } else {
-    sendResponse({
-      type: 'GROUPING_ERROR',
-      payload: { message: result.error.message },
-    })
-  }
+  const groups = await grouper.getGroups()
+  sendResponse({ type: 'KEEPLY_GROUPS_RESPONSE', payload: groups })
+}
+
+async function handleSaveKeplyGroups(
+  groups: readonly KeeplyGroup[],
+  sendResponse: (response: PopupMessage) => void,
+): Promise<void> {
+  await grouper.saveGroups(groups)
+  sendResponse({ type: 'KEEPLY_GROUPS_RESPONSE', payload: [...groups] })
 }

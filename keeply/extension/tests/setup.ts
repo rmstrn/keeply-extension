@@ -16,9 +16,9 @@ const chromeMock = {
   },
   tabs: {
     query: vi.fn(),
-    group: vi.fn(),
-    ungroup: vi.fn(),
+    remove: vi.fn(),
     update: vi.fn(),
+    create: vi.fn(),
     onCreated: { addListener: vi.fn(), removeListener: vi.fn() },
     onRemoved: { addListener: vi.fn(), removeListener: vi.fn() },
     onUpdated: { addListener: vi.fn(), removeListener: vi.fn() },
@@ -26,11 +26,6 @@ const chromeMock = {
   windows: {
     update: vi.fn(),
     WINDOW_ID_CURRENT: -2,
-  },
-  tabGroups: {
-    query: vi.fn(),
-    update: vi.fn(),
-    TAB_GROUP_ID_NONE: -1,
   },
   runtime: {
     lastError: null as chrome.runtime.LastError | null,

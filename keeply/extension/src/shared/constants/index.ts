@@ -1,4 +1,4 @@
-import type { ChromeTabGroupColor } from '@/shared/types'
+import type { GroupColor } from '@/shared/types'
 export { DEFAULT_SETTINGS, STORAGE_KEYS } from '@/shared/types'
 
 // -----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ export const AI_REQUEST_TIMEOUT_MS = 15_000
 // Chrome Tab Group Colors
 // -----------------------------------------------------------------------------
 
-export const VALID_COLORS: readonly ChromeTabGroupColor[] = [
+export const VALID_COLORS: readonly GroupColor[] = [
   'grey',
   'blue',
   'red',
@@ -32,10 +32,10 @@ export const VALID_COLORS: readonly ChromeTabGroupColor[] = [
   'cyan',
 ] as const
 
-export const DEFAULT_COLOR: ChromeTabGroupColor = 'grey'
+export const DEFAULT_COLOR: GroupColor = 'grey'
 
 // Chrome group color → hex for UI display
-export const GROUP_COLOR_HEX: Record<ChromeTabGroupColor, string> = {
+export const GROUP_COLOR_HEX: Record<GroupColor, string> = {
   green: '#1D9E75',
   blue: '#2563EB',
   purple: '#6D4AFF',
@@ -56,7 +56,7 @@ export const LOADING_TAGS = [
 ] as const
 
 // Маппинг от ключевых слов к цветам для умного выбора
-export const CATEGORY_COLOR_MAP: Record<string, ChromeTabGroupColor> = {
+export const CATEGORY_COLOR_MAP: Record<string, GroupColor> = {
   work: 'blue',
   research: 'purple',
   shopping: 'yellow',

@@ -3,12 +3,12 @@ import { useTabStore } from '@/popup/stores/tabStore'
 import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
 import { useDefaultScreenData } from '@/popup/hooks/useDefaultScreenData'
-import type { GroupWithTabs, TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
+import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
-import { GROUP_COLOR_HEX } from '@/shared/constants'
+import { GROUP_COLOR_HEX, STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
-import { removeGroupFromRecent, removeTabFromRecent } from '@/shared/utils/recentGroupsUtils'
+import type { KeeplyGroup } from '@/shared/types'
 
 // =============================================================================
 // HELPERS
@@ -26,7 +26,7 @@ function parseDragData(e: React.DragEvent): DragData | null {
     if (data.tabId) return data
   } catch {
     const tabId = Number(raw)
-    if (tabId) return { tabId, sourceGroupId: 'inbox' }
+    if (tabId) return { tabId, sourceGroupId: 'ungrouped' }
   }
   return null
 }
@@ -46,7 +46,7 @@ export function DefaultScreen() {
   const setScreen = useTabStore((s) => s.setScreen)
   const triggerRefresh = useTabStore((s) => s.triggerRefresh)
 
-  const { tabCount, currentGroups, inboxTabs } = useDefaultScreenData()
+  const { tabCount, keeplyGroups, allTabs, ungroupedTabs } = useDefaultScreenData()
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState<string | null>(null)
@@ -60,26 +60,43 @@ export function DefaultScreen() {
     })
   }
 
-  const handleDropOnGroup = (e: React.DragEvent, group: GroupWithTabs) => {
+  // Move tab into a Keeply group (storage-only)
+  const handleDropOnGroup = (e: React.DragEvent, group: KeeplyGroup) => {
     e.preventDefault()
     setIsDragOver(null)
     const data = parseDragData(e)
     if (!data || data.sourceGroupId === group.id) return
-    chrome.tabs.group({ tabIds: [data.tabId], groupId: Number(group.id) }, () => {
-      if (chrome.runtime.lastError) return
-      triggerRefresh()
-    })
+
+    const updated = keeplyGroups.map((g) => {
+      if (g.id === group.id) {
+        return { ...g, tabIds: [...g.tabIds, data.tabId] }
+      }
+      // Remove from source group if dragging between groups
+      if (g.id === data.sourceGroupId) {
+        return { ...g, tabIds: g.tabIds.filter((id) => id !== data.tabId) }
+      }
+      return g
+    }).filter((g) => g.tabIds.length > 0)
+
+    saveGroups(updated)
   }
 
-  const handleDropOnInbox = (e: React.DragEvent) => {
+  // Remove tab from its group (move to ungrouped)
+  const handleDropOnUngrouped = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragOver(null)
     const data = parseDragData(e)
-    if (!data || data.sourceGroupId === 'inbox') return
-    chrome.tabs.ungroup([data.tabId], () => {
-      if (chrome.runtime.lastError) return
-      triggerRefresh()
-    })
+    if (!data || data.sourceGroupId === 'ungrouped') return
+
+    const updated = keeplyGroups
+      .map((g) =>
+        g.id === data.sourceGroupId
+          ? { ...g, tabIds: g.tabIds.filter((id) => id !== data.tabId) }
+          : g,
+      )
+      .filter((g) => g.tabIds.length > 0)
+
+    saveGroups(updated)
   }
 
   const handleGroupDragLeave = (e: React.DragEvent, groupId: string) => {
@@ -92,16 +109,31 @@ export function DefaultScreen() {
     e.stopPropagation()
     chrome.tabs.remove(tabId, () => {
       if (chrome.runtime.lastError) return
-      removeTabFromRecent(tabId, () => triggerRefresh())
+      // Also remove from any Keeply group
+      const updated = keeplyGroups
+        .map((g) => ({ ...g, tabIds: g.tabIds.filter((id) => id !== tabId) }))
+        .filter((g) => g.tabIds.length > 0)
+      saveGroups(updated)
     })
   }
 
-  const ungroupAll = (e: React.MouseEvent, group: GroupWithTabs) => {
+  const deleteGroup = (e: React.MouseEvent, group: KeeplyGroup) => {
     e.stopPropagation()
-    chrome.tabs.ungroup([...group.tabIds], () => {
-      if (chrome.runtime.lastError) return
-      removeGroupFromRecent(group.name, () => triggerRefresh())
+    const updated = keeplyGroups.filter((g) => g.id !== group.id)
+    saveGroups(updated)
+  }
+
+  const saveGroups = (groups: KeeplyGroup[]) => {
+    chrome.storage.local.set({ [STORAGE_KEYS.KEEPLY_GROUPS]: groups }, () => {
+      triggerRefresh()
     })
+  }
+
+  // Resolve tabIds to actual tab info for display
+  const resolveGroupTabs = (group: KeeplyGroup): TabInfoWithWindow[] => {
+    return group.tabIds
+      .map((id) => allTabs.find((t) => t.id === id))
+      .filter((t): t is TabInfoWithWindow => t !== undefined)
   }
 
   return (
@@ -144,166 +176,106 @@ export function DefaultScreen() {
         <button className="new-group-btn" onClick={() => setScreen('manual')}>+ New</button>
       </div>
 
-      {currentGroups.length === 0 && (
+      {keeplyGroups.length === 0 && (
         <div className="rr empty">
           <span className="rm">No groups yet. Click Group tabs to start.</span>
         </div>
       )}
 
-      {currentGroups.map((group) => (
-        <GroupItem
-          key={group.id}
-          group={group}
-          isExpanded={expandedGroups.has(group.id)}
-          isDragOver={isDragOver === group.id}
-          onToggle={() => toggleGroup(group.id)}
-          onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
-          onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
-          onDrop={(e) => handleDropOnGroup(e, group)}
-          onCloseTab={closeTab}
-          onUngroupAll={(e) => ungroupAll(e, group)}
-        />
-      ))}
+      {keeplyGroups.map((group) => {
+        const tabs = resolveGroupTabs(group)
+        const isExpanded = expandedGroups.has(group.id)
+        return (
+          <div
+            key={group.id}
+            className={`group-item${isDragOver === group.id ? ' drag-over' : ''}`}
+            onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
+            onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
+            onDrop={(e) => handleDropOnGroup(e, group)}
+          >
+            <div className="rr group-header" onClick={() => toggleGroup(group.id)}>
+              <div className="rdot" style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }} aria-hidden="true" />
+              <span className="rn">{group.name}</span>
+              <span className="gbadge">{tabCountLabel(tabs.length)}</span>
+              <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <button className="group-delete-btn" title="Delete group" onClick={(e) => deleteGroup(e, group)}>×</button>
+            </div>
 
-      {/* Inbox section */}
-      <InboxSection
-        tabs={inboxTabs}
-        isDragOver={isDragOver === 'inbox'}
-        onDragOver={(e) => { e.preventDefault(); setIsDragOver('inbox') }}
-        onDragLeave={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
-        }}
-        onDrop={handleDropOnInbox}
-        onCloseTab={closeTab}
-      />
+            {isExpanded && (
+              <div className="group-tabs-list">
+                {tabs.map((tab) => (
+                  <div
+                    key={tab.id}
+                    className="tab-row group-tab-row"
+                    draggable
+                    onDragStart={(e) => {
+                      e.stopPropagation()
+                      e.dataTransfer.setData('text/plain', makeDragData(tab.id, group.id))
+                      e.dataTransfer.effectAllowed = 'move'
+                    }}
+                    onClick={() => {
+                      chrome.tabs.update(tab.id, { active: true })
+                      if (tab.windowId !== undefined) chrome.windows.update(tab.windowId, { focused: true })
+                    }}
+                  >
+                    <TabFavicon url={tab.favIconUrl} />
+                    <span className="tab-title">{tab.title}</span>
+                    <button className="tab-close-btn" title="Close tab" onClick={(e) => closeTab(e, tab.id)}>×</button>
+                  </div>
+                ))}
+                {tabs.length === 0 && (
+                  <div className="tab-row empty"><span className="rm">No open tabs in this group</span></div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
 
-      {/* Empty ungrouped drop target while dragging */}
-      {inboxTabs.length === 0 && isDragOver === 'inbox' && (
+      {/* Ungrouped tabs */}
+      {ungroupedTabs.length > 0 && (
         <div
-          className="inbox-section drag-over"
-          onDragOver={(e) => { e.preventDefault(); setIsDragOver('inbox') }}
-          onDragLeave={() => setIsDragOver(null)}
-          onDrop={handleDropOnInbox}
+          className={`inbox-section${isDragOver === 'ungrouped' ? ' drag-over' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver('ungrouped') }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
+          }}
+          onDrop={handleDropOnUngrouped}
         >
-          <div className="slbl" style={{ color: '#9B9C96' }}>Drop here to ungroup</div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// =============================================================================
-// SUB-COMPONENTS
-// =============================================================================
-
-function GroupItem({
-  group,
-  isExpanded,
-  isDragOver: dragOver,
-  onToggle,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onCloseTab,
-  onUngroupAll,
-}: {
-  group: GroupWithTabs
-  isExpanded: boolean
-  isDragOver: boolean
-  onToggle: () => void
-  onDragOver: (e: React.DragEvent) => void
-  onDragLeave: (e: React.DragEvent) => void
-  onDrop: (e: React.DragEvent) => void
-  onCloseTab: (e: React.MouseEvent, tabId: number) => void
-  onUngroupAll: (e: React.MouseEvent) => void
-}) {
-  return (
-    <div
-      className={`group-item${dragOver ? ' drag-over' : ''}`}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-    >
-      <div className="rr group-header" onClick={onToggle}>
-        <div className="rdot" style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }} aria-hidden="true" />
-        <span className="rn">{group.name}</span>
-        <span className="gbadge">{tabCountLabel(group.tabs.length)}</span>
-        <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <button className="group-delete-btn" title="Ungroup all tabs" onClick={onUngroupAll}>×</button>
-      </div>
-
-      {isExpanded && (
-        <div className="group-tabs-list">
-          {group.tabs.map((tab) => (
+          <div className="slbl" style={{ color: '#9B9C96' }}>Ungrouped · {tabCountLabel(ungroupedTabs.length)}</div>
+          {ungroupedTabs.map((tab) => (
             <div
               key={tab.id}
-              className="tab-row group-tab-row"
+              className="tab-row inbox-tab"
               draggable
               onDragStart={(e) => {
                 e.stopPropagation()
-                e.dataTransfer.setData('text/plain', makeDragData(tab.id, group.id))
+                e.dataTransfer.setData('text/plain', makeDragData(tab.id, 'ungrouped'))
                 e.dataTransfer.effectAllowed = 'move'
-              }}
-              onClick={() => {
-                chrome.tabs.update(tab.id, { active: true })
-                if (tab.windowId !== undefined) chrome.windows.update(tab.windowId, { focused: true })
               }}
             >
               <TabFavicon url={tab.favIconUrl} />
               <span className="tab-title">{tab.title}</span>
-              <button className="tab-close-btn" title="Close tab" onClick={(e) => onCloseTab(e, tab.id)}>×</button>
+              <button className="tab-close-btn" title="Close tab" onClick={(e) => closeTab(e, tab.id)}>×</button>
+              <span className="drag-hint" aria-hidden="true">&#x2807;</span>
             </div>
           ))}
         </div>
       )}
-    </div>
-  )
-}
 
-function InboxSection({
-  tabs,
-  isDragOver: dragOver,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onCloseTab,
-}: {
-  tabs: readonly TabInfoWithWindow[]
-  isDragOver: boolean
-  onDragOver: (e: React.DragEvent) => void
-  onDragLeave: (e: React.DragEvent) => void
-  onDrop: (e: React.DragEvent) => void
-  onCloseTab: (e: React.MouseEvent, tabId: number) => void
-}) {
-  if (tabs.length === 0) return null
-
-  return (
-    <div
-      className={`inbox-section${dragOver ? ' drag-over' : ''}`}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-    >
-      <div className="slbl" style={{ color: '#9B9C96' }}>Ungrouped · {tabCountLabel(tabs.length)}</div>
-      {tabs.map((tab) => (
+      {/* Empty ungrouped drop target while dragging */}
+      {ungroupedTabs.length === 0 && isDragOver === 'ungrouped' && (
         <div
-          key={tab.id}
-          className="tab-row inbox-tab"
-          draggable
-          onDragStart={(e) => {
-            e.stopPropagation()
-            e.dataTransfer.setData('text/plain', makeDragData(tab.id, 'inbox'))
-            e.dataTransfer.effectAllowed = 'move'
-          }}
+          className="inbox-section drag-over"
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver('ungrouped') }}
+          onDragLeave={() => setIsDragOver(null)}
+          onDrop={handleDropOnUngrouped}
         >
-          <TabFavicon url={tab.favIconUrl} />
-          <span className="tab-title">{tab.title}</span>
-          <button className="tab-close-btn" title="Close tab" onClick={(e) => onCloseTab(e, tab.id)}>×</button>
-          <span className="drag-hint" aria-hidden="true">&#x2807;</span>
+          <div className="slbl" style={{ color: '#9B9C96' }}>Drop here to ungroup</div>
         </div>
-      ))}
+      )}
     </div>
   )
 }

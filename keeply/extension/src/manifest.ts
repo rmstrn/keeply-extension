@@ -24,7 +24,6 @@ export default defineManifest({
 
   permissions: [
     'tabs',
-    'tabGroups',
     'storage',
     'windows',
   ],
