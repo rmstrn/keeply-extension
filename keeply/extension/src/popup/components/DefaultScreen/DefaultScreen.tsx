@@ -6,6 +6,7 @@ import { useDefaultScreenData } from '@/popup/hooks/useDefaultScreenData'
 import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
 import { useOutsideClick } from '@/popup/hooks/useOutsideClick'
 import { useGroupActions } from '@/popup/hooks/useGroupActions'
+import { useTheme } from '@/popup/hooks/useTheme'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { STORAGE_KEYS } from '@/shared/constants'
@@ -220,6 +221,7 @@ export function DefaultScreen() {
   const status = useUsageStore((s) => s.status)
   const isLoading = useUsageStore((s) => s.isLoading)
   const triggerRefresh = useTabStore((s) => s.triggerRefresh)
+  const theme = useTheme()
 
   const { tabCount, keeplyGroups, allTabs, ungroupedTabs } = useDefaultScreenData()
 
@@ -273,9 +275,9 @@ export function DefaultScreen() {
 
       <button
         className="cta-btn"
-        style={{ background: '#0D7A5F', color: '#FFFFFF', border: 'none' }}
-        onMouseOver={(e) => { e.currentTarget.style.background = '#0A5C47' }}
-        onMouseOut={(e) => { e.currentTarget.style.background = '#0D7A5F' }}
+        style={{ background: theme.primary, color: theme.primaryText, border: 'none' }}
+        onMouseOver={(e) => { e.currentTarget.style.background = theme.primaryHover }}
+        onMouseOut={(e) => { e.currentTarget.style.background = theme.primary }}
         onClick={() => void groupTabs()}
         disabled={!isLoading && status.isLimitReached}
         aria-label="Group tabs with AI"
