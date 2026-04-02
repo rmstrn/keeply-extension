@@ -174,12 +174,12 @@ export function DefaultScreen() {
       {/* Groups section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="slbl">Groups</div>
-        <button className="new-group-btn" onClick={() => setScreen('manual')}>+ New</button>
+        <button className="new-group-btn" onClick={() => setScreen('manual')}>+ Add Group</button>
       </div>
 
       {keeplyGroups.length === 0 && (
-        <div className="rr empty">
-          <span className="rm">No groups yet. Click Group tabs to start.</span>
+        <div className="rr empty" onClick={() => setScreen('manual')} style={{ cursor: 'pointer' }}>
+          <span className="rm">No groups yet. Click <strong>Add Group</strong> to start.</span>
         </div>
       )}
 
