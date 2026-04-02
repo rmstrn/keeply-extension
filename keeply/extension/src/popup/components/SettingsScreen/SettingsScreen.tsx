@@ -1,3 +1,5 @@
+import { useState, useRef } from 'react'
+
 interface ToggleSwitchProps {
   readonly id: string
   readonly checked: boolean
@@ -18,8 +20,22 @@ function ToggleSwitch({ id, checked, onChange }: ToggleSwitchProps) {
 }
 
 export function SettingsScreen() {
+  const [showDev, setShowDev] = useState(false)
+  const tapCountRef = useRef(0)
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const openUpgrade = () => {
     chrome.tabs.create({ url: 'https://keeply.app/pricing' })
+  }
+
+  const handleVersionTap = () => {
+    tapCountRef.current += 1
+    if (tapCountRef.current >= 5) {
+      setShowDev((d) => !d)
+      tapCountRef.current = 0
+    }
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current)
+    tapTimerRef.current = setTimeout(() => { tapCountRef.current = 0 }, 2000)
   }
 
   return (
@@ -92,18 +108,18 @@ export function SettingsScreen() {
         </span>
       </div>
 
-      <div className="sr">
+      <div className="sr" style={{ cursor: 'default' }} onClick={handleVersionTap}>
         <div>
           <p className="sr-label">Keeply v1.0.0</p>
           <p className="sr-sub">keeply.app · Send feedback</p>
         </div>
       </div>
 
-      {import.meta.env.DEV && (
+      {showDev && (
         <div className="sr" style={{ borderTop: '1px dashed #DDDDD8', marginTop: 8 }}>
           <div>
             <p className="sr-label" style={{ color: '#C0392B' }}>Dev Tools</p>
-            <p className="sr-sub">Only visible in development</p>
+            <p className="sr-sub">Reset AI usage counter</p>
           </div>
           <button
             className="sr-val"
