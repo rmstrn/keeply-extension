@@ -61,7 +61,7 @@ vi.mock('@/popup/hooks/useDefaultScreenData', () => ({
 // =============================================================================
 
 function clickAddGroup() {
-  fireEvent.click(screen.getByText('+ Add Group'))
+  fireEvent.click(screen.getByText('+ Add group'))
 }
 
 function setupChromeMock() {
@@ -89,11 +89,11 @@ describe('InlineGroupForm', () => {
     setupChromeMock()
   })
 
-  it('shows inline form when "+ Add Group" is clicked', () => {
+  it('shows inline form when "+ Add group" is clicked', () => {
     render(<DefaultScreen />)
-    expect(document.querySelector('.inline-group-form')).toBeNull()
+    expect(document.querySelector('.igf')).toBeNull()
     clickAddGroup()
-    expect(document.querySelector('.inline-group-form')).toBeInTheDocument()
+    expect(document.querySelector('.igf')).toBeInTheDocument()
   })
 
   it('renders emoji trigger button', () => {
@@ -109,31 +109,13 @@ describe('InlineGroupForm', () => {
     expect(confirmBtn).toBeDisabled()
   })
 
-  it('confirm button is disabled when no tabs selected', () => {
+  it('confirm button is enabled when name is entered (no tab selection needed)', () => {
     render(<DefaultScreen />)
     clickAddGroup()
     const input = screen.getByPlaceholderText('Group name...')
     fireEvent.change(input, { target: { value: 'My Group' } })
-    const confirmBtn = screen.getByLabelText('Create group')
-    expect(confirmBtn).toBeDisabled()
-  })
-
-  it('confirm button is enabled when name + tab selected', () => {
-    render(<DefaultScreen />)
-    clickAddGroup()
-    const input = screen.getByPlaceholderText('Group name...')
-    fireEvent.change(input, { target: { value: 'My Group' } })
-    const tabOptions = screen.getAllByRole('option')
-    fireEvent.click(tabOptions[0]!)
     const confirmBtn = screen.getByLabelText('Create group')
     expect(confirmBtn).toBeEnabled()
-  })
-
-  it('shows ungrouped tabs as selectable options', () => {
-    render(<DefaultScreen />)
-    clickAddGroup()
-    const tabOptions = screen.getAllByRole('option')
-    expect(tabOptions).toHaveLength(3)
   })
 
   it('opens emoji dropdown on emoji trigger click', () => {
@@ -160,9 +142,9 @@ describe('InlineGroupForm', () => {
   it('closes form on Escape', () => {
     render(<DefaultScreen />)
     clickAddGroup()
-    expect(document.querySelector('.inline-group-form')).toBeInTheDocument()
+    expect(document.querySelector('.igf')).toBeInTheDocument()
     fireEvent.keyDown(document, { key: 'Escape' })
-    expect(document.querySelector('.inline-group-form')).toBeNull()
+    expect(document.querySelector('.igf')).toBeNull()
   })
 })
 
