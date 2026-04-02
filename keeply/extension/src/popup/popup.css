@@ -399,7 +399,7 @@ body {
 }
 .drop-zone-active {
   outline: 1.5px dashed var(--border);
-  outline-offset: 3px;
+  outline-offset: 4px;
 }
 .group-tabs-list {
   padding: 2px 0 4px 12px;
