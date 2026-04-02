@@ -21,8 +21,9 @@ describe('getTodayString', () => {
     expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
-  it('returns current date', () => {
-    const today = new Date().toISOString().split('T')[0]
+  it('returns current local date', () => {
+    const d = new Date()
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     expect(getTodayString()).toBe(today)
   })
 })

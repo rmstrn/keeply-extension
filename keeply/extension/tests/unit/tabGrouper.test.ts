@@ -169,9 +169,11 @@ describe('TabGrouper', () => {
   })
 
   it('returns error when free limit is reached', async () => {
+    const d = new Date()
+    const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const exhaustedUsage: UsageState = {
       count: 5,
-      date: new Date().toISOString().split('T')[0]!,
+      date: localDate,
       limit: 5,
     }
     const storage = createMockStorage({
