@@ -98,6 +98,26 @@ export function SettingsScreen() {
           <p className="sr-sub">keeply.app · Send feedback</p>
         </div>
       </div>
+
+      {import.meta.env.DEV && (
+        <div className="sr" style={{ borderTop: '1px dashed #DDDDD8', marginTop: 8 }}>
+          <div>
+            <p className="sr-label" style={{ color: '#C0392B' }}>Dev Tools</p>
+            <p className="sr-sub">Only visible in development</p>
+          </div>
+          <button
+            className="sr-val"
+            style={{ color: '#C0392B' }}
+            onClick={() => {
+              chrome.storage.local.remove('keeply_usage', () => {
+                window.location.reload()
+              })
+            }}
+          >
+            Reset limit
+          </button>
+        </div>
+      )}
     </div>
   )
 }
