@@ -121,9 +121,15 @@ export function useGroupActions(
     const data = parseDragData(e)
     if (!data || data.sourceGroupId === group.id) return
 
-    const tab = allTabs.find((t) => t.id === data.tabId)
-    if (!tab) return
-    const newGroupTab: GroupTab = { url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl, tabId: tab.id }
+    // Find tab info from allTabs (open) or source group (closed)
+    const openTab = allTabs.find((t) => t.url === data.url)
+    const sourceGroup = keeplyGroups.find((g) => g.id === data.sourceGroupId)
+    const closedTab = sourceGroup?.tabs.find((t) => t.url === data.url)
+    if (!openTab && !closedTab) return
+
+    const newGroupTab: GroupTab = openTab
+      ? { url: openTab.url, title: openTab.title, favIconUrl: openTab.favIconUrl, tabId: openTab.id }
+      : { url: closedTab!.url, title: closedTab!.title, favIconUrl: closedTab!.favIconUrl, tabId: undefined }
 
     const updated = keeplyGroups.map((g) => {
       if (g.id === group.id) {

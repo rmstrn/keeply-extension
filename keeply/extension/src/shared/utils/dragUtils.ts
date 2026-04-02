@@ -9,7 +9,7 @@ export interface DragData {
 export function parseDragData(e: React.DragEvent): DragData | null {
   try {
     const data = JSON.parse(e.dataTransfer.getData('text/plain')) as DragData
-    if (data.tabId && data.url) return data
+    if (data.tabId !== undefined && data.url) return data
   } catch { /* ignore non-JSON drag data */ }
   return null
 }

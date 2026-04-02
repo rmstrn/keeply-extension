@@ -169,7 +169,7 @@ export function DefaultScreen() {
             }
           }}
           onTabDragStart={(e, gt) => {
-            e.dataTransfer.setData('text/plain', makeDragData(gt.tabId!, gt.url, group.id))
+            e.dataTransfer.setData('text/plain', makeDragData(gt.tabId ?? 0, gt.url, group.id))
             e.dataTransfer.effectAllowed = 'move'
           }}
         />

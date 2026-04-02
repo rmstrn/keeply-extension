@@ -161,11 +161,11 @@ export function GroupRow({
               <div
                 key={gt.url}
                 className={`tab-row group-tab-row${isOpen ? '' : ' tab-closed'}`}
-                draggable={isOpen}
-                onDragStart={isOpen ? (e) => {
+                draggable
+                onDragStart={(e) => {
                   e.stopPropagation()
                   onTabDragStart(e, gt)
-                } : undefined}
+                }}
                 onClick={() => onTabClick(gt)}
               >
                 <TabFavicon url={gt.favIconUrl} />
