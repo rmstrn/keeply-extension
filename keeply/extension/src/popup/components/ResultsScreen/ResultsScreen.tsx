@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { extractGroupableTabs } from '@/shared/utils/tabUtils'
-import { GROUP_COLOR_HEX } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { TabRow } from '@/popup/components/TabRow/TabRow'
 import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
@@ -48,11 +47,6 @@ export function ResultsScreen() {
         {result.groups.map((group) => (
           <div key={group.name} className="gr" role="listitem">
             <div className="gh">
-              <div
-                className="gdot"
-                style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }}
-                aria-hidden="true"
-              />
               <span className="gn">{group.name}</span>
               <TabCountBadge count={group.tabIds.length} />
             </div>

@@ -441,7 +441,6 @@ export function DefaultScreen() {
             onDrop={(e) => handleDropOnGroup(e, group)}
           >
             <div className="rr group-header" onClick={() => toggleGroup(group.id)}>
-              <div className="rdot" style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }} aria-hidden="true" />
               <span className="rn">{group.name}</span>
               <TabCountBadge count={tabs.length} />
               <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
