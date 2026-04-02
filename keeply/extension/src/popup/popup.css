@@ -17,18 +17,20 @@
   --bd: #E4E5E0;
 }
 
-/* ── DARK THEME TOKENS ──────────────────── */
+/* ── DARK THEME — CARBON PALETTE ────────── */
 html.dark {
-  --w:  #15160F;
-  --n0: #1E1F17;
-  --n1: #2C2D26;
-  --n9: #EDEEE6;
-  --n7: #C8C9BF;
-  --n5: #6B6D64;
-  --n3: #4E5046;
-  --bd: #2C2D26;
-  --t1: #1A3328;
-  --t2: #1F5A40;
+  --w:  #111111;
+  --n0: #1A1A1A;
+  --n1: #222222;
+  --bd: #2E2E2E;
+  --n9: #F0F0EF;
+  --n7: #CCCCCC;
+  --n5: #707070;
+  --n3: #444444;
+  --t7: #0D7A5F;
+  --t1: #0D2420;
+  --t2: #134E44;
+  --t-hover: #10A37F;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -407,20 +409,120 @@ body {
 .theme-btn:hover { border-color: var(--t7); background: var(--t1); }
 .theme-btn.active { border-color: var(--t7); background: var(--t1); }
 
-/* ── DARK MODE OVERRIDES ─── */
-html.dark .settings-btn { background: #22231C; border-color: var(--n1); }
-html.dark .settings-btn:hover { background: var(--t1); border-color: var(--t7); }
-html.dark .pill-free { background: var(--t1); color: var(--t7); border-color: var(--t2); }
-html.dark .done-chip { background: #153D2C; border-color: #1F5A40; }
-html.dark .done-text { color: #7DD4B0; }
-html.dark .ract { background: var(--n0); border-color: var(--n1); color: var(--n5); }
-html.dark .ract:hover { background: var(--t1); border-color: var(--t7); color: #13A07C; }
-html.dark .toggle { background: #3A3C32; border-color: #4E5046; }
-html.dark .toggle::after { background: #E8E9E2; }
-html.dark .plan { background: var(--n0); border-color: var(--n1); }
-html.dark .plan:hover { border-color: var(--t7); background: var(--t1); }
-html.dark .plan.best { background: var(--t1); border-color: var(--t7); }
-html.dark .tab-close-btn:hover { background: #3D1C1E; color: #EF4444; }
-html.dark .group-delete-btn:hover { background: #3D1C1E; color: #EF4444; }
-html.dark .manual-input { background: var(--n0); border-color: var(--n1); color: var(--n9); }
-html.dark .manual-input:focus { border-color: var(--t7); }
+/* ── DARK MODE OVERRIDES — CARBON ─── */
+
+/* Hover text — brighter teal on dark */
+html.dark .rr:hover .rn,
+html.dark .gh:hover .gn,
+html.dark .fullpage-btn,
+html.dark .new-group-btn,
+html.dark .sr-val.action,
+html.dark .usage-num,
+html.dark .plan-save { color: var(--t-hover); }
+
+html.dark .sr-val:hover { background: #0D2420; color: var(--t-hover); }
+
+/* Header, dividers, borders */
+html.dark .hdr { border-bottom-color: #222222; }
+html.dark .divider { background: #222222; }
+html.dark .sr { border-bottom-color: #222222; }
+
+/* Settings button */
+html.dark .settings-btn { background: #1A1A1A; border-color: #2E2E2E; color: #707070; }
+html.dark .settings-btn:hover { background: #0D2420; border-color: #0D7A5F; color: var(--t-hover); }
+
+/* Stats */
+html.dark .stat { background: #1A1A1A; border-color: #2E2E2E; }
+
+/* Hover backgrounds */
+html.dark .rr:hover,
+html.dark .gh:hover,
+html.dark .tab-row:hover,
+html.dark .group-header:hover,
+html.dark .fullpage-btn:hover,
+html.dark .new-group-btn:hover { background: #0D2420; }
+
+/* Toggle */
+html.dark .toggle { background: #2E2E2E; border-color: #3A3A3A; }
+html.dark .toggle::after { background: #CCCCCC; }
+html.dark .toggle.on { background: #0D7A5F; border-color: #0D7A5F; }
+html.dark .toggle.on::after { background: #FFFFFF; }
+html.dark .toggle:hover { border-color: #0D7A5F; }
+
+/* Result actions */
+html.dark .ract { background: #1A1A1A; border-color: #2E2E2E; color: #707070; }
+html.dark .ract:hover { background: #0D2420; border-color: #0D7A5F; color: var(--t-hover); }
+
+/* Plans */
+html.dark .plan { background: #1A1A1A; border-color: #2E2E2E; }
+html.dark .plan:hover,
+html.dark .plan.best { background: #0D2420; border-color: #0D7A5F; }
+
+/* Done chip */
+html.dark .done-chip { background: #0D2420; border-color: #134E44; }
+html.dark .done-text { color: var(--t-hover); }
+
+/* Pill */
+html.dark .pill-free { background: #0D2420; color: var(--t-hover); border-color: #134E44; }
+
+/* Search input */
+html.dark .tab-search { background: #1A1A1A; border-color: #2E2E2E; color: #F0F0EF; }
+html.dark .tab-search:focus { border-color: #0D7A5F; }
+html.dark .tab-search::placeholder { color: #444444; }
+
+/* Manual input */
+html.dark .manual-input { background: #1A1A1A; border-color: #2E2E2E; color: #F0F0EF; }
+html.dark .manual-input:focus { border-color: #0D7A5F; }
+
+/* Borders in expanded areas */
+html.dark .group-tabs-list,
+html.dark .manual-section-tabs { border-left-color: #2E2E2E; }
+
+/* Checkboxes */
+html.dark .tab-checkbox { background: #1A1A1A; border-color: #2E2E2E; }
+
+/* Loading */
+html.dark .spin-wrap { background: #0D2420; }
+html.dark .prog-track { background: #0D2420; }
+
+/* Theme picker */
+html.dark .theme-btn { background: #1A1A1A; border-color: #2E2E2E; }
+html.dark .theme-btn:hover,
+html.dark .theme-btn.active { background: #0D2420; border-color: #0D7A5F; }
+
+/* Drag & drop */
+html.dark .inbox-section.drag-over,
+html.dark .group-item.drag-over { background: #0D2420; outline-color: #0D7A5F; }
+
+/* Section headers */
+html.dark .slbl { color: #444444; }
+html.dark .ss-lbl { color: #444444; }
+html.dark .manual-section-header { color: #707070; }
+html.dark .manual-section-header:hover { color: #CCCCCC; }
+html.dark .manual-section-count { background: #222222; color: #707070; }
+
+/* Badges */
+html.dark .gbadge { background: #222222; color: #707070; }
+html.dark .tab-group-badge { background: #222222; color: #707070; }
+
+/* Delete buttons */
+html.dark .tab-close-btn:hover,
+html.dark .group-delete-btn:hover { background: #2A1515; color: #E24B4A; }
+
+/* ── CUSTOM SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--n3); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: var(--n5); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+.body {
+  overflow-y: auto;
+  max-height: calc(520px - 54px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--n3) transparent;
+}
+
+html.dark ::-webkit-scrollbar-thumb { background: #2E2E2E; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #3A3A3A; }
+html.dark .body { scrollbar-color: #2E2E2E transparent; }
