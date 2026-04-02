@@ -27,15 +27,15 @@ export const lightTheme: ThemeTokens = {
 }
 
 export const darkTheme: ThemeTokens = {
-  bg: '#091413',
-  surface: '#285A48',
-  elevated: '#408A71',
-  border: '#285A48',
-  hoverBg: '#408A71',
-  text: '#F0F0EF',
-  text2: '#CCCCCC',
-  textMuted: '#B0E4CC',
+  bg: '#222831',
+  surface: '#393E46',
+  elevated: '#393E46',
+  border: '#393E46',
+  hoverBg: '#948979',
+  text: '#DFD0B8',
+  text2: '#948979',
+  textMuted: '#948979',
   primary: '#0D7A5F',
-  primaryHover: '#408A71',
+  primaryHover: '#0A5C47',
   primaryText: '#FFFFFF',
 }
