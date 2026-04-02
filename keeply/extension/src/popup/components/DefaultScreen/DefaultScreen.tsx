@@ -286,23 +286,20 @@ export function DefaultScreen() {
         Group tabs with AI
       </button>
 
-      <div className="divider" role="separator" />
-
       {/* Groups section */}
       <div
         className="section-header"
         onClick={() => setSectionsOpen((prev) => ({ ...prev, groups: !prev.groups }))}
       >
-        <div className="slbl" style={{ marginBottom: 0 }}>Groups</div>
-        <div className="section-header-right">
-          <button
-            className="new-group-btn"
-            onClick={(e) => { e.stopPropagation(); setShowInlineForm((v) => !v) }}
-          >
-            + Add Group
-          </button>
-          <span className={`section-chevron${sectionsOpen.groups ? ' open' : ''}`}>›</span>
-        </div>
+        <span className="section-label">Groups</span>
+        <span className="section-line" />
+        <button
+          className="new-group-btn"
+          onClick={(e) => { e.stopPropagation(); setShowInlineForm((v) => !v) }}
+        >
+          + Add Group
+        </button>
+        <span className={`section-chevron${sectionsOpen.groups ? ' open' : ''}`}>›</span>
       </div>
 
       <div className={`section-body${sectionsOpen.groups ? ' open' : ''}`}>
@@ -369,8 +366,6 @@ export function DefaultScreen() {
       ))}
       </div>
 
-      <div className="divider" role="separator" />
-
       {/* Ungrouped tabs */}
       {ungroupedTabs.length > 0 && (
         <div
@@ -385,7 +380,8 @@ export function DefaultScreen() {
             className="section-header"
             onClick={() => setSectionsOpen((prev) => ({ ...prev, ungrouped: !prev.ungrouped }))}
           >
-            <div className="slbl" style={{ marginBottom: 0 }}>Ungrouped · {tabCountLabel(ungroupedTabs.length)}</div>
+            <span className="section-label">Ungrouped · {tabCountLabel(ungroupedTabs.length)}</span>
+            <span className="section-line" />
             <span className={`section-chevron${sectionsOpen.ungrouped ? ' open' : ''}`}>›</span>
           </div>
           <div className={`section-body${sectionsOpen.ungrouped ? ' open' : ''}`}>

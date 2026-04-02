@@ -89,15 +89,25 @@ body {
 
 /* ── COLLAPSIBLE SECTIONS ─── */
 .section-header {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; gap: 8px;
   cursor: pointer; user-select: none;
-  padding: 2px 0; margin-bottom: 4px;
+  padding: 0; margin: 14px 0 6px;
 }
-.section-header:hover .slbl { color: var(--text-2); }
-.section-header-right { display: flex; align-items: center; gap: 2px; }
+.section-header:first-child { margin-top: 6px; }
+.section-label {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .07em;
+  white-space: nowrap; flex-shrink: 0;
+}
+.section-header:hover .section-label { color: var(--text-2); }
+.section-line {
+  flex: 1; height: 1px; min-width: 12px;
+  background: var(--border);
+}
 .section-chevron {
   font-size: 14px; font-weight: 600; color: var(--text-muted);
   transition: transform .2s ease; display: inline-block;
+  flex-shrink: 0;
 }
 .section-chevron.open { transform: rotate(90deg); }
 .section-body {
