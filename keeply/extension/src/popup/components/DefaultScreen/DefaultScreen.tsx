@@ -7,7 +7,6 @@ import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
 import { useOutsideClick } from '@/popup/hooks/useOutsideClick'
 import { useGroupActions } from '@/popup/hooks/useGroupActions'
 import { useTheme } from '@/popup/hooks/useTheme'
-import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
@@ -228,6 +227,7 @@ export function DefaultScreen() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState<string | null>(null)
   const [showInlineForm, setShowInlineForm] = useState(false)
+  const [sectionsOpen, setSectionsOpen] = useState({ groups: true, ungrouped: true })
 
   const editInputRef = useRef<HTMLInputElement>(null)
   const editEmojiRef = useRef<HTMLDivElement>(null)
@@ -286,16 +286,26 @@ export function DefaultScreen() {
         Group tabs with AI
       </button>
 
-      <UsageDots status={status} />
-
       <div className="divider" role="separator" />
 
       {/* Groups section */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="slbl">Groups</div>
-        <button className="new-group-btn" onClick={() => setShowInlineForm((v) => !v)}>+ Add Group</button>
+      <div
+        className="section-header"
+        onClick={() => setSectionsOpen((prev) => ({ ...prev, groups: !prev.groups }))}
+      >
+        <div className="slbl" style={{ marginBottom: 0 }}>Groups</div>
+        <div className="section-header-right">
+          <button
+            className="new-group-btn"
+            onClick={(e) => { e.stopPropagation(); setShowInlineForm((v) => !v) }}
+          >
+            + Add Group
+          </button>
+          <span className={`section-chevron${sectionsOpen.groups ? ' open' : ''}`}>›</span>
+        </div>
       </div>
 
+      <div className={`section-body${sectionsOpen.groups ? ' open' : ''}`}>
       {showInlineForm && (
         <InlineGroupForm
           ungroupedTabs={ungroupedTabs}
@@ -357,6 +367,9 @@ export function DefaultScreen() {
           }}
         />
       ))}
+      </div>
+
+      <div className="divider" role="separator" />
 
       {/* Ungrouped tabs */}
       {ungroupedTabs.length > 0 && (
@@ -368,7 +381,14 @@ export function DefaultScreen() {
           }}
           onDrop={(e) => { setIsDragOver(null); actions.handleDropOnUngrouped(e, parseDragData) }}
         >
-          <div className="slbl" >Ungrouped · {tabCountLabel(ungroupedTabs.length)}</div>
+          <div
+            className="section-header"
+            onClick={() => setSectionsOpen((prev) => ({ ...prev, ungrouped: !prev.ungrouped }))}
+          >
+            <div className="slbl" style={{ marginBottom: 0 }}>Ungrouped · {tabCountLabel(ungroupedTabs.length)}</div>
+            <span className={`section-chevron${sectionsOpen.ungrouped ? ' open' : ''}`}>›</span>
+          </div>
+          <div className={`section-body${sectionsOpen.ungrouped ? ' open' : ''}`}>
           {ungroupedTabs.map((tab) => (
             <div
               key={tab.id}
@@ -386,6 +406,7 @@ export function DefaultScreen() {
               <span className="drag-hint" aria-hidden="true">&#x2807;</span>
             </div>
           ))}
+          </div>
         </div>
       )}
 

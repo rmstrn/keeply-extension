@@ -87,6 +87,25 @@ body {
 /* ── SECTION LABEL ─── */
 .slbl { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; }
 
+/* ── COLLAPSIBLE SECTIONS ─── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+  padding: 2px 0; margin-bottom: 4px;
+}
+.section-header:hover .slbl { color: var(--text-2); }
+.section-header-right { display: flex; align-items: center; gap: 2px; }
+.section-chevron {
+  font-size: 14px; font-weight: 600; color: var(--text-muted);
+  transition: transform .2s ease; display: inline-block;
+}
+.section-chevron.open { transform: rotate(90deg); }
+.section-body {
+  overflow: hidden; max-height: 0;
+  transition: max-height .25s ease;
+}
+.section-body.open { max-height: 2000px; }
+
 /* ── RECENT ROWS ─── */
 .rr { display: flex; align-items: center; gap: 10px; padding: 6px 7px; border-radius: 7px; cursor: pointer; transition: background .12s; margin: 0 -7px; }
 .rr:hover { background: var(--hover-bg); }
