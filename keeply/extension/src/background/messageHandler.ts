@@ -31,10 +31,9 @@ export function handleMessage(
       handleSaveSettings(message.payload, sendResponse)
       break
 
-    default:
-      // TypeScript exhaustive check — компилятор поймает незаписанные случаи
-      const _exhaustive: never = message
-      console.warn('[Keeply] Unknown message type:', _exhaustive)
+    case 'UNDO_GROUPING':
+      // TODO: implement undo logic
+      break
   }
 }
 

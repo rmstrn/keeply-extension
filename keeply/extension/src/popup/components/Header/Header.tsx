@@ -1,5 +1,4 @@
 import { useTabStore } from '@/popup/stores/tabStore'
-import { useUsageStore } from '@/popup/stores/usageStore'
 
 // =============================================================================
 // HEADER COMPONENT

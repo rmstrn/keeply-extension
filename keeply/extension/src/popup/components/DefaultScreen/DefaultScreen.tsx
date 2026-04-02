@@ -1,4 +1,3 @@
-import { useTabStore } from '@/popup/stores/tabStore'
 import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
@@ -16,7 +15,6 @@ const RECENT_MOCK = [
 export function DefaultScreen() {
   const { groupTabs } = useTabGroups()
   const status = useUsageStore((s) => s.status)
-  const setScreen = useTabStore((s) => s.setScreen)
 
   return (
     <div className="body">

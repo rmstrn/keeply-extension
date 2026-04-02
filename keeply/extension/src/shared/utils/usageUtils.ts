@@ -36,7 +36,7 @@ export function resetUsageIfNewDay(usage: UsageState): UsageState {
   if (usage.date === today) {
     return usage // тот же день — ничего не меняем
   }
-  return createInitialUsage(today)
+  return { ...createInitialUsage(today), limit: usage.limit }
 }
 
 /**
