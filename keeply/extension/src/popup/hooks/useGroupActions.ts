@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { STORAGE_KEYS } from '@/shared/constants'
 import type { GroupTab, KeeplyGroup } from '@/shared/types'
 import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
+import { UNGROUPED_ID, parseDragData } from '@/shared/utils/dragUtils'
 
 export function useGroupActions(
   keeplyGroups: KeeplyGroup[],
@@ -115,7 +116,7 @@ export function useGroupActions(
     saveGroups(updated)
   }
 
-  const handleDropOnGroup = (e: React.DragEvent, group: KeeplyGroup, parseDragData: (e: React.DragEvent) => { tabId: number; url: string; sourceGroupId: string } | null) => {
+  const handleDropOnGroup = (e: React.DragEvent, group: KeeplyGroup) => {
     e.preventDefault()
     const data = parseDragData(e)
     if (!data || data.sourceGroupId === group.id) return
@@ -137,10 +138,10 @@ export function useGroupActions(
     saveGroups(updated)
   }
 
-  const handleDropOnUngrouped = (e: React.DragEvent, parseDragData: (e: React.DragEvent) => { tabId: number; url: string; sourceGroupId: string } | null) => {
+  const handleDropOnUngrouped = (e: React.DragEvent) => {
     e.preventDefault()
     const data = parseDragData(e)
-    if (!data || data.sourceGroupId === 'ungrouped') return
+    if (!data || data.sourceGroupId === UNGROUPED_ID) return
 
     const updated = keeplyGroups
       .map((g) =>

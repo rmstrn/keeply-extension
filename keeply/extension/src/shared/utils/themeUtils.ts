@@ -1,49 +1,30 @@
 import type { Theme } from '@/shared/types'
-import { lightTheme, softJadeTheme, THEMES } from '@/shared/constants/theme'
+import { resolveTheme } from '@/shared/constants/theme'
 import type { ThemeTokens } from '@/shared/constants/theme'
+
+const CSS_VAR_MAP: ReadonlyArray<[string, keyof ThemeTokens]> = [
+  ['--bg', 'bg'], ['--surface', 'surface'], ['--elevated', 'elevated'],
+  ['--border', 'border'], ['--hover-bg', 'hoverBg'],
+  ['--text', 'text'], ['--text-2', 'text2'], ['--text-muted', 'textMuted'],
+  ['--primary', 'primary'], ['--primary-hover', 'primaryHover'], ['--primary-text', 'primaryText'],
+  ['--danger', 'danger'], ['--danger-bg', 'dangerBg'],
+  ['--warning', 'warning'], ['--success', 'success'],
+]
 
 function applyThemeVars(tokens: ThemeTokens): void {
   const s = document.documentElement.style
-  s.setProperty('--bg', tokens.bg)
-  s.setProperty('--surface', tokens.surface)
-  s.setProperty('--elevated', tokens.elevated)
-  s.setProperty('--border', tokens.border)
-  s.setProperty('--hover-bg', tokens.hoverBg)
-  s.setProperty('--text', tokens.text)
-  s.setProperty('--text-2', tokens.text2)
-  s.setProperty('--text-muted', tokens.textMuted)
-  s.setProperty('--primary', tokens.primary)
-  s.setProperty('--primary-hover', tokens.primaryHover)
-  s.setProperty('--primary-text', tokens.primaryText)
-  s.setProperty('--danger', tokens.danger)
-  s.setProperty('--danger-bg', tokens.dangerBg)
-  s.setProperty('--warning', tokens.warning)
-  s.setProperty('--success', tokens.success)
-}
-
-function resolveTheme(theme: Theme): ThemeTokens {
-  if (theme === 'system') {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    return prefersDark ? softJadeTheme : lightTheme
+  for (const [prop, key] of CSS_VAR_MAP) {
+    s.setProperty(prop, tokens[key])
   }
-  // 'dark' is a legacy alias for 'soft-jade'
-  const id = theme === 'dark' ? 'soft-jade' : theme
-  return THEMES.find((t) => t.id === id) ?? lightTheme
 }
 
-/**
- * Apply theme class to document root and set CSS variables
- */
 export function applyTheme(theme: Theme): void {
-  const tokens = resolveTheme(theme)
-  const isDark = tokens.id !== 'light'
-  document.documentElement.classList.toggle('dark', isDark)
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const tokens = resolveTheme(theme, prefersDark)
+  document.documentElement.classList.toggle('dark', tokens.id !== 'light')
   applyThemeVars(tokens)
 }
 
-/**
- * Initialize theme from storage, with system preference listener for 'system' mode.
- */
 export function initThemeFromStorage(onReady: () => void): void {
   try {
     chrome.storage.local.get('keeply_settings', (result) => {
@@ -54,9 +35,7 @@ export function initThemeFromStorage(onReady: () => void): void {
 
       if (theme === 'system') {
         window.matchMedia('(prefers-color-scheme: dark)')
-          .addEventListener('change', () => {
-            applyTheme('system')
-          })
+          .addEventListener('change', () => applyTheme('system'))
       }
 
       onReady()

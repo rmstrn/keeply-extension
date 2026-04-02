@@ -1,215 +1,17 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
 import { useDefaultScreenData } from '@/popup/hooks/useDefaultScreenData'
-import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
 import { useOutsideClick } from '@/popup/hooks/useOutsideClick'
 import { useGroupActions } from '@/popup/hooks/useGroupActions'
 import { useTheme } from '@/popup/hooks/useTheme'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
-import { STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
-import type { GroupTab, KeeplyGroup, RecentGroup } from '@/shared/types'
-import { TabIcon, ExternalIcon, CheckIcon, ChevronIcon, LightningIcon } from './Icons'
-import { EmojiPicker } from './EmojiPicker'
+import { UNGROUPED_ID, makeDragData } from '@/shared/utils/dragUtils'
+import { TabIcon, ExternalIcon, ChevronIcon, LightningIcon } from './Icons'
+import { InlineGroupForm } from './InlineGroupForm'
 import { GroupRow } from './GroupRow'
-
-// =============================================================================
-// HELPERS
-// =============================================================================
-
-interface DragData {
-  readonly tabId: number
-  readonly url: string
-  readonly sourceGroupId: string
-}
-
-function parseDragData(e: React.DragEvent): DragData | null {
-  const raw = e.dataTransfer.getData('text/plain')
-  try {
-    const data = JSON.parse(raw) as DragData
-    if (data.tabId && data.url) return data
-  } catch {
-    // legacy: plain tabId
-  }
-  return null
-}
-
-function makeDragData(tabId: number, url: string, sourceGroupId: string): string {
-  return JSON.stringify({ tabId, url, sourceGroupId })
-}
-
-// =============================================================================
-// INLINE GROUP FORM
-// =============================================================================
-
-interface InlineGroupFormProps {
-  ungroupedTabs: TabInfoWithWindow[]
-  onCreated: () => void
-  onCancel: () => void
-}
-
-function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupFormProps) {
-  const triggerRefresh = useTabStore((s) => s.triggerRefresh)
-
-  const [groupName, setGroupName] = useState('')
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null)
-  const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
-  const [emojiOpen, setEmojiOpen] = useState(false)
-
-  const formRef = useRef<HTMLDivElement>(null)
-  const emojiRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  // Focus input on mount
-  useEffect(() => { inputRef.current?.focus() }, [])
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (formRef.current && !formRef.current.contains(e.target as Node)) {
-        onCancel()
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [onCancel])
-
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (emojiOpen) setEmojiOpen(false)
-        else onCancel()
-      }
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [onCancel, emojiOpen])
-
-  // Close emoji picker on outside click
-  useOutsideClick(emojiRef, emojiOpen, () => setEmojiOpen(false))
-
-  const pickEmoji = (emoji: string) => {
-    setSelectedEmoji(emoji)
-    setEmojiOpen(false)
-    inputRef.current?.focus()
-  }
-
-  const toggleTab = (tabId: number) => {
-    setSelectedTabIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(tabId)) next.delete(tabId)
-      else next.add(tabId)
-      return next
-    })
-  }
-
-  const canCreate = groupName.trim().length > 0 && selectedTabIds.size > 0
-
-  const handleCreate = () => {
-    if (!canCreate) return
-
-    const tabs: GroupTab[] = [...selectedTabIds].map((tabId) => {
-      const tab = ungroupedTabs.find((t) => t.id === tabId)!
-      return { url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl, tabId }
-    })
-
-    const newGroup: KeeplyGroup = {
-      id: crypto.randomUUID(),
-      name: groupName.trim(),
-      color: 'blue',
-      ...(selectedEmoji ? { emoji: selectedEmoji } : {}),
-      tabs,
-    }
-
-    const newEntry: RecentGroup = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      groups: [{ name: newGroup.name, color: newGroup.color, tabIds: [...selectedTabIds] }],
-      totalTabs: tabs.length,
-    }
-
-    chrome.storage.local.get(
-      [STORAGE_KEYS.KEEPLY_GROUPS, STORAGE_KEYS.RECENT_GROUPS],
-      (result) => {
-        const existingGroups = (result[STORAGE_KEYS.KEEPLY_GROUPS] as KeeplyGroup[] | undefined) ?? []
-        const existingRecent = (result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined) ?? []
-
-        chrome.storage.local.set({
-          [STORAGE_KEYS.KEEPLY_GROUPS]: [...existingGroups, newGroup],
-          [STORAGE_KEYS.RECENT_GROUPS]: [newEntry, ...existingRecent].slice(0, 10),
-        }, () => {
-          triggerRefresh()
-          onCreated()
-        })
-      },
-    )
-  }
-
-  return (
-    <div className="inline-group-form" ref={formRef}>
-      <div className="inline-form-name-row">
-        <div className="emoji-picker-wrapper" ref={emojiRef}>
-          <button
-            type="button"
-            className="emoji-trigger"
-            onClick={() => setEmojiOpen((o) => !o)}
-            aria-label="Pick emoji"
-            aria-expanded={emojiOpen}
-          >
-            {selectedEmoji ?? '😀'}
-          </button>
-          {emojiOpen && <EmojiPicker onPick={pickEmoji} />}
-        </div>
-        <input
-          ref={inputRef}
-          className="manual-input"
-          type="text"
-          placeholder="Group name..."
-          value={groupName}
-          onChange={(e) => setGroupName(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleCreate() }}
-          maxLength={50}
-        />
-        <button
-          type="button"
-          className="inline-form-confirm"
-          onClick={handleCreate}
-          disabled={!canCreate}
-          aria-label="Create group"
-          title="Create group"
-        >
-          ✓
-        </button>
-      </div>
-
-      {ungroupedTabs.length > 0 && (
-        <div className="inline-form-tabs" role="listbox" aria-label="Select tabs">
-          {ungroupedTabs.map((tab) => (
-            <div
-              key={tab.id}
-              className="tab-row"
-              onClick={() => toggleTab(tab.id)}
-              role="option"
-              aria-selected={selectedTabIds.has(tab.id)}
-            >
-              <div
-                className={`tab-checkbox${selectedTabIds.has(tab.id) ? ' checked' : ''}`}
-                aria-hidden="true"
-              >
-                {selectedTabIds.has(tab.id) && <CheckIcon />}
-              </div>
-              <TabFavicon url={tab.favIconUrl} />
-              <span className="tab-title">{tab.title}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 // =============================================================================
 // DEFAULT SCREEN
@@ -237,8 +39,7 @@ export function DefaultScreen() {
 
   const actions = useGroupActions(keeplyGroups, allTabs, triggerRefresh)
 
-  // Find duplicate tab IDs (same URL appears 2+ times in ungrouped — keep first, collect rest)
-  const duplicateTabIds = (() => {
+  const duplicateTabIds = useMemo(() => {
     const seen = new Set<string>()
     const dupes: number[] = []
     for (const tab of ungroupedTabs) {
@@ -246,7 +47,7 @@ export function DefaultScreen() {
       else seen.add(tab.url)
     }
     return dupes
-  })()
+  }, [ungroupedTabs])
 
   // Outside-click dismissals
   useOutsideClick(editEmojiRef, actions.emojiPickerGroupId !== null, () => actions.setEmojiPickerGroupId(null))
@@ -287,9 +88,6 @@ export function DefaultScreen() {
 
       <button
         className="cta-btn"
-        style={{ background: theme.primary, color: theme.primaryText, border: 'none' }}
-        onMouseOver={(e) => { e.currentTarget.style.background = theme.primaryHover }}
-        onMouseOut={(e) => { e.currentTarget.style.background = theme.primary }}
         onClick={() => void groupTabs()}
         disabled={!isLoading && status.isLimitReached}
         aria-label="Group tabs with AI"
@@ -324,7 +122,7 @@ export function DefaultScreen() {
       )}
 
       {keeplyGroups.length === 0 && !showInlineForm && (
-        <div className="rr empty" onClick={() => setShowInlineForm(true)} style={{ cursor: 'pointer' }}>
+        <div className="rr empty" onClick={() => setShowInlineForm(true)}>
           <span className="rm">No groups yet. Click <strong>Add Group</strong> to start.</span>
         </div>
       )}
@@ -347,7 +145,7 @@ export function DefaultScreen() {
           onToggleExpand={() => toggleGroup(group.id)}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
           onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
-          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnGroup(e, group, parseDragData) }}
+          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnGroup(e, group) }}
           onStartEditing={() => actions.startEditing(group)}
           onEditNameChange={actions.setEditName}
           onCommitRename={() => actions.commitRename(group.id)}
@@ -381,12 +179,12 @@ export function DefaultScreen() {
       {/* Ungrouped tabs */}
       {ungroupedTabs.length > 0 && (
         <div
-          className={`inbox-section${isDragOver === 'ungrouped' ? ' drop-zone-active' : ''}`}
-          onDragOver={(e) => { e.preventDefault(); setIsDragOver('ungrouped') }}
+          className={`inbox-section${isDragOver === UNGROUPED_ID ? ' drop-zone-active' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver(UNGROUPED_ID) }}
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
           }}
-          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnUngrouped(e, parseDragData) }}
+          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnUngrouped(e) }}
         >
           <div
             className="section-header"
@@ -415,7 +213,7 @@ export function DefaultScreen() {
               draggable
               onDragStart={(e) => {
                 e.stopPropagation()
-                e.dataTransfer.setData('text/plain', makeDragData(tab.id, tab.url, 'ungrouped'))
+                e.dataTransfer.setData('text/plain', makeDragData(tab.id, tab.url, UNGROUPED_ID))
                 e.dataTransfer.effectAllowed = 'move'
               }}
             >
@@ -432,12 +230,12 @@ export function DefaultScreen() {
       {/* Empty ungrouped drop target while dragging */}
       {ungroupedTabs.length === 0 && isDragging && (
         <div
-          className={`inbox-section${isDragOver === 'ungrouped' ? ' drop-zone-active' : ''}`}
-          onDragOver={(e) => { e.preventDefault(); setIsDragOver('ungrouped') }}
+          className={`inbox-section${isDragOver === UNGROUPED_ID ? ' drop-zone-active' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver(UNGROUPED_ID) }}
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
           }}
-          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnUngrouped(e, parseDragData) }}
+          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnUngrouped(e) }}
         >
           <div className="slbl" >Drop here to ungroup</div>
         </div>

@@ -87,3 +87,10 @@ export const plumWineTheme: ThemeTokens = {
 }
 
 export const THEMES: readonly ThemeTokens[] = [lightTheme, softJadeTheme, plumWineTheme]
+
+/** Resolve a Theme string to a ThemeTokens object. Handles 'system' and legacy 'dark' alias. */
+export function resolveTheme(theme: string, prefersDark = false): ThemeTokens {
+  if (theme === 'system') return prefersDark ? softJadeTheme : lightTheme
+  const id = theme === 'dark' ? 'soft-jade' : theme
+  return THEMES.find((t) => t.id === id) ?? lightTheme
+}

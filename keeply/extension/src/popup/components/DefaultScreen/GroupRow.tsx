@@ -2,6 +2,7 @@ import { type RefObject, useRef, useLayoutEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import type { GroupTab, KeeplyGroup } from '@/shared/types'
+import { MAX_GROUP_NAME_LENGTH } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { EmojiPicker } from './EmojiPicker'
 import { ChevronIcon } from './Icons'
@@ -110,7 +111,7 @@ export function GroupRow({
             }}
             onBlur={onCommitRename}
             onClick={(e) => e.stopPropagation()}
-            maxLength={50}
+            maxLength={MAX_GROUP_NAME_LENGTH}
             autoFocus
           />
         ) : (

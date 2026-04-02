@@ -45,7 +45,11 @@ body {
 .settings-btn:hover { color: var(--primary); }
 
 /* ── BODY ─── */
-.body { padding: 14px 15px; }
+.body {
+  padding: 14px 15px; overflow-y: auto;
+  max-height: calc(520px - 54px);
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
 
 .tab-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .tab-ct { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
@@ -56,11 +60,12 @@ body {
 .cta-btn {
   display: flex; width: 100%; padding: 13px 16px;
   align-items: center; justify-content: center; gap: 6px;
-  border-radius: 10px; cursor: pointer;
+  border-radius: 10px; cursor: pointer; border: none;
+  background: var(--primary); color: var(--primary-text);
   font-family: var(--f); font-size: 14px; font-weight: 700; letter-spacing: -.2px;
   transition: all .15s ease;
 }
-.cta-btn:hover { transform: translateY(-1px); }
+.cta-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
 .cta-btn:active { transform: translateY(0); }
 .cta-btn:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -341,7 +346,6 @@ body {
   background: var(--primary); border-color: var(--primary);
 }
 
-.manual-create-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Tab search */
 .tab-search {
@@ -387,14 +391,6 @@ body {
 .manual-section-name { flex: 1; }
 .manual-section-tabs {
   padding-left: 8px; border-left: 1.5px solid var(--elevated); margin-left: 4px;
-}
-
-/* Group badge on tabs */
-.tab-group-badge {
-  font-size: 9px; font-weight: 600;
-  padding: 1px 5px; border-radius: 10px;
-  background: var(--elevated); color: var(--text-muted);
-  flex-shrink: 0;
 }
 
 /* ── EXPANDABLE GROUPS ─── */
@@ -444,10 +440,6 @@ body {
 .tab-close-btn:hover { background: var(--danger-bg); color: var(--danger); }
 
 .group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; cursor: pointer; width: 20px; text-align: center; }
-.group-emoji-btn {
-  font-size: 14px; line-height: 1; flex-shrink: 0; border: none;
-  background: transparent; cursor: pointer; padding: 0;
-}
 .group-rename-input {
   flex: 1; min-width: 0; font-size: 13px; font-weight: 600;
   font-family: var(--f); color: var(--text); background: var(--surface);
@@ -536,9 +528,3 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 ::-webkit-scrollbar-corner { background: transparent; }
 
-.body {
-  overflow-y: auto;
-  max-height: calc(520px - 54px);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
