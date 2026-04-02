@@ -398,11 +398,11 @@ body {
   transition: background .15s ease, box-shadow .15s ease;
 }
 .group-item.drop-zone-active {
-  outline: 1.5px dashed var(--border);
+  outline: 1.5px dashed var(--primary);
   outline-offset: 1px;
 }
 .inbox-section.drop-zone-active {
-  outline: 1.5px dashed var(--border);
+  outline: 1.5px dashed var(--primary);
   outline-offset: 5px;
 }
 .group-tabs-list {
