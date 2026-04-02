@@ -394,7 +394,7 @@ body {
 
 /* ── EXPANDABLE GROUPS ─── */
 .group-item {
-  border-radius: 8px; padding: 2px 4px;
+  border-radius: 8px; padding: 0 4px;
   transition: background .15s ease, box-shadow .15s ease;
 }
 .drop-zone-active {
@@ -404,7 +404,7 @@ body {
 .group-tabs-list {
   padding: 2px 0 4px 12px;
   border-left: 1.5px solid var(--elevated);
-  margin-left: var(--emoji-center);
+  margin-left: calc(var(--emoji-center) + 4px);
 }
 .group-tab-row {
   display: flex; align-items: center; gap: 7px;
@@ -415,7 +415,7 @@ body {
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { padding: 2px 4px; min-height: 40px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
+.inbox-section { padding: 0 4px; min-height: 40px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
 .inbox-tab {
   display: flex; align-items: center; gap: 7px;
   padding: 4px 4px; border-radius: 6px;
