@@ -427,7 +427,8 @@ body {
 }
 .inbox-tab:hover { background: var(--hover-bg); }
 .inbox-tab:active { cursor: grabbing; }
-.drag-hint { color: var(--border); font-size: 14px; margin-left: auto; }
+.drag-hint { color: var(--text-2); font-size: 14px; margin-left: auto; opacity: 0; transition: opacity .15s ease; }
+.inbox-tab:hover .drag-hint { opacity: 1; }
 .inbox-section.drag-over {
   outline: 1.5px dashed var(--primary);
   outline-offset: -2px;
