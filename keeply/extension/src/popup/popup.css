@@ -469,7 +469,7 @@ body {
 .group-header:hover .group-menu-btn { opacity: 1; }
 .group-menu-btn:hover { color: var(--primary); }
 .group-menu-dropdown {
-  position: absolute; top: calc(100% + 4px); right: 0; z-index: 100;
+  position: fixed; z-index: 1000;
   background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
   box-shadow: 0 4px 14px rgba(0,0,0,.3);
   min-width: 140px; padding: 4px 0;

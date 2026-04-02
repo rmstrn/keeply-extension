@@ -1,4 +1,5 @@
-import type { RefObject } from 'react'
+import { type RefObject, useRef, useLayoutEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import type { GroupTab, KeeplyGroup } from '@/shared/types'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
@@ -64,6 +65,15 @@ export function GroupRow({
 }: GroupRowProps) {
   const closedCount = group.tabs.filter((t) => t.tabId === undefined).length
   const openCount = group.tabs.length - closedCount
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
+
+  useLayoutEffect(() => {
+    if (isMenuOpen && menuBtnRef.current) {
+      const rect = menuBtnRef.current.getBoundingClientRect()
+      setMenuPos({ top: rect.bottom + 4, left: rect.right })
+    }
+  }, [isMenuOpen])
 
   return (
     <div
@@ -118,8 +128,9 @@ export function GroupRow({
         </button>
 
         {/* [⋯] — hover only, click → dropdown menu */}
-        <div className="group-menu-wrapper" ref={isMenuOpen ? menuRef : undefined}>
+        <div className="group-menu-wrapper">
           <button
+            ref={menuBtnRef}
             className="group-menu-btn"
             title="Group actions"
             aria-label="Group actions"
@@ -127,32 +138,6 @@ export function GroupRow({
           >
             ⋯
           </button>
-          {isMenuOpen && (
-            <div className="group-menu-dropdown">
-              {closedCount > 0 && (
-                <button
-                  className="group-menu-item"
-                  onClick={(e) => { onOpenAllClosed(e); onToggleMenu() }}
-                >
-                  Open all tabs
-                </button>
-              )}
-              {openCount > 0 && (
-                <button
-                  className="group-menu-item"
-                  onClick={(e) => { onCloseAllOpen(e); onToggleMenu() }}
-                >
-                  Close all tabs
-                </button>
-              )}
-              <button
-                className="group-menu-item group-menu-item--danger"
-                onClick={(e) => { e.stopPropagation(); onRequestDelete() }}
-              >
-                Delete group
-              </button>
-            </div>
-          )}
         </div>
 
         <ChevronIcon expanded={isExpanded} />
@@ -198,6 +183,38 @@ export function GroupRow({
             <div className="tab-row empty"><span className="rm">No tabs in this group</span></div>
           )}
         </div>
+      )}
+
+      {isMenuOpen && menuPos && createPortal(
+        <div
+          ref={menuRef}
+          className="group-menu-dropdown"
+          style={{ top: menuPos.top, right: document.documentElement.clientWidth - menuPos.left }}
+        >
+          {closedCount > 0 && (
+            <button
+              className="group-menu-item"
+              onClick={(e) => { onOpenAllClosed(e); onToggleMenu() }}
+            >
+              Open all tabs
+            </button>
+          )}
+          {openCount > 0 && (
+            <button
+              className="group-menu-item"
+              onClick={(e) => { onCloseAllOpen(e); onToggleMenu() }}
+            >
+              Close all tabs
+            </button>
+          )}
+          <button
+            className="group-menu-item group-menu-item--danger"
+            onClick={(e) => { e.stopPropagation(); onRequestDelete() }}
+          >
+            Delete group
+          </button>
+        </div>,
+        document.body
       )}
     </div>
   )
