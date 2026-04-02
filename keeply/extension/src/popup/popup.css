@@ -53,7 +53,7 @@ body {
 /* ── CTA BUTTON ─── */
 .cta-btn {
   display: flex; width: 100%; padding: 13px 16px;
-  align-items: center; justify-content: center; gap: 8px;
+  align-items: center; justify-content: center; gap: 6px;
   border-radius: 10px; cursor: pointer;
   font-family: var(--f); font-size: 14px; font-weight: 700; letter-spacing: -.2px;
   transition: all .15s ease;
