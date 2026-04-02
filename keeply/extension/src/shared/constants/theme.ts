@@ -88,6 +88,18 @@ export const plumWineTheme: ThemeTokens = {
 
 export const THEMES: readonly ThemeTokens[] = [lightTheme, softJadeTheme, plumWineTheme]
 
+export const typography = {
+  logo: { size: 15, weight: 700 },
+  pill: { size: 11, weight: 600 },
+  tabCount: { size: 12, weight: 500 },
+  cta: { size: 14, weight: 600 },
+  sectionLabel: { size: 10, weight: 600 },
+  groupName: { size: 13, weight: 500 },
+  groupMeta: { size: 11, weight: 400 },
+  tabTitle: { size: 12, weight: 400 },
+  actionButton: { size: 11, weight: 500 },
+} as const
+
 /** Resolve a Theme string to a ThemeTokens object. Handles 'system' and legacy 'dark' alias. */
 export function resolveTheme(theme: string, prefersDark = false): ThemeTokens {
   if (theme === 'system') return prefersDark ? softJadeTheme : lightTheme

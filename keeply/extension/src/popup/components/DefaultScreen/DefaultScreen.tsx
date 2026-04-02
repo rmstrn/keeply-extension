@@ -9,7 +9,7 @@ import { useTheme } from '@/popup/hooks/useTheme'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { UNGROUPED_ID, makeDragData, makeSingleDragData } from '@/shared/utils/dragUtils'
-import { TabIcon, ExternalIcon, ChevronIcon, LightningIcon } from './Icons'
+import { TabIcon, ChevronIcon, LightningIcon } from './Icons'
 import { InlineGroupForm } from './InlineGroupForm'
 import { GroupRow } from './GroupRow'
 
@@ -97,14 +97,6 @@ export function DefaultScreen() {
           <TabIcon />
           {tabCountLabel(tabCount)} open
         </span>
-        <button
-          className="fullpage-btn"
-          onClick={() => chrome.tabs.create({ url: chrome.runtime.getURL('fullpage.html') })}
-          title="Open full page view"
-        >
-          Full page
-          <ExternalIcon />
-        </button>
       </div>
 
       <button

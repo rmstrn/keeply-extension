@@ -34,7 +34,7 @@ body {
 }
 .logo-name { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.5px; }
 .hdr-right { display: flex; align-items: center; gap: 6px; }
-.pill { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 0; line-height: 1.4; background: none; border: none; }
+.pill { font-size: 11px; font-weight: 600; letter-spacing: .04em; padding: 0; line-height: 1.4; background: none; border: none; }
 .pill-free { color: var(--primary); }
 .pill-pro  { color: var(--primary); }
 .settings-btn {
@@ -53,8 +53,6 @@ body {
 
 .tab-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .tab-ct { font-size: 12px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
-.fullpage-btn { font-size: 11px; font-weight: 600; color: var(--primary); background: none; border: none; cursor: pointer; font-family: var(--f); display: flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 5px; transition: background .12s; }
-.fullpage-btn:hover { background: var(--hover-bg); }
 
 /* ── CTA BUTTON ─── */
 .cta-btn {
@@ -62,7 +60,7 @@ body {
   align-items: center; justify-content: center; gap: 6px;
   border-radius: 10px; cursor: pointer; border: none;
   background: var(--primary); color: var(--primary-text);
-  font-family: var(--f); font-size: 14px; font-weight: 700; letter-spacing: -.2px;
+  font-family: var(--f); font-size: 14px; font-weight: 600; letter-spacing: -.2px;
   transition: all .15s ease;
 }
 .cta-btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
@@ -101,8 +99,8 @@ body {
   padding: 0; margin: 10px 0 4px;
 }
 .section-label {
-  font-size: 10px; font-weight: 700; color: var(--text-muted);
-  text-transform: uppercase; letter-spacing: .07em;
+  font-size: 10px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: .06em;
   white-space: nowrap; flex-shrink: 0;
 }
 .section-header:hover .section-label { color: var(--text-2); }
@@ -125,7 +123,7 @@ body {
 .rr { display: flex; align-items: center; gap: 8px; padding: 6px 6px; border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0; }
 .rr:hover { background: var(--hover-bg); }
 .rr:hover .rn { color: var(--primary); }
-.rn { font-size: 13px; font-weight: 600; color: var(--text-2); flex: 1; transition: color .12s; }
+.rn { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; transition: color .12s; }
 .rm { font-size: 11px; color: var(--text-muted); }
 
 /* ── LOADING ─── */
@@ -153,7 +151,7 @@ body {
 .gh:hover { background: var(--hover-bg); }
 .gh:hover .gn { color: var(--primary); }
 .gn { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; transition: color .12s; }
-.group-count { font-weight: 500; color: var(--text-muted); }
+.group-count { font-size: 11px; font-weight: 400; color: var(--text-muted); }
 .tab-count-badge { font-size: 10px; font-weight: 600; color: var(--text-muted); background: var(--elevated); padding: 1px 6px; border-radius: 10px; text-transform: uppercase; letter-spacing: .04em; }
 .gtabs { padding: 1px 0 5px 8px; }
 .gtab { font-size: 11px; color: var(--text-muted); padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
@@ -224,7 +222,7 @@ body {
 
 /* ── NEW GROUP BUTTON ─── */
 .dedup-btn {
-  font-size: 11px; font-weight: 600; color: var(--primary);
+  font-size: 11px; font-weight: 500; color: var(--primary);
   background: none; border: none; cursor: pointer;
   font-family: var(--f); padding: 2px 6px;
   border-radius: 5px; transition: background .12s;
@@ -232,7 +230,7 @@ body {
 }
 .dedup-btn:hover { background: var(--hover-bg); }
 .new-group-btn {
-  font-size: 11px; font-weight: 600; color: var(--primary);
+  font-size: 11px; font-weight: 500; color: var(--primary);
   background: none; border: none; cursor: pointer;
   font-family: var(--f); padding: 2px 6px;
   border-radius: 5px; transition: background .12s;
@@ -310,7 +308,7 @@ body {
 .igf-input:focus { border-bottom-color: var(--primary); }
 .igf-input::placeholder { color: var(--text-muted); font-weight: 500; }
 .igf-confirm {
-  font-family: var(--f); font-size: 12px; font-weight: 600;
+  font-family: var(--f); font-size: 12px; font-weight: 500;
   color: var(--primary); background: none; border: none;
   cursor: pointer; padding: 2px 6px; flex-shrink: 0;
   transition: color .12s;
@@ -338,7 +336,7 @@ body {
   width: 14px; height: 14px; flex-shrink: 0;
 }
 .tab-title {
-  font-size: 12px; color: var(--text-2); flex: 1;
+  font-size: 12px; font-weight: 400; color: var(--text); flex: 1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   max-width: 260px;
 }
