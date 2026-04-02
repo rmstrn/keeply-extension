@@ -236,6 +236,17 @@ export function DefaultScreen() {
 
   const actions = useGroupActions(keeplyGroups, allTabs, triggerRefresh)
 
+  // Find duplicate tab IDs (same URL appears 2+ times in ungrouped — keep first, collect rest)
+  const duplicateTabIds = (() => {
+    const seen = new Set<string>()
+    const dupes: number[] = []
+    for (const tab of ungroupedTabs) {
+      if (seen.has(tab.url)) dupes.push(tab.id)
+      else seen.add(tab.url)
+    }
+    return dupes
+  })()
+
   // Outside-click dismissals
   useOutsideClick(editEmojiRef, actions.emojiPickerGroupId !== null, () => actions.setEmojiPickerGroupId(null))
   useOutsideClick(menuRef, actions.menuOpenGroupId !== null, () => actions.setMenuOpenGroupId(null))
@@ -382,6 +393,17 @@ export function DefaultScreen() {
           >
             <span className="section-label">Ungrouped · {tabCountLabel(ungroupedTabs.length)}</span>
             <span className="section-line" />
+            {duplicateTabIds.length > 0 && (
+              <button
+                className="dedup-btn"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  chrome.tabs.remove(duplicateTabIds, () => triggerRefresh())
+                }}
+              >
+                Remove duplicates
+              </button>
+            )}
             <ChevronIcon expanded={sectionsOpen.ungrouped} />
           </div>
           <div className={`section-body${sectionsOpen.ungrouped ? ' open' : ''}`}>

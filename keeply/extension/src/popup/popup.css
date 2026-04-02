@@ -217,6 +217,14 @@ body {
 .inbox-hint { font-size: 11px; color: var(--text-muted); padding: 6px 0; }
 
 /* ── NEW GROUP BUTTON ─── */
+.dedup-btn {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--f); padding: 2px 6px;
+  border-radius: 5px; transition: background .12s, color .12s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.dedup-btn:hover { background: var(--hover-bg); color: var(--primary); }
 .new-group-btn {
   font-size: 11px; font-weight: 600; color: var(--primary);
   background: none; border: none; cursor: pointer;
