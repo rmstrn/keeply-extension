@@ -15,6 +15,26 @@ const mockTabs = [
   { id: 3, title: 'GitHub — keeply-ext', url: 'https://github.com/keeply', favIconUrl: 'https://github.com/favicon.ico', windowId: 1 },
 ]
 
+const mockGroupsWithClosedTab = [
+  {
+    id: 'g1',
+    name: 'Work',
+    color: 'blue' as const,
+    tabs: [
+      { url: 'https://linear.app/q4', title: 'Linear — Q4', favIconUrl: undefined, tabId: 1 },
+      { url: 'https://closed.example.com', title: 'Closed Page', favIconUrl: undefined, tabId: undefined },
+    ],
+  },
+]
+
+// Mutable mock data ref — tests can switch between empty groups and groups with closed tabs
+let mockHookData = {
+  tabCount: 3,
+  keeplyGroups: [] as typeof mockGroupsWithClosedTab,
+  allTabs: mockTabs,
+  ungroupedTabs: mockTabs,
+}
+
 vi.mock('@/popup/stores/tabStore', () => ({
   useTabStore: (selector: (s: Record<string, unknown>) => unknown) =>
     selector({ triggerRefresh: mockTriggerRefresh, screen: 'default', lastRefresh: 0 }),
@@ -33,12 +53,7 @@ vi.mock('@/popup/hooks/useTabGroups', () => ({
 }))
 
 vi.mock('@/popup/hooks/useDefaultScreenData', () => ({
-  useDefaultScreenData: () => ({
-    tabCount: 3,
-    keeplyGroups: [],
-    allTabs: mockTabs,
-    ungroupedTabs: mockTabs,
-  }),
+  useDefaultScreenData: () => mockHookData,
 }))
 
 // =============================================================================
@@ -49,25 +64,29 @@ function clickAddGroup() {
   fireEvent.click(screen.getByText('+ Add Group'))
 }
 
+function setupChromeMock() {
+  vi.stubGlobal('chrome', {
+    tabs: { query: vi.fn(), remove: vi.fn(), update: vi.fn(), create: vi.fn() },
+    storage: {
+      local: {
+        get: vi.fn((_: unknown, cb: (result: Record<string, unknown>) => void) => cb({})),
+        set: vi.fn((_: unknown, cb: () => void) => cb()),
+      },
+    },
+    runtime: { lastError: null, getURL: vi.fn((p: string) => p) },
+    windows: { update: vi.fn() },
+  })
+}
+
 // =============================================================================
-// TESTS
+// TESTS — INLINE FORM
 // =============================================================================
 
 describe('InlineGroupForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-
-    vi.stubGlobal('chrome', {
-      tabs: { query: vi.fn(), remove: vi.fn(), update: vi.fn(), create: vi.fn() },
-      storage: {
-        local: {
-          get: vi.fn((_: unknown, cb: (result: Record<string, unknown>) => void) => cb({})),
-          set: vi.fn((_: unknown, cb: () => void) => cb()),
-        },
-      },
-      runtime: { lastError: null, getURL: vi.fn((p: string) => p) },
-      windows: { update: vi.fn() },
-    })
+    mockHookData = { tabCount: 3, keeplyGroups: [], allTabs: mockTabs, ungroupedTabs: mockTabs }
+    setupChromeMock()
   })
 
   it('shows inline form when "+ Add Group" is clicked', () => {
@@ -134,7 +153,6 @@ describe('InlineGroupForm', () => {
     expect(document.querySelector('.emoji-dropdown')).toBeInTheDocument()
     const emojiCell = document.querySelectorAll('.emoji-cell')[0]! as HTMLButtonElement
     act(() => { emojiCell.click() })
-    // Button shows selected emoji, input unchanged
     expect(screen.getByLabelText('Pick emoji').textContent).toBe('💼')
     expect(input.value).toBe('Work')
   })
@@ -146,5 +164,40 @@ describe('InlineGroupForm', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(document.querySelector('.inline-group-form')).toBeNull()
   })
+})
 
+// =============================================================================
+// TESTS — GROUP TABS WITH CLOSED STATE
+// =============================================================================
+
+describe('Group tab rendering', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockHookData = {
+      tabCount: 1,
+      keeplyGroups: mockGroupsWithClosedTab,
+      allTabs: mockTabs.slice(0, 1),
+      ungroupedTabs: [],
+    }
+    setupChromeMock()
+  })
+
+  it('renders closed tabs with dimmed class', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByText('Work'))
+    const closedRow = document.querySelector('.tab-closed')
+    expect(closedRow).toBeInTheDocument()
+    expect(closedRow?.textContent).toContain('Closed Page')
+  })
+
+  it('renders open tabs without dimmed class', () => {
+    render(<DefaultScreen />)
+    fireEvent.click(screen.getByText('Work'))
+    const rows = document.querySelectorAll('.group-tab-row')
+    expect(rows).toHaveLength(2)
+    // First tab is open
+    expect(rows[0]).not.toHaveClass('tab-closed')
+    // Second tab is closed
+    expect(rows[1]).toHaveClass('tab-closed')
+  })
 })

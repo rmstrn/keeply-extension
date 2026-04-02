@@ -42,13 +42,21 @@ export interface TabGroup {
   readonly tabIds: readonly number[]
 }
 
+// Single tab entry stored in a Keeply group — URL snapshot + optional live tabId
+export interface GroupTab {
+  readonly url: string
+  readonly title: string
+  readonly favIconUrl?: string | undefined
+  readonly tabId?: number | undefined
+}
+
 // Keeply group stored in chrome.storage.local
 export interface KeeplyGroup {
   readonly id: string
   readonly name: string
   readonly color: GroupColor
   readonly emoji?: string | undefined
-  readonly tabIds: readonly number[]
+  readonly tabs: readonly GroupTab[]
 }
 
 export interface GroupingResult {

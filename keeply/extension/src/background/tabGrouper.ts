@@ -110,7 +110,15 @@ export class TabGrouper {
       id: crypto.randomUUID(),
       name: g.name,
       color: g.color,
-      tabIds: [...g.tabIds],
+      tabs: g.tabIds.map((tabId) => {
+        const tab = tabs.find((t) => t.id === tabId)
+        return {
+          url: tab?.url ?? '',
+          title: tab?.title ?? '',
+          favIconUrl: tab?.favIconUrl,
+          tabId,
+        }
+      }),
     }))
     await this.storage.set(STORAGE_KEYS.KEEPLY_GROUPS, keeplyGroups)
 

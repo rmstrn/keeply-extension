@@ -9,7 +9,7 @@ import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
 import { STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
-import type { KeeplyGroup, RecentGroup } from '@/shared/types'
+import type { GroupTab, KeeplyGroup, RecentGroup } from '@/shared/types'
 
 // =============================================================================
 // HELPERS
@@ -17,6 +17,7 @@ import type { KeeplyGroup, RecentGroup } from '@/shared/types'
 
 interface DragData {
   readonly tabId: number
+  readonly url: string
   readonly sourceGroupId: string
 }
 
@@ -24,16 +25,15 @@ function parseDragData(e: React.DragEvent): DragData | null {
   const raw = e.dataTransfer.getData('text/plain')
   try {
     const data = JSON.parse(raw) as DragData
-    if (data.tabId) return data
+    if (data.tabId && data.url) return data
   } catch {
-    const tabId = Number(raw)
-    if (tabId) return { tabId, sourceGroupId: 'ungrouped' }
+    // legacy: plain tabId
   }
   return null
 }
 
-function makeDragData(tabId: number, sourceGroupId: string): string {
-  return JSON.stringify({ tabId, sourceGroupId })
+function makeDragData(tabId: number, url: string, sourceGroupId: string): string {
+  return JSON.stringify({ tabId, url, sourceGroupId })
 }
 
 // =============================================================================
@@ -123,21 +123,25 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
   const handleCreate = () => {
     if (!canCreate) return
 
-    const tabIds = [...selectedTabIds]
+    // Snapshot tab data from selected ungrouped tabs
+    const tabs: GroupTab[] = [...selectedTabIds].map((tabId) => {
+      const tab = ungroupedTabs.find((t) => t.id === tabId)!
+      return { url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl, tabId }
+    })
 
     const newGroup: KeeplyGroup = {
       id: crypto.randomUUID(),
       name: groupName.trim(),
       color: 'blue',
       ...(selectedEmoji ? { emoji: selectedEmoji } : {}),
-      tabIds,
+      tabs,
     }
 
     const newEntry: RecentGroup = {
       id: crypto.randomUUID(),
       timestamp: Date.now(),
-      groups: [{ name: newGroup.name, color: newGroup.color, tabIds }],
-      totalTabs: tabIds.length,
+      groups: [{ name: newGroup.name, color: newGroup.color, tabIds: [...selectedTabIds] }],
+      totalTabs: tabs.length,
     }
 
     chrome.storage.local.get(
@@ -274,16 +278,21 @@ export function DefaultScreen() {
     const data = parseDragData(e)
     if (!data || data.sourceGroupId === group.id) return
 
+    // Snapshot tab data from allTabs
+    const tab = allTabs.find((t) => t.id === data.tabId)
+    if (!tab) return
+    const newGroupTab: GroupTab = { url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl, tabId: tab.id }
+
     const updated = keeplyGroups.map((g) => {
       if (g.id === group.id) {
-        return { ...g, tabIds: [...g.tabIds, data.tabId] }
+        return { ...g, tabs: [...g.tabs, newGroupTab] }
       }
       // Remove from source group if dragging between groups
       if (g.id === data.sourceGroupId) {
-        return { ...g, tabIds: g.tabIds.filter((id) => id !== data.tabId) }
+        return { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
       }
       return g
-    }).filter((g) => g.tabIds.length > 0)
+    }).filter((g) => g.tabs.length > 0)
 
     saveGroups(updated)
   }
@@ -298,10 +307,10 @@ export function DefaultScreen() {
     const updated = keeplyGroups
       .map((g) =>
         g.id === data.sourceGroupId
-          ? { ...g, tabIds: g.tabIds.filter((id) => id !== data.tabId) }
+          ? { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
           : g,
       )
-      .filter((g) => g.tabIds.length > 0)
+      .filter((g) => g.tabs.length > 0)
 
     saveGroups(updated)
   }
@@ -312,15 +321,37 @@ export function DefaultScreen() {
     }
   }
 
-  const closeTab = (e: React.MouseEvent, tabId: number) => {
+  const closeTab = (e: React.MouseEvent, groupTab: GroupTab, groupId: string) => {
+    e.stopPropagation()
+    if (groupTab.tabId !== undefined) {
+      // Tab is open — close it in Chrome, keep entry with tabId=undefined
+      chrome.tabs.remove(groupTab.tabId, () => {
+        if (chrome.runtime.lastError) return
+        const updated = keeplyGroups.map((g) =>
+          g.id === groupId
+            ? { ...g, tabs: g.tabs.map((t) => t.url === groupTab.url ? { ...t, tabId: undefined } : t) }
+            : g,
+        )
+        saveGroups(updated)
+      })
+    } else {
+      // Tab is closed — remove entry from group entirely
+      const updated = keeplyGroups
+        .map((g) =>
+          g.id === groupId
+            ? { ...g, tabs: g.tabs.filter((t) => t.url !== groupTab.url) }
+            : g,
+        )
+        .filter((g) => g.tabs.length > 0)
+      saveGroups(updated)
+    }
+  }
+
+  const closeUngroupedTab = (e: React.MouseEvent, tabId: number) => {
     e.stopPropagation()
     chrome.tabs.remove(tabId, () => {
       if (chrome.runtime.lastError) return
-      // Also remove from any Keeply group
-      const updated = keeplyGroups
-        .map((g) => ({ ...g, tabIds: g.tabIds.filter((id) => id !== tabId) }))
-        .filter((g) => g.tabIds.length > 0)
-      saveGroups(updated)
+      triggerRefresh()
     })
   }
 
@@ -334,13 +365,6 @@ export function DefaultScreen() {
     chrome.storage.local.set({ [STORAGE_KEYS.KEEPLY_GROUPS]: groups }, () => {
       triggerRefresh()
     })
-  }
-
-  // Resolve tabIds to actual tab info for display
-  const resolveGroupTabs = (group: KeeplyGroup): TabInfoWithWindow[] => {
-    return group.tabIds
-      .map((id) => allTabs.find((t) => t.id === id))
-      .filter((t): t is TabInfoWithWindow => t !== undefined)
   }
 
   return (
@@ -398,7 +422,6 @@ export function DefaultScreen() {
       )}
 
       {keeplyGroups.map((group) => {
-        const tabs = resolveGroupTabs(group)
         const isExpanded = expandedGroups.has(group.id)
         return (
           <div
@@ -411,7 +434,7 @@ export function DefaultScreen() {
             <div className="rr group-header" onClick={() => toggleGroup(group.id)}>
               {group.emoji && <span className="group-emoji" aria-hidden="true">{group.emoji}</span>}
               <span className="rn">{group.name}</span>
-              <TabCountBadge count={tabs.length} />
+              <TabCountBadge count={group.tabs.length} />
               <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -420,28 +443,42 @@ export function DefaultScreen() {
 
             {isExpanded && (
               <div className="group-tabs-list">
-                {tabs.map((tab) => (
-                  <div
-                    key={tab.id}
-                    className="tab-row group-tab-row"
-                    draggable
-                    onDragStart={(e) => {
-                      e.stopPropagation()
-                      e.dataTransfer.setData('text/plain', makeDragData(tab.id, group.id))
-                      e.dataTransfer.effectAllowed = 'move'
-                    }}
-                    onClick={() => {
-                      chrome.tabs.update(tab.id, { active: true })
-                      if (tab.windowId !== undefined) chrome.windows.update(tab.windowId, { focused: true })
-                    }}
-                  >
-                    <TabFavicon url={tab.favIconUrl} />
-                    <span className="tab-title">{tab.title}</span>
-                    <button className="tab-close-btn" title="Close tab" onClick={(e) => closeTab(e, tab.id)}>×</button>
-                  </div>
-                ))}
-                {tabs.length === 0 && (
-                  <div className="tab-row empty"><span className="rm">No open tabs in this group</span></div>
+                {group.tabs.map((gt) => {
+                  const isOpen = gt.tabId !== undefined
+                  return (
+                    <div
+                      key={gt.url}
+                      className={`tab-row group-tab-row${isOpen ? '' : ' tab-closed'}`}
+                      draggable={isOpen}
+                      onDragStart={isOpen ? (e) => {
+                        e.stopPropagation()
+                        e.dataTransfer.setData('text/plain', makeDragData(gt.tabId!, gt.url, group.id))
+                        e.dataTransfer.effectAllowed = 'move'
+                      } : undefined}
+                      onClick={() => {
+                        if (isOpen) {
+                          chrome.tabs.update(gt.tabId!, { active: true })
+                          const openTab = allTabs.find((t) => t.id === gt.tabId)
+                          if (openTab?.windowId !== undefined) chrome.windows.update(openTab.windowId, { focused: true })
+                        } else {
+                          chrome.tabs.create({ url: gt.url })
+                        }
+                      }}
+                    >
+                      <TabFavicon url={gt.favIconUrl} />
+                      <span className="tab-title">{gt.title}</span>
+                      <button
+                        className="tab-close-btn"
+                        title={isOpen ? 'Close tab' : 'Remove from group'}
+                        onClick={(e) => closeTab(e, gt, group.id)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
+                })}
+                {group.tabs.length === 0 && (
+                  <div className="tab-row empty"><span className="rm">No tabs in this group</span></div>
                 )}
               </div>
             )}
@@ -467,13 +504,13 @@ export function DefaultScreen() {
               draggable
               onDragStart={(e) => {
                 e.stopPropagation()
-                e.dataTransfer.setData('text/plain', makeDragData(tab.id, 'ungrouped'))
+                e.dataTransfer.setData('text/plain', makeDragData(tab.id, tab.url, 'ungrouped'))
                 e.dataTransfer.effectAllowed = 'move'
               }}
             >
               <TabFavicon url={tab.favIconUrl} />
               <span className="tab-title">{tab.title}</span>
-              <button className="tab-close-btn" title="Close tab" onClick={(e) => closeTab(e, tab.id)}>×</button>
+              <button className="tab-close-btn" title="Close tab" onClick={(e) => closeUngroupedTab(e, tab.id)}>×</button>
               <span className="drag-hint" aria-hidden="true">&#x2807;</span>
             </div>
           ))}

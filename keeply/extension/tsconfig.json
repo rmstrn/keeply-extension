@@ -10,6 +10,8 @@
       "@/*": ["src/*"]
     },
 
+    "noEmit": true,
+
     /* Strict mode — всё включено */
     "strict": true,
     "noUncheckedIndexedAccess": true,

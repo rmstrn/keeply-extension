@@ -449,6 +449,10 @@ body {
 .group-header:hover .group-delete-btn { opacity: 1; }
 .group-delete-btn:hover { background: #FFE4E6; color: #DC2626; }
 
+/* Closed tabs in groups */
+.tab-closed { opacity: 0.5; }
+.tab-closed:hover { opacity: 0.7; }
+
 /* ── THEME PICKER ─── */
 .theme-picker { display: flex; gap: 4px; }
 .theme-btn {
