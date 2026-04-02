@@ -264,6 +264,41 @@ body {
 
 .manual-create-btn:disabled { opacity: .5; cursor: not-allowed; }
 
+/* Tab search */
+.tab-search {
+  width: 100%; padding: 7px 10px;
+  border: 1px solid var(--bd); border-radius: 8px;
+  font-family: var(--f); font-size: 12px;
+  color: var(--n9); background: var(--n0);
+  outline: none; margin-bottom: 8px;
+  transition: border-color .15s;
+}
+.tab-search:focus { border-color: var(--t7); background: var(--w); }
+.tab-search::placeholder { color: var(--n3); }
+
+/* Show all toggle */
+.show-all-toggle {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--n5);
+  cursor: pointer; padding: 6px 0;
+}
+.show-all-toggle input { accent-color: var(--t7); }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 20px 0;
+  font-size: 12px; color: var(--n5);
+}
+.empty-state p { margin-bottom: 10px; }
+
+/* Group badge on tabs */
+.tab-group-badge {
+  font-size: 9px; font-weight: 600;
+  padding: 1px 5px; border-radius: 10px;
+  background: var(--n1); color: var(--n5);
+  flex-shrink: 0;
+}
+
 /* ── EXPANDABLE GROUPS ─── */
 .group-item {
   margin-bottom: 1px; border-radius: 8px;

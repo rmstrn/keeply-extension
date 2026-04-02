@@ -34,6 +34,7 @@ describe('ManualGroupScreen', () => {
         group: vi.fn(),
       },
       tabGroups: {
+        query: vi.fn((_: unknown, cb: (groups: never[]) => void) => cb([])),
         update: vi.fn(),
         TAB_GROUP_ID_NONE: -1,
       },
