@@ -226,6 +226,7 @@ export function DefaultScreen() {
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [showInlineForm, setShowInlineForm] = useState(false)
   const [sectionsOpen, setSectionsOpen] = useState({ groups: true, ungrouped: true })
 
@@ -268,7 +269,7 @@ export function DefaultScreen() {
   }
 
   return (
-    <div className="body">
+    <div className="body" onDragOver={() => setIsDragging(true)} onDragEnd={() => setIsDragging(false)} onDrop={() => setIsDragging(false)}>
       <div className="tab-meta">
         <span className="tab-ct">
           <TabIcon />
@@ -346,7 +347,7 @@ export function DefaultScreen() {
           onToggleExpand={() => toggleGroup(group.id)}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
           onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
-          onDrop={(e) => { setIsDragOver(null); actions.handleDropOnGroup(e, group, parseDragData) }}
+          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnGroup(e, group, parseDragData) }}
           onStartEditing={() => actions.startEditing(group)}
           onEditNameChange={actions.setEditName}
           onCommitRename={() => actions.commitRename(group.id)}
@@ -385,7 +386,7 @@ export function DefaultScreen() {
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
           }}
-          onDrop={(e) => { setIsDragOver(null); actions.handleDropOnUngrouped(e, parseDragData) }}
+          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnUngrouped(e, parseDragData) }}
         >
           <div
             className="section-header"
@@ -429,12 +430,14 @@ export function DefaultScreen() {
       )}
 
       {/* Empty ungrouped drop target while dragging */}
-      {ungroupedTabs.length === 0 && isDragOver === 'ungrouped' && (
+      {ungroupedTabs.length === 0 && isDragging && (
         <div
-          className="inbox-section drag-over"
+          className={`inbox-section${isDragOver === 'ungrouped' ? ' drag-over' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver('ungrouped') }}
-          onDragLeave={() => setIsDragOver(null)}
-          onDrop={(e) => { setIsDragOver(null); actions.handleDropOnUngrouped(e, parseDragData) }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
+          }}
+          onDrop={(e) => { setIsDragOver(null); setIsDragging(false); actions.handleDropOnUngrouped(e, parseDragData) }}
         >
           <div className="slbl" >Drop here to ungroup</div>
         </div>
