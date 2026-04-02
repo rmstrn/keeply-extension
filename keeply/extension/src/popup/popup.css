@@ -30,7 +30,7 @@ html.dark {
   --t7: #0D7A5F;
   --t1: #393E46;
   --t2: #948979;
-  --t-hover: #0A5C47;
+  --t-hover: #393E46;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

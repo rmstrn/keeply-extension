@@ -36,6 +36,6 @@ export const darkTheme: ThemeTokens = {
   text2: '#948979',
   textMuted: '#948979',
   primary: '#0D7A5F',
-  primaryHover: '#0A5C47',
+  primaryHover: '#393E46',
   primaryText: '#FFFFFF',
 }
