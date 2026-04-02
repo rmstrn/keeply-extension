@@ -119,9 +119,11 @@ export function useGroupActions(
   const handleDropOnGroup = (e: React.DragEvent, group: KeeplyGroup) => {
     e.preventDefault()
     const data = parseDragData(e)
+    console.log('[DnD] dropOnGroup', { data, targetGroup: group.name, allTabsCount: allTabs.length })
     if (!data || data.sourceGroupId === group.id) return
 
     const tab = allTabs.find((t) => t.id === data.tabId)
+    console.log('[DnD] found tab:', tab ? tab.title : 'NOT FOUND')
     if (!tab) return
     const newGroupTab: GroupTab = { url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl, tabId: tab.id }
 
@@ -141,6 +143,7 @@ export function useGroupActions(
   const handleDropOnUngrouped = (e: React.DragEvent) => {
     e.preventDefault()
     const data = parseDragData(e)
+    console.log('[DnD] dropOnUngrouped', { data })
     if (!data || data.sourceGroupId === UNGROUPED_ID) return
 
     const updated = keeplyGroups
