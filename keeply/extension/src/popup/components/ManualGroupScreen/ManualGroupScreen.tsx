@@ -12,20 +12,31 @@ interface TabInfoWithGroup extends TabInfo {
   readonly chromeGroupId?: number | undefined
 }
 
+interface ExistingGroup {
+  readonly id: number
+  readonly name: string
+  readonly color: ChromeTabGroupColor
+  readonly tabCount: number
+}
+
 // =============================================================================
 // COLOR OPTIONS
 // =============================================================================
 
-const COLORS: { color: ChromeTabGroupColor; hex: string }[] = [
-  { color: 'grey',   hex: '#6B7280' },
-  { color: 'blue',   hex: '#2563EB' },
-  { color: 'red',    hex: '#DC2626' },
-  { color: 'yellow', hex: '#D97706' },
-  { color: 'green',  hex: '#1D9E75' },
-  { color: 'pink',   hex: '#D4537E' },
-  { color: 'purple', hex: '#6D4AFF' },
-  { color: 'cyan',   hex: '#0891B2' },
+const CHROME_COLORS: { color: ChromeTabGroupColor; hex: string; label: string }[] = [
+  { color: 'blue',   hex: '#2563EB', label: 'Blue'   },
+  { color: 'purple', hex: '#6D4AFF', label: 'Purple' },
+  { color: 'green',  hex: '#1D9E75', label: 'Green'  },
+  { color: 'cyan',   hex: '#0891B2', label: 'Cyan'   },
+  { color: 'yellow', hex: '#D97706', label: 'Yellow' },
+  { color: 'red',    hex: '#DC2626', label: 'Red'    },
+  { color: 'pink',   hex: '#D4537E', label: 'Pink'   },
+  { color: 'grey',   hex: '#6B7280', label: 'Grey'   },
 ]
+
+const GROUP_HEX: Record<string, string> = Object.fromEntries(
+  CHROME_COLORS.map(({ color, hex }) => [color, hex]),
+)
 
 const SKIP_PREFIXES = ['chrome://', 'chrome-extension://'] as const
 
@@ -56,6 +67,32 @@ export function ManualGroupScreen() {
   const [search, setSearch] = useState('')
   const [groupMap, setGroupMap] = useState<Record<number, string>>({})
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['inbox']))
+  const [existingGroups, setExistingGroups] = useState<ExistingGroup[]>([])
+
+  // Fetch existing Chrome groups on mount
+  useEffect(() => {
+    try {
+      chrome.tabGroups.query({}, (groups) => {
+        if (chrome.runtime.lastError || !groups.length) return
+        const promises = groups.map(
+          (g) =>
+            new Promise<ExistingGroup>((resolve) => {
+              chrome.tabs.query({ groupId: g.id }, (tabs) => {
+                resolve({
+                  id: g.id,
+                  name: g.title ?? 'Unnamed',
+                  color: g.color as ChromeTabGroupColor,
+                  tabCount: tabs.length,
+                })
+              })
+            }),
+        )
+        Promise.all(promises).then(setExistingGroups)
+      })
+    } catch {
+      // Extension not loaded properly
+    }
+  }, [])
 
   // Fetch tabs based on showAllTabs toggle
   useEffect(() => {
@@ -124,7 +161,6 @@ export function ManualGroupScreen() {
     })
   }
 
-  // Build grouped sections when showAllTabs is true
   const sections = useMemo(() => {
     if (!showAllTabs) return null
 
@@ -201,6 +237,25 @@ export function ManualGroupScreen() {
     <div className="body">
       <div className="manual-title">Create Group</div>
 
+      {/* Existing groups overview */}
+      {existingGroups.length > 0 && (
+        <div className="existing-groups">
+          <p className="existing-groups-label">Existing groups</p>
+          <div className="existing-groups-list">
+            {existingGroups.map((group) => (
+              <div key={group.id} className="existing-group-chip">
+                <div
+                  className="existing-group-dot"
+                  style={{ background: GROUP_HEX[group.color] ?? '#6B7280' }}
+                />
+                <span className="existing-group-name">{group.name}</span>
+                <span className="existing-group-count">{group.tabCount}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="manual-field">
         <label className="manual-label" htmlFor="group-name">Name</label>
         <input
@@ -215,21 +270,35 @@ export function ManualGroupScreen() {
         />
       </div>
 
-      <div className="manual-field">
-        <span className="manual-label">Color</span>
-        <div className="color-picker" role="radiogroup" aria-label="Group color">
-          {COLORS.map(({ color, hex }) => (
-            <button
-              key={color}
-              className={`color-dot${selectedColor === color ? ' selected' : ''}`}
-              style={{ background: hex }}
-              onClick={() => setSelectedColor(color)}
-              aria-label={color}
-              aria-checked={selectedColor === color}
-              role="radio"
-            />
-          ))}
+      {/* Live preview */}
+      {groupName.trim() && (
+        <div className="group-name-preview">
+          <div className="gdot" style={{ background: GROUP_HEX[selectedColor] ?? '#6B7280' }} />
+          <span className="gn">{groupName}</span>
         </div>
+      )}
+
+      {/* Color picker — 4x2 grid */}
+      <div className="color-picker-label">Color</div>
+      <div className="color-picker-grid">
+        {CHROME_COLORS.map(({ color, hex, label }) => (
+          <button
+            key={color}
+            className={`color-swatch${selectedColor === color ? ' selected' : ''}`}
+            onClick={() => setSelectedColor(color)}
+            title={label}
+            aria-label={label}
+            aria-pressed={selectedColor === color}
+          >
+            <div className="color-swatch-circle" style={{ background: hex }} />
+            <span className="color-swatch-label">{label}</span>
+            {selectedColor === color && (
+              <div className="color-swatch-check">
+                <CheckIcon />
+              </div>
+            )}
+          </button>
+        ))}
       </div>
 
       <div className="divider" role="separator" />

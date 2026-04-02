@@ -50,8 +50,10 @@ describe('ManualGroupScreen', () => {
 
   it('renders color picker with all 8 colors', () => {
     render(<ManualGroupScreen />)
-    const colorDots = screen.getAllByRole('radio')
-    expect(colorDots).toHaveLength(8)
+    const colorSwatches = screen.getAllByRole('button').filter(
+      (btn) => btn.getAttribute('aria-pressed') !== null,
+    )
+    expect(colorSwatches).toHaveLength(8)
   })
 
   it('Create button is disabled when name is empty', () => {
