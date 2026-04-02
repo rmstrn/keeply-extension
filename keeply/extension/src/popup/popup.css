@@ -397,7 +397,11 @@ body {
   border-radius: 8px; padding: 1px 0;
   transition: background .15s ease, box-shadow .15s ease;
 }
-.drop-zone-active {
+.group-item.drop-zone-active {
+  outline: 1.5px dashed var(--border);
+  outline-offset: 2px;
+}
+.inbox-section.drop-zone-active {
   outline: 1.5px dashed var(--border);
   outline-offset: 4px;
 }
