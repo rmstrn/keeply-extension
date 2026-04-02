@@ -400,7 +400,6 @@ body {
 .drop-zone-active {
   outline: 1.5px dashed var(--border);
   outline-offset: 3px;
-  background: var(--hover-bg);
 }
 .group-tabs-list {
   padding: 2px 0 4px 12px;
@@ -416,7 +415,7 @@ body {
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { padding: 2px; min-height: 40px; border-radius: 8px; transition: background .15s ease; }
+.inbox-section { padding: 0; min-height: 40px; border-radius: 8px; }
 .inbox-tab {
   display: flex; align-items: center; gap: 8px;
   padding: 5px 6px; border-radius: 6px;
