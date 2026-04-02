@@ -397,12 +397,12 @@ body {
 
 /* ── EXPANDABLE GROUPS ─── */
 .group-item {
-  margin-bottom: 1px; border-radius: 8px;
-  transition: background .12s;
+  margin-bottom: 1px; border-radius: 8px; padding: 6px 0;
+  transition: background .15s ease;
 }
 .group-item.drag-over {
-  outline: 1.5px dashed var(--primary);
-  outline-offset: -2px;
+  outline: 1.5px dashed var(--border);
+  outline-offset: 2px;
   background: var(--hover-bg);
 }
 .group-tabs-list {
@@ -419,7 +419,7 @@ body {
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { margin-top: 10px; padding: 4px; }
+.inbox-section { margin-top: 10px; padding: 6px 8px; min-height: 48px; }
 .inbox-tab {
   display: flex; align-items: center; gap: 7px;
   padding: 4px 8px; border-radius: 6px;
