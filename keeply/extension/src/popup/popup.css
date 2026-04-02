@@ -4,8 +4,8 @@
 /* CSS variables are set programmatically from theme.ts via themeUtils.ts */
 :root {
   --f: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --row-px: 8px;
-  --emoji-center: 18px; /* --row-px (8) + half of 20px emoji (10) */
+  --emoji-w: 24px;
+  --emoji-center: 12px; /* half of --emoji-w */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -98,9 +98,8 @@ body {
 .section-header {
   display: flex; align-items: center; gap: 8px;
   cursor: pointer; user-select: none;
-  padding: 0 var(--row-px); margin: 14px 0 6px;
+  padding: 0; margin: 8px 0;
 }
-.section-header:first-child { margin-top: 6px; }
 .section-label {
   font-size: 10px; font-weight: 700; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: .07em;
@@ -123,7 +122,7 @@ body {
 .section-body.open { max-height: 2000px; opacity: 1; }
 
 /* ── RECENT ROWS ─── */
-.rr { display: flex; align-items: center; gap: 10px; padding: 6px var(--row-px); border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0; }
+.rr { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0; }
 .rr:hover { background: var(--hover-bg); }
 .rr:hover .rn { color: var(--primary); }
 .rn { font-size: 13px; font-weight: 600; color: var(--text-2); flex: 1; transition: color .12s; }
@@ -395,7 +394,7 @@ body {
 
 /* ── EXPANDABLE GROUPS ─── */
 .group-item {
-  margin-bottom: 1px; border-radius: 8px; padding: 6px 8px; min-height: 36px;
+  margin-bottom: 1px; border-radius: 8px; padding: 0; min-height: 36px;
   transition: background .15s ease, box-shadow .15s ease;
 }
 .drop-zone-active {
@@ -403,24 +402,23 @@ body {
   background: var(--hover-bg);
 }
 .group-tabs-list {
-  padding: 2px 0 4px 0;
+  padding: 2px 0 4px 12px;
   border-left: 1.5px solid var(--elevated);
   margin-left: var(--emoji-center);
-  padding-left: 10px;
 }
 .group-tab-row {
   display: flex; align-items: center; gap: 7px;
-  padding: 4px var(--row-px); border-radius: 6px; cursor: grab;
+  padding: 4px 0; border-radius: 6px; cursor: grab;
   transition: background .15s ease; margin: 0;
 }
 .group-tab-row:active { cursor: grabbing; }
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { margin-top: 10px; padding: 10px 8px; min-height: 52px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
+.inbox-section { margin-top: 0; padding: 0; min-height: 52px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
 .inbox-tab {
   display: flex; align-items: center; gap: 7px;
-  padding: 4px var(--row-px); border-radius: 6px;
+  padding: 4px 0; border-radius: 6px;
   cursor: grab; transition: background .15s ease; margin: 0;
 }
 .inbox-tab:hover { background: var(--hover-bg); }
@@ -439,7 +437,7 @@ body {
 .group-tab-row:hover .tab-close-btn { opacity: 1; }
 .tab-close-btn:hover { background: var(--danger-bg); color: var(--danger); }
 
-.group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; cursor: pointer; width: 20px; text-align: center; }
+.group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; cursor: pointer; width: var(--emoji-w); display: inline-flex; align-items: center; justify-content: center; }
 .group-rename-input {
   flex: 1; min-width: 0; font-size: 13px; font-weight: 600;
   font-family: var(--f); color: var(--text); background: var(--surface);
