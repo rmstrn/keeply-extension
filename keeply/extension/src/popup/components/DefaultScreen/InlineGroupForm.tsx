@@ -5,7 +5,6 @@ import { useOutsideClick } from '@/popup/hooks/useOutsideClick'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { STORAGE_KEYS, MAX_GROUP_NAME_LENGTH, MAX_RECENT_GROUPS } from '@/shared/constants'
 import type { GroupTab, KeeplyGroup, RecentGroup } from '@/shared/types'
-import { CheckIcon } from './Icons'
 import { EmojiPicker } from './EmojiPicker'
 
 interface InlineGroupFormProps {
@@ -64,7 +63,7 @@ export function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGr
     })
   }
 
-  const canCreate = groupName.trim().length > 0 && selectedTabIds.size > 0
+  const canCreate = groupName.trim().length > 0
 
   const handleCreate = () => {
     if (!canCreate) return
@@ -107,15 +106,15 @@ export function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGr
   }
 
   return (
-    <div className="inline-group-form" ref={formRef}>
-      <div className="inline-form-name-row">
+    <div className="igf" ref={formRef}>
+      <div className="igf-sep" />
+      <div className="igf-name-row">
         <div className="emoji-picker-wrapper" ref={emojiRef}>
           <button
             type="button"
-            className="emoji-trigger"
+            className="igf-emoji"
             onClick={() => setEmojiOpen((o) => !o)}
             aria-label="Pick emoji"
-            aria-expanded={emojiOpen}
           >
             {selectedEmoji ?? '😀'}
           </button>
@@ -123,7 +122,7 @@ export function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGr
         </div>
         <input
           ref={inputRef}
-          className="manual-input"
+          className="igf-input"
           type="text"
           placeholder="Group name..."
           value={groupName}
@@ -133,38 +132,32 @@ export function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGr
         />
         <button
           type="button"
-          className="inline-form-confirm"
+          className="igf-confirm"
           onClick={handleCreate}
           disabled={!canCreate}
           aria-label="Create group"
-          title="Create group"
         >
           ✓
         </button>
       </div>
 
       {ungroupedTabs.length > 0 && (
-        <div className="inline-form-tabs" role="listbox" aria-label="Select tabs">
+        <div className="igf-tabs" role="listbox" aria-label="Select tabs">
           {ungroupedTabs.map((tab) => (
             <div
               key={tab.id}
-              className="tab-row"
+              className={`igf-tab${selectedTabIds.has(tab.id) ? ' selected' : ''}`}
               onClick={() => toggleTab(tab.id)}
               role="option"
               aria-selected={selectedTabIds.has(tab.id)}
             >
-              <div
-                className={`tab-checkbox${selectedTabIds.has(tab.id) ? ' checked' : ''}`}
-                aria-hidden="true"
-              >
-                {selectedTabIds.has(tab.id) && <CheckIcon />}
-              </div>
               <TabFavicon url={tab.favIconUrl} />
               <span className="tab-title">{tab.title}</span>
             </div>
           ))}
         </div>
       )}
+      <div className="igf-sep" />
     </div>
   )
 }
