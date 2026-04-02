@@ -1,4 +1,5 @@
 import { useTabStore } from '@/popup/stores/tabStore'
+import { useTheme } from '@/popup/hooks/useTheme'
 
 const PRO_FEATURES = [
   'Unlimited AI groupings every day',
@@ -9,6 +10,7 @@ const PRO_FEATURES = [
 
 export function PaywallScreen() {
   const setScreen = useTabStore((s) => s.setScreen)
+  const theme = useTheme()
 
   const handleUpgrade = (annual: boolean) => {
     const url = annual
@@ -78,7 +80,7 @@ export function PaywallScreen() {
               <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
                 <path
                   d="M1.5 4.5l2 2 4-4"
-                  stroke="#0D7A5F"
+                  stroke={theme.primary}
                   strokeWidth="1.6"
                   strokeLinecap="round"
                   strokeLinejoin="round"

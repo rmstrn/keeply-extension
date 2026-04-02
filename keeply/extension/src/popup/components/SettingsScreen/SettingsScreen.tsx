@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { applyTheme } from '@/shared/utils/themeUtils'
+import { useTheme } from '@/popup/hooks/useTheme'
 import type { Theme } from '@/shared/types'
 
 interface ToggleSwitchProps {
@@ -25,6 +26,7 @@ export function SettingsScreen() {
   const [showDev, setShowDev] = useState(false)
   const [currentTheme, setCurrentTheme] = useState<Theme>('system')
   const tapCountRef = useRef(0)
+  const theme = useTheme()
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -158,7 +160,7 @@ export function SettingsScreen() {
       </div>
 
       {showDev && (
-        <div className="sr" style={{ borderTop: '1px dashed #DDDDD8', marginTop: 8 }}>
+        <div className="sr" style={{ borderTop: `1px dashed ${theme.border}`, marginTop: 8 }}>
           <div>
             <p className="sr-label" style={{ color: '#C0392B' }}>Dev Tools</p>
             <p className="sr-sub">Reset AI usage counter</p>

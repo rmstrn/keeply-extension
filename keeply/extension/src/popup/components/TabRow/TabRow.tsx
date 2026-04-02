@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { TabInfo } from '@/shared/types'
+import { useTheme } from '@/popup/hooks/useTheme'
 
 interface TabRowProps {
   readonly tab: TabInfo
@@ -24,13 +25,14 @@ export function TabRow({ tab, selected, onToggle, showCheckbox }: TabRowProps) {
 
 export function TabFavicon({ url }: { readonly url?: string | undefined }) {
   const [error, setError] = useState(false)
+  const theme = useTheme()
 
   if (!url || error) {
     return (
       <div className="tab-favicon tab-favicon--fallback" aria-hidden="true">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <circle cx="6" cy="6" r="5" stroke="#9B9C96" strokeWidth="1" />
-          <path d="M6 1c0 0-2 2-2 5s2 5 2 5M6 1c0 0 2 2 2 5s-2 5-2 5M1 6h10" stroke="#9B9C96" strokeWidth="1" />
+          <circle cx="6" cy="6" r="5" stroke={theme.textMuted} strokeWidth="1" />
+          <path d="M6 1c0 0-2 2-2 5s2 5 2 5M6 1c0 0 2 2 2 5s-2 5-2 5M1 6h10" stroke={theme.textMuted} strokeWidth="1" />
         </svg>
       </div>
     )

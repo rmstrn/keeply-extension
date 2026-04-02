@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
+import { useTheme } from '@/popup/hooks/useTheme'
 import { extractGroupableTabs } from '@/shared/utils/tabUtils'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { TabRow } from '@/popup/components/TabRow/TabRow'
@@ -10,6 +11,7 @@ export function ResultsScreen() {
   const result = useTabStore((s) => s.lastResult)
   const reset = useTabStore((s) => s.reset)
   const startGrouping = useTabStore((s) => s.startGrouping)
+  const theme = useTheme()
   const [allTabs, setAllTabs] = useState<TabInfo[]>([])
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export function ResultsScreen() {
     <div className="body">
       <div className="done-chip" role="status">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <circle cx="8" cy="8" r="7" fill="#0D7A5F" />
+          <circle cx="8" cy="8" r="7" fill={theme.primary} />
           <path
             d="M5 8l2.5 2.5 4-5"
             stroke="white"
