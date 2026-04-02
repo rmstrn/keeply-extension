@@ -4,12 +4,16 @@ import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
 import { useDefaultScreenData } from '@/popup/hooks/useDefaultScreenData'
 import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
+import { useOutsideClick } from '@/popup/hooks/useOutsideClick'
+import { useGroupActions } from '@/popup/hooks/useGroupActions'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
-import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
 import { STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import type { GroupTab, KeeplyGroup, RecentGroup } from '@/shared/types'
+import { TabIcon, BulbIcon, ExternalIcon, CheckIcon } from './Icons'
+import { EmojiPicker } from './EmojiPicker'
+import { GroupRow } from './GroupRow'
 
 // =============================================================================
 // HELPERS
@@ -39,13 +43,6 @@ function makeDragData(tabId: number, url: string, sourceGroupId: string): string
 // =============================================================================
 // INLINE GROUP FORM
 // =============================================================================
-
-const EMOJI_CATEGORIES = [
-  { label: 'Work',  emojis: ['💼', '📊', '📝', '💡', '🖥️', '📱', '🔧', '⚙️'] },
-  { label: 'Media', emojis: ['🎬', '🎵', '🎮', '📚', '🎨', '🎭', '📷', '🎙️'] },
-  { label: 'Life',  emojis: ['🛒', '🏠', '🚗', '✈️', '🍕', '☕', '💪', '🧘'] },
-  { label: 'Other', emojis: ['⭐', '🔥', '💎', '🚀', '❤️', '🌿', '🎯', '💰'] },
-] as const
 
 interface InlineGroupFormProps {
   ungroupedTabs: TabInfoWithWindow[]
@@ -92,16 +89,7 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
   }, [onCancel, emojiOpen])
 
   // Close emoji picker on outside click
-  useEffect(() => {
-    if (!emojiOpen) return
-    const handler = (e: MouseEvent) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
-        setEmojiOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [emojiOpen])
+  useOutsideClick(emojiRef, emojiOpen, () => setEmojiOpen(false))
 
   const pickEmoji = (emoji: string) => {
     setSelectedEmoji(emoji)
@@ -123,7 +111,6 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
   const handleCreate = () => {
     if (!canCreate) return
 
-    // Snapshot tab data from selected ungrouped tabs
     const tabs: GroupTab[] = [...selectedTabIds].map((tabId) => {
       const tab = ungroupedTabs.find((t) => t.id === tabId)!
       return { url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl, tabId }
@@ -163,7 +150,6 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
 
   return (
     <div className="inline-group-form" ref={formRef}>
-      {/* Name row: emoji + input + confirm */}
       <div className="inline-form-name-row">
         <div className="emoji-picker-wrapper" ref={emojiRef}>
           <button
@@ -175,27 +161,7 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
           >
             {selectedEmoji ?? '😀'}
           </button>
-          {emojiOpen && (
-            <div className="emoji-dropdown">
-              {EMOJI_CATEGORIES.map((cat) => (
-                <div key={cat.label} className="emoji-cat">
-                  <div className="emoji-cat-label">{cat.label}</div>
-                  <div className="emoji-grid">
-                    {cat.emojis.map((e) => (
-                      <button
-                        key={e}
-                        type="button"
-                        className="emoji-cell"
-                        onClick={() => pickEmoji(e)}
-                      >
-                        {e}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {emojiOpen && <EmojiPicker onPick={pickEmoji} />}
         </div>
         <input
           ref={inputRef}
@@ -219,7 +185,6 @@ function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGroupForm
         </button>
       </div>
 
-      {/* Tab selection */}
       {ungroupedTabs.length > 0 && (
         <div className="inline-form-tabs" role="listbox" aria-label="Select tabs">
           {ungroupedTabs.map((tab) => (
@@ -261,15 +226,18 @@ export function DefaultScreen() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState<string | null>(null)
   const [showInlineForm, setShowInlineForm] = useState(false)
-  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const [emojiPickerGroupId, setEmojiPickerGroupId] = useState<string | null>(null)
-  const [menuOpenGroupId, setMenuOpenGroupId] = useState<string | null>(null)
-  const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState<string | null>(null)
+
   const editInputRef = useRef<HTMLInputElement>(null)
   const editEmojiRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const confirmRef = useRef<HTMLDivElement>(null)
+
+  const actions = useGroupActions(keeplyGroups, allTabs, triggerRefresh)
+
+  // Outside-click dismissals
+  useOutsideClick(editEmojiRef, actions.emojiPickerGroupId !== null, () => actions.setEmojiPickerGroupId(null))
+  useOutsideClick(menuRef, actions.menuOpenGroupId !== null, () => actions.setMenuOpenGroupId(null))
+  useOutsideClick(confirmRef, actions.confirmDeleteGroupId !== null, () => actions.setConfirmDeleteGroupId(null))
 
   const toggleGroup = (id: string) => {
     setExpandedGroups((prev) => {
@@ -280,193 +248,10 @@ export function DefaultScreen() {
     })
   }
 
-  const startEditing = (group: KeeplyGroup) => {
-    setEditingGroupId(group.id)
-    setEditName(group.name)
-    setEmojiPickerGroupId(null)
-  }
-
-  const commitRename = (groupId: string) => {
-    const trimmed = editName.trim()
-    if (trimmed.length === 0) {
-      cancelRename()
-      return
-    }
-    const updated = keeplyGroups.map((g) =>
-      g.id === groupId ? { ...g, name: trimmed } : g,
-    )
-    saveGroups(updated)
-    setEditingGroupId(null)
-  }
-
-  const cancelRename = () => {
-    setEditingGroupId(null)
-    setEmojiPickerGroupId(null)
-  }
-
-  const pickEditEmoji = (emoji: string, groupId: string) => {
-    const updated = keeplyGroups.map((g) =>
-      g.id === groupId ? { ...g, emoji } : g,
-    )
-    saveGroups(updated)
-    setEmojiPickerGroupId(null)
-  }
-
-  const openAllClosed = (e: React.MouseEvent, group: KeeplyGroup) => {
-    e.stopPropagation()
-    for (const gt of group.tabs) {
-      if (gt.tabId === undefined) {
-        chrome.tabs.create({ url: gt.url })
-      }
-    }
-  }
-
-  const closeAllOpen = (e: React.MouseEvent, group: KeeplyGroup) => {
-    e.stopPropagation()
-    const openTabs = group.tabs.filter((t) => t.tabId !== undefined)
-    if (openTabs.length === 0) return
-    const tabIds = openTabs.map((t) => t.tabId!)
-    chrome.tabs.remove(tabIds, () => {
-      if (chrome.runtime.lastError) return
-      const updated = keeplyGroups.map((g) =>
-        g.id === group.id
-          ? { ...g, tabs: g.tabs.map((t) => ({ ...t, tabId: undefined })) }
-          : g,
-      )
-      saveGroups(updated)
-    })
-  }
-
-  // Close emoji picker on outside click
-  useEffect(() => {
-    if (!emojiPickerGroupId) return
-    const handler = (e: MouseEvent) => {
-      if (editEmojiRef.current && !editEmojiRef.current.contains(e.target as Node)) {
-        setEmojiPickerGroupId(null)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [emojiPickerGroupId])
-
-  // Close group menu on outside click
-  useEffect(() => {
-    if (!menuOpenGroupId) return
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpenGroupId(null)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [menuOpenGroupId])
-
-  // Close delete confirmation on outside click
-  useEffect(() => {
-    if (!confirmDeleteGroupId) return
-    const handler = (e: MouseEvent) => {
-      if (confirmRef.current && !confirmRef.current.contains(e.target as Node)) {
-        setConfirmDeleteGroupId(null)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [confirmDeleteGroupId])
-
-  // Move tab into a Keeply group (storage-only)
-  const handleDropOnGroup = (e: React.DragEvent, group: KeeplyGroup) => {
-    e.preventDefault()
-    setIsDragOver(null)
-    const data = parseDragData(e)
-    if (!data || data.sourceGroupId === group.id) return
-
-    // Snapshot tab data from allTabs
-    const tab = allTabs.find((t) => t.id === data.tabId)
-    if (!tab) return
-    const newGroupTab: GroupTab = { url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl, tabId: tab.id }
-
-    const updated = keeplyGroups.map((g) => {
-      if (g.id === group.id) {
-        return { ...g, tabs: [...g.tabs, newGroupTab] }
-      }
-      // Remove from source group if dragging between groups
-      if (g.id === data.sourceGroupId) {
-        return { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
-      }
-      return g
-    }).filter((g) => g.tabs.length > 0)
-
-    saveGroups(updated)
-  }
-
-  // Remove tab from its group (move to ungrouped)
-  const handleDropOnUngrouped = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(null)
-    const data = parseDragData(e)
-    if (!data || data.sourceGroupId === 'ungrouped') return
-
-    const updated = keeplyGroups
-      .map((g) =>
-        g.id === data.sourceGroupId
-          ? { ...g, tabs: g.tabs.filter((t) => t.url !== data.url) }
-          : g,
-      )
-      .filter((g) => g.tabs.length > 0)
-
-    saveGroups(updated)
-  }
-
   const handleGroupDragLeave = (e: React.DragEvent, groupId: string) => {
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       if (isDragOver === groupId) setIsDragOver(null)
     }
-  }
-
-  const closeTab = (e: React.MouseEvent, groupTab: GroupTab, groupId: string) => {
-    e.stopPropagation()
-    if (groupTab.tabId !== undefined) {
-      // Tab is open — close it in Chrome, keep entry with tabId=undefined
-      chrome.tabs.remove(groupTab.tabId, () => {
-        if (chrome.runtime.lastError) return
-        const updated = keeplyGroups.map((g) =>
-          g.id === groupId
-            ? { ...g, tabs: g.tabs.map((t) => t.url === groupTab.url ? { ...t, tabId: undefined } : t) }
-            : g,
-        )
-        saveGroups(updated)
-      })
-    } else {
-      // Tab is closed — remove entry from group entirely
-      const updated = keeplyGroups
-        .map((g) =>
-          g.id === groupId
-            ? { ...g, tabs: g.tabs.filter((t) => t.url !== groupTab.url) }
-            : g,
-        )
-        .filter((g) => g.tabs.length > 0)
-      saveGroups(updated)
-    }
-  }
-
-  const closeUngroupedTab = (e: React.MouseEvent, tabId: number) => {
-    e.stopPropagation()
-    chrome.tabs.remove(tabId, () => {
-      if (chrome.runtime.lastError) return
-      triggerRefresh()
-    })
-  }
-
-  const deleteGroup = (e: React.MouseEvent, group: KeeplyGroup) => {
-    e.stopPropagation()
-    const updated = keeplyGroups.filter((g) => g.id !== group.id)
-    saveGroups(updated)
-  }
-
-  const saveGroups = (groups: KeeplyGroup[]) => {
-    chrome.storage.local.set({ [STORAGE_KEYS.KEEPLY_GROUPS]: groups }, () => {
-      triggerRefresh()
-    })
   }
 
   return (
@@ -523,198 +308,53 @@ export function DefaultScreen() {
         </div>
       )}
 
-      {keeplyGroups.map((group) => {
-        const isExpanded = expandedGroups.has(group.id)
-        const isEditing = editingGroupId === group.id
-        const isMenuOpen = menuOpenGroupId === group.id
-        const closedCount = group.tabs.filter((t) => t.tabId === undefined).length
-        const openCount = group.tabs.length - closedCount
-        return (
-          <div
-            key={group.id}
-            className={`group-item${isDragOver === group.id ? ' drag-over' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
-            onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
-            onDrop={(e) => handleDropOnGroup(e, group)}
-          >
-            <div className="rr group-header" onClick={() => { if (!isEditing) toggleGroup(group.id) }}>
-              {/* [emoji] — always visible, click opens emoji picker */}
-              <div className="emoji-picker-wrapper" ref={emojiPickerGroupId === group.id ? editEmojiRef : undefined}>
-                <span
-                  className="group-emoji"
-                  role="button"
-                  aria-label="Change emoji"
-                  onClick={(e) => { e.stopPropagation(); setEmojiPickerGroupId(emojiPickerGroupId === group.id ? null : group.id) }}
-                >
-                  {group.emoji ?? '😀'}
-                </span>
-                {emojiPickerGroupId === group.id && (
-                  <div className="emoji-dropdown">
-                    {EMOJI_CATEGORIES.map((cat) => (
-                      <div key={cat.label} className="emoji-cat">
-                        <div className="emoji-cat-label">{cat.label}</div>
-                        <div className="emoji-grid">
-                          {cat.emojis.map((em) => (
-                            <button
-                              key={em}
-                              type="button"
-                              className="emoji-cell"
-                              onClick={(ev) => { ev.stopPropagation(); pickEditEmoji(em, group.id) }}
-                            >
-                              {em}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* [name] — flex-grow, or inline rename input */}
-              {isEditing ? (
-                <input
-                  ref={editInputRef}
-                  className="group-rename-input"
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') commitRename(group.id)
-                    if (e.key === 'Escape') cancelRename()
-                  }}
-                  onBlur={() => commitRename(group.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  maxLength={50}
-                  autoFocus
-                />
-              ) : (
-                <span className="rn">{group.name}</span>
-              )}
-
-              {/* [badge] — always visible */}
-              <TabCountBadge count={group.tabs.length} />
-
-              {/* [pencil] — hover only, click → inline rename */}
-              <button
-                className="group-edit-btn"
-                title="Rename group"
-                onClick={(e) => { e.stopPropagation(); startEditing(group) }}
-                aria-label="Rename group"
-              >
-                <PencilIcon />
-              </button>
-
-              {/* [⋯] — hover only, click → dropdown menu */}
-              <div className="group-menu-wrapper" ref={isMenuOpen ? menuRef : undefined}>
-                <button
-                  className="group-menu-btn"
-                  title="Group actions"
-                  aria-label="Group actions"
-                  onClick={(e) => { e.stopPropagation(); setMenuOpenGroupId(isMenuOpen ? null : group.id) }}
-                >
-                  ⋯
-                </button>
-                {isMenuOpen && (
-                  <div className="group-menu-dropdown">
-                    {closedCount > 0 && (
-                      <button
-                        className="group-menu-item"
-                        onClick={(e) => { openAllClosed(e, group); setMenuOpenGroupId(null) }}
-                      >
-                        Open all tabs
-                      </button>
-                    )}
-                    {openCount > 0 && (
-                      <button
-                        className="group-menu-item"
-                        onClick={(e) => { closeAllOpen(e, group); setMenuOpenGroupId(null) }}
-                      >
-                        Close all tabs
-                      </button>
-                    )}
-                    <button
-                      className="group-menu-item group-menu-item--danger"
-                      onClick={(e) => { e.stopPropagation(); setMenuOpenGroupId(null); setConfirmDeleteGroupId(group.id) }}
-                    >
-                      Delete group
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* [›] — always visible chevron */}
-              <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-
-            {confirmDeleteGroupId === group.id && (
-              <div className="confirm-delete" ref={confirmRef}>
-                <div className="confirm-delete-text">
-                  Delete <strong>{group.emoji ? `${group.emoji} ` : ''}{group.name}</strong>?
-                </div>
-                <div className="confirm-delete-actions">
-                  <button
-                    className="confirm-delete-cancel"
-                    onClick={() => setConfirmDeleteGroupId(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="confirm-delete-btn"
-                    onClick={(e) => { deleteGroup(e, group); setConfirmDeleteGroupId(null) }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {isExpanded && (
-              <div className="group-tabs-list">
-                {group.tabs.map((gt) => {
-                  const isOpen = gt.tabId !== undefined
-                  return (
-                    <div
-                      key={gt.url}
-                      className={`tab-row group-tab-row${isOpen ? '' : ' tab-closed'}`}
-                      draggable={isOpen}
-                      onDragStart={isOpen ? (e) => {
-                        e.stopPropagation()
-                        e.dataTransfer.setData('text/plain', makeDragData(gt.tabId!, gt.url, group.id))
-                        e.dataTransfer.effectAllowed = 'move'
-                      } : undefined}
-                      onClick={() => {
-                        if (isOpen) {
-                          chrome.tabs.update(gt.tabId!, { active: true })
-                          const openTab = allTabs.find((t) => t.id === gt.tabId)
-                          if (openTab?.windowId !== undefined) chrome.windows.update(openTab.windowId, { focused: true })
-                        } else {
-                          chrome.tabs.create({ url: gt.url })
-                        }
-                      }}
-                    >
-                      <TabFavicon url={gt.favIconUrl} />
-                      <span className="tab-title">{gt.title}</span>
-                      <button
-                        className="tab-close-btn"
-                        title={isOpen ? 'Close tab' : 'Remove from group'}
-                        onClick={(e) => closeTab(e, gt, group.id)}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )
-                })}
-                {group.tabs.length === 0 && (
-                  <div className="tab-row empty"><span className="rm">No tabs in this group</span></div>
-                )}
-              </div>
-            )}
-          </div>
-        )
-      })}
+      {keeplyGroups.map((group) => (
+        <GroupRow
+          key={group.id}
+          group={group}
+          isExpanded={expandedGroups.has(group.id)}
+          isDragOver={isDragOver === group.id}
+          isEditing={actions.editingGroupId === group.id}
+          isMenuOpen={actions.menuOpenGroupId === group.id}
+          isConfirmingDelete={actions.confirmDeleteGroupId === group.id}
+          isEmojiPickerOpen={actions.emojiPickerGroupId === group.id}
+          editName={actions.editName}
+          editEmojiRef={editEmojiRef}
+          editInputRef={editInputRef}
+          menuRef={menuRef}
+          confirmRef={confirmRef}
+          onToggleExpand={() => toggleGroup(group.id)}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver(group.id) }}
+          onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
+          onDrop={(e) => { setIsDragOver(null); actions.handleDropOnGroup(e, group, parseDragData) }}
+          onStartEditing={() => actions.startEditing(group)}
+          onEditNameChange={actions.setEditName}
+          onCommitRename={() => actions.commitRename(group.id)}
+          onCancelRename={actions.cancelRename}
+          onToggleEmojiPicker={() => actions.setEmojiPickerGroupId(actions.emojiPickerGroupId === group.id ? null : group.id)}
+          onPickEmoji={(emoji) => actions.pickEditEmoji(emoji, group.id)}
+          onToggleMenu={() => actions.setMenuOpenGroupId(actions.menuOpenGroupId === group.id ? null : group.id)}
+          onOpenAllClosed={(e) => actions.openAllClosed(e, group)}
+          onCloseAllOpen={(e) => actions.closeAllOpen(e, group)}
+          onRequestDelete={() => { actions.setMenuOpenGroupId(null); actions.setConfirmDeleteGroupId(group.id) }}
+          onConfirmDelete={(e) => { actions.deleteGroup(e, group); actions.setConfirmDeleteGroupId(null) }}
+          onCancelDelete={() => actions.setConfirmDeleteGroupId(null)}
+          onCloseTab={(e, gt) => actions.closeTab(e, gt, group.id)}
+          onTabClick={(gt) => {
+            if (gt.tabId !== undefined) {
+              chrome.tabs.update(gt.tabId, { active: true })
+              const openTab = allTabs.find((t) => t.id === gt.tabId)
+              if (openTab?.windowId !== undefined) chrome.windows.update(openTab.windowId, { focused: true })
+            } else {
+              chrome.tabs.create({ url: gt.url })
+            }
+          }}
+          onTabDragStart={(e, gt) => {
+            e.dataTransfer.setData('text/plain', makeDragData(gt.tabId!, gt.url, group.id))
+            e.dataTransfer.effectAllowed = 'move'
+          }}
+        />
+      ))}
 
       {/* Ungrouped tabs */}
       {ungroupedTabs.length > 0 && (
@@ -724,7 +364,7 @@ export function DefaultScreen() {
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
           }}
-          onDrop={handleDropOnUngrouped}
+          onDrop={(e) => { setIsDragOver(null); actions.handleDropOnUngrouped(e, parseDragData) }}
         >
           <div className="slbl" >Ungrouped · {tabCountLabel(ungroupedTabs.length)}</div>
           {ungroupedTabs.map((tab) => (
@@ -740,7 +380,7 @@ export function DefaultScreen() {
             >
               <TabFavicon url={tab.favIconUrl} />
               <span className="tab-title">{tab.title}</span>
-              <button className="tab-close-btn" title="Close tab" onClick={(e) => closeUngroupedTab(e, tab.id)}>×</button>
+              <button className="tab-close-btn" title="Close tab" onClick={(e) => actions.closeUngroupedTab(e, tab.id)}>×</button>
               <span className="drag-hint" aria-hidden="true">&#x2807;</span>
             </div>
           ))}
@@ -753,59 +393,11 @@ export function DefaultScreen() {
           className="inbox-section drag-over"
           onDragOver={(e) => { e.preventDefault(); setIsDragOver('ungrouped') }}
           onDragLeave={() => setIsDragOver(null)}
-          onDrop={handleDropOnUngrouped}
+          onDrop={(e) => { setIsDragOver(null); actions.handleDropOnUngrouped(e, parseDragData) }}
         >
           <div className="slbl" >Drop here to ungroup</div>
         </div>
       )}
     </div>
-  )
-}
-
-// =============================================================================
-// SVG ICONS
-// =============================================================================
-
-function TabIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-      <rect x=".5" y=".5" width="4.5" height="3.5" rx="1" stroke="currentColor" strokeWidth="1" />
-      <rect x="7" y=".5" width="5.5" height="3.5" rx="1" stroke="currentColor" strokeWidth="1" />
-      <rect x=".5" y="6" width="12" height="6.5" rx="1" stroke="currentColor" strokeWidth="1" />
-    </svg>
-  )
-}
-
-function BulbIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M8 2C5.8 2 4 3.8 4 6c0 1.7.9 3.1 2.3 3.9V11h3.4V9.9C11.1 9.1 12 7.7 12 6c0-2.2-1.8-4-4-4z" fill="white" fillOpacity=".9" />
-      <rect x="5.8" y="11" width="4.4" height="1.5" rx=".75" fill="white" fillOpacity=".7" />
-      <rect x="6.3" y="12.5" width="3.4" height="1" rx=".5" fill="white" fillOpacity=".5" />
-    </svg>
-  )
-}
-
-function ExternalIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-      <path d="M2 8L8 2M8 2H4.5M8 2v3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function PencilIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <path d="M8.5 1.5l2 2L4 10H2v-2l6.5-6.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-      <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   )
 }

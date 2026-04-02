@@ -93,3 +93,14 @@ export const PRICING = {
   ANNUAL_PER_MONTH_USD: 4,
   ANNUAL_DISCOUNT_PCT: 33,
 } as const
+
+// -----------------------------------------------------------------------------
+// Emoji Picker
+// -----------------------------------------------------------------------------
+
+export const EMOJI_CATEGORIES = [
+  { label: 'Work',  emojis: ['💼', '📊', '📝', '💡', '🖥️', '📱', '🔧', '⚙️'] },
+  { label: 'Media', emojis: ['🎬', '🎵', '🎮', '📚', '🎨', '🎭', '📷', '🎙️'] },
+  { label: 'Life',  emojis: ['🛒', '🏠', '🚗', '✈️', '🍕', '☕', '💪', '🧘'] },
+  { label: 'Other', emojis: ['⭐', '🔥', '💎', '🚀', '❤️', '🌿', '🎯', '💰'] },
+] as const
