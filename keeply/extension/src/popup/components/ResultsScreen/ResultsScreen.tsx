@@ -4,6 +4,7 @@ import { extractGroupableTabs } from '@/shared/utils/tabUtils'
 import { GROUP_COLOR_HEX } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { TabRow } from '@/popup/components/TabRow/TabRow'
+import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
 import type { TabInfo } from '@/shared/types'
 
 export function ResultsScreen() {
@@ -53,9 +54,7 @@ export function ResultsScreen() {
                 aria-hidden="true"
               />
               <span className="gn">{group.name}</span>
-              <span className="gbadge" aria-label={tabCountLabel(group.tabIds.length)}>
-                {group.tabIds.length}
-              </span>
+              <TabCountBadge count={group.tabIds.length} />
             </div>
             <div className="gtabs">
               {group.tabIds.map((tabId) => {

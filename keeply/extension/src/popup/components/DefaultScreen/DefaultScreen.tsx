@@ -6,6 +6,7 @@ import { useDefaultScreenData } from '@/popup/hooks/useDefaultScreenData'
 import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
+import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
 import { GROUP_COLOR_HEX, STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import type { KeeplyGroup } from '@/shared/types'
@@ -196,7 +197,7 @@ export function DefaultScreen() {
             <div className="rr group-header" onClick={() => toggleGroup(group.id)}>
               <div className="rdot" style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }} aria-hidden="true" />
               <span className="rn">{group.name}</span>
-              <span className="gbadge">{tabCountLabel(tabs.length)}</span>
+              <TabCountBadge count={tabs.length} />
               <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

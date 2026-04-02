@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { STORAGE_KEYS, GROUP_COLOR_HEX } from '@/shared/constants'
-import { isGroupableUrl, tabCountLabel } from '@/shared/utils/chromeUtils'
+import { isGroupableUrl } from '@/shared/utils/chromeUtils'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
+import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
 import type { GroupColor, KeeplyGroup, RecentGroup, TabInfo } from '@/shared/types'
 
 // =============================================================================
@@ -276,7 +277,7 @@ export function ManualGroupScreen() {
                       />
                     )}
                     <span className="manual-section-name">{section.name}</span>
-                    <span className="manual-section-count">{tabCountLabel(sectionTabs.length)}</span>
+                    <TabCountBadge count={sectionTabs.length} />
                     <svg
                       className={`expand-arrow${isExpanded ? ' expanded' : ''}`}
                       width="10" height="10" viewBox="0 0 10 10" fill="none"

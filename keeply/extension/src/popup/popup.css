@@ -148,7 +148,7 @@ body {
 .gh:hover .gn { color: var(--t7); }
 .gdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .gn { font-size: 13px; font-weight: 700; color: var(--n9); flex: 1; transition: color .12s; }
-.gbadge { font-size: 10px; font-weight: 600; color: var(--n5); background: var(--n0); border-radius: 20px; padding: 2px 7px; }
+.tab-count-badge { font-size: 10px; font-weight: 600; color: var(--n5); background: var(--n1); padding: 1px 6px; border-radius: 10px; }
 .gtabs { padding: 1px 0 5px 8px; }
 .gtab { font-size: 11px; color: var(--n5); padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
 .res-acts { display: flex; gap: 6px; margin-top: 13px; }
@@ -344,10 +344,6 @@ html.dark .color-swatch.selected .color-swatch-circle {
   width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
 }
 .manual-section-name { flex: 1; }
-.manual-section-count {
-  font-size: 10px; background: var(--n1); color: var(--n5);
-  padding: 1px 6px; border-radius: 10px; font-weight: 600;
-}
 .manual-section-tabs {
   padding-left: 8px; border-left: 1.5px solid var(--n1); margin-left: 4px;
 }
@@ -525,10 +521,9 @@ html.dark .slbl { color: #444444; }
 html.dark .ss-lbl { color: #444444; }
 html.dark .manual-section-header { color: #707070; }
 html.dark .manual-section-header:hover { color: #CCCCCC; }
-html.dark .manual-section-count { background: #222222; color: #707070; }
+html.dark .tab-count-badge { background: #222222; color: #707070; }
 
 /* Badges */
-html.dark .gbadge { background: #222222; color: #707070; }
 html.dark .tab-group-badge { background: #222222; color: #707070; }
 
 /* Delete buttons */
