@@ -538,99 +538,74 @@ export function DefaultScreen() {
             onDrop={(e) => handleDropOnGroup(e, group)}
           >
             <div className="rr group-header" onClick={() => { if (!isEditing) toggleGroup(group.id) }}>
+              {/* [emoji] — always visible, click opens emoji picker */}
+              <div className="emoji-picker-wrapper" ref={emojiPickerGroupId === group.id ? editEmojiRef : undefined}>
+                <span
+                  className="group-emoji"
+                  role="button"
+                  aria-label="Change emoji"
+                  onClick={(e) => { e.stopPropagation(); setEmojiPickerGroupId(emojiPickerGroupId === group.id ? null : group.id) }}
+                >
+                  {group.emoji ?? '😀'}
+                </span>
+                {emojiPickerGroupId === group.id && (
+                  <div className="emoji-dropdown">
+                    {EMOJI_CATEGORIES.map((cat) => (
+                      <div key={cat.label} className="emoji-cat">
+                        <div className="emoji-cat-label">{cat.label}</div>
+                        <div className="emoji-grid">
+                          {cat.emojis.map((em) => (
+                            <button
+                              key={em}
+                              type="button"
+                              className="emoji-cell"
+                              onClick={(ev) => { ev.stopPropagation(); pickEditEmoji(em, group.id) }}
+                            >
+                              {em}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* [name] — flex-grow, or inline rename input */}
               {isEditing ? (
-                <>
-                  <div className="emoji-picker-wrapper" ref={editEmojiRef}>
-                    <button
-                      type="button"
-                      className="group-emoji-btn"
-                      onClick={(e) => { e.stopPropagation(); setEmojiPickerGroupId(emojiPickerGroupId === group.id ? null : group.id) }}
-                      aria-label="Change emoji"
-                    >
-                      {group.emoji ?? '😀'}
-                    </button>
-                    {emojiPickerGroupId === group.id && (
-                      <div className="emoji-dropdown">
-                        {EMOJI_CATEGORIES.map((cat) => (
-                          <div key={cat.label} className="emoji-cat">
-                            <div className="emoji-cat-label">{cat.label}</div>
-                            <div className="emoji-grid">
-                              {cat.emojis.map((e) => (
-                                <button
-                                  key={e}
-                                  type="button"
-                                  className="emoji-cell"
-                                  onClick={(ev) => { ev.stopPropagation(); pickEditEmoji(e, group.id) }}
-                                >
-                                  {e}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    ref={editInputRef}
-                    className="group-rename-input"
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') commitRename(group.id)
-                      if (e.key === 'Escape') cancelRename()
-                    }}
-                    onBlur={() => commitRename(group.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    maxLength={50}
-                    autoFocus
-                  />
-                </>
+                <input
+                  ref={editInputRef}
+                  className="group-rename-input"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commitRename(group.id)
+                    if (e.key === 'Escape') cancelRename()
+                  }}
+                  onBlur={() => commitRename(group.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  maxLength={50}
+                  autoFocus
+                />
               ) : (
-                <>
-                  <div className="emoji-picker-wrapper" ref={emojiPickerGroupId === group.id ? editEmojiRef : undefined}>
-                    <span
-                      className="group-emoji"
-                      role="button"
-                      aria-label="Change emoji"
-                      onClick={(e) => { e.stopPropagation(); setEmojiPickerGroupId(emojiPickerGroupId === group.id ? null : group.id) }}
-                    >
-                      {group.emoji ?? '😀'}
-                    </span>
-                    {emojiPickerGroupId === group.id && (
-                      <div className="emoji-dropdown">
-                        {EMOJI_CATEGORIES.map((cat) => (
-                          <div key={cat.label} className="emoji-cat">
-                            <div className="emoji-cat-label">{cat.label}</div>
-                            <div className="emoji-grid">
-                              {cat.emojis.map((em) => (
-                                <button
-                                  key={em}
-                                  type="button"
-                                  className="emoji-cell"
-                                  onClick={(ev) => { ev.stopPropagation(); pickEditEmoji(em, group.id) }}
-                                >
-                                  {em}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <span className="rn">{group.name}</span>
-                  <button
-                    className="group-edit-btn"
-                    title="Rename group"
-                    onClick={(e) => { e.stopPropagation(); startEditing(group) }}
-                    aria-label="Rename group"
-                  >
-                    <PencilIcon />
-                  </button>
-                </>
+                <span className="rn">{group.name}</span>
               )}
+
+              {/* [badge] — always visible */}
+              <TabCountBadge count={group.tabs.length} />
+
+              {/* [pencil] — hover only, click → inline rename */}
+              <button
+                className="group-edit-btn"
+                title="Rename group"
+                onClick={(e) => { e.stopPropagation(); startEditing(group) }}
+                aria-label="Rename group"
+              >
+                <PencilIcon />
+              </button>
+
+              {/* [⋯] — hover only, click → dropdown menu */}
               <div className="group-menu-wrapper" ref={isMenuOpen ? menuRef : undefined}>
                 <button
                   className="group-menu-btn"
@@ -667,7 +642,8 @@ export function DefaultScreen() {
                   </div>
                 )}
               </div>
-              <TabCountBadge count={group.tabs.length} />
+
+              {/* [›] — always visible chevron */}
               <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
