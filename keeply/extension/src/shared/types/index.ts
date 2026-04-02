@@ -98,7 +98,7 @@ export interface UsageStatus {
 // Settings Types
 // -----------------------------------------------------------------------------
 
-export type Theme = 'light' | 'dark' | 'system'
+export type Theme = 'light' | 'dark' | 'soft-jade' | 'plum-wine' | 'system'
 export type GroupLanguage = 'en' | 'ru' | 'auto'
 export type MaxGroups = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 'auto'
 

@@ -1,5 +1,5 @@
 import type { Theme } from '@/shared/types'
-import { lightTheme, darkTheme } from '@/shared/constants/theme'
+import { lightTheme, softJadeTheme, THEMES } from '@/shared/constants/theme'
 import type { ThemeTokens } from '@/shared/constants/theme'
 
 function applyThemeVars(tokens: ThemeTokens): void {
@@ -21,21 +21,24 @@ function applyThemeVars(tokens: ThemeTokens): void {
   s.setProperty('--success', tokens.success)
 }
 
+function resolveTheme(theme: Theme): ThemeTokens {
+  if (theme === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    return prefersDark ? softJadeTheme : lightTheme
+  }
+  // 'dark' is a legacy alias for 'soft-jade'
+  const id = theme === 'dark' ? 'soft-jade' : theme
+  return THEMES.find((t) => t.id === id) ?? lightTheme
+}
+
 /**
  * Apply theme class to document root and set CSS variables
  */
 export function applyTheme(theme: Theme): void {
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark')
-    applyThemeVars(darkTheme)
-  } else if (theme === 'light') {
-    document.documentElement.classList.remove('dark')
-    applyThemeVars(lightTheme)
-  } else {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    document.documentElement.classList.toggle('dark', prefersDark)
-    applyThemeVars(prefersDark ? darkTheme : lightTheme)
-  }
+  const tokens = resolveTheme(theme)
+  const isDark = tokens.id !== 'light'
+  document.documentElement.classList.toggle('dark', isDark)
+  applyThemeVars(tokens)
 }
 
 /**
@@ -51,9 +54,8 @@ export function initThemeFromStorage(onReady: () => void): void {
 
       if (theme === 'system') {
         window.matchMedia('(prefers-color-scheme: dark)')
-          .addEventListener('change', (e) => {
-            document.documentElement.classList.toggle('dark', e.matches)
-            applyThemeVars(e.matches ? darkTheme : lightTheme)
+          .addEventListener('change', () => {
+            applyTheme('system')
           })
       }
 

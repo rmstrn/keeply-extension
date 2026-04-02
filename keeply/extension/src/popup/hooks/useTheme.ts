@@ -1,18 +1,19 @@
 import { useSettingsStore } from '@/popup/stores/settingsStore'
-import { lightTheme, darkTheme } from '@/shared/constants/theme'
+import { lightTheme, softJadeTheme, THEMES } from '@/shared/constants/theme'
 import type { ThemeTokens } from '@/shared/constants/theme'
 
 export function useTheme(): ThemeTokens {
   const theme = useSettingsStore((s) => s.settings.theme)
 
-  if (theme === 'dark') return darkTheme
-  if (theme === 'light') return lightTheme
+  if (theme === 'system') {
+    const prefersDark =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    return prefersDark ? softJadeTheme : lightTheme
+  }
 
-  // 'system' — check media query
-  const prefersDark =
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches
-
-  return prefersDark ? darkTheme : lightTheme
+  // 'dark' is a legacy alias for 'soft-jade'
+  const id = theme === 'dark' ? 'soft-jade' : theme
+  return THEMES.find((t) => t.id === id) ?? lightTheme
 }

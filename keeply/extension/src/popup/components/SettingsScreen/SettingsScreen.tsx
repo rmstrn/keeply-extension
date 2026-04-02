@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { applyTheme } from '@/shared/utils/themeUtils'
 import { useTheme } from '@/popup/hooks/useTheme'
+import { THEMES } from '@/shared/constants/theme'
 import type { Theme } from '@/shared/types'
 
 interface ToggleSwitchProps {
@@ -109,18 +110,19 @@ export function SettingsScreen() {
       <div className="sr">
         <div>
           <p className="sr-label">Theme</p>
-          <p className="sr-sub">Light, dark, or follow system</p>
+          <p className="sr-sub">Choose a color scheme</p>
         </div>
         <div className="theme-picker">
-          {(['light', 'system', 'dark'] as const).map((t) => (
+          {THEMES.map((t) => (
             <button
-              key={t}
-              className={`theme-btn${currentTheme === t ? ' active' : ''}`}
-              onClick={() => handleThemeChange(t)}
-              aria-label={t}
-              title={t.charAt(0).toUpperCase() + t.slice(1)}
+              key={t.id}
+              className={`theme-btn${currentTheme === t.id || (currentTheme === 'dark' && t.id === 'soft-jade') ? ' active' : ''}`}
+              onClick={() => handleThemeChange(t.id as Theme)}
+              aria-label={t.name}
+              title={t.name}
+              style={{ background: t.bg, borderColor: t.primary }}
             >
-              {t === 'light' ? '\u2600' : t === 'dark' ? '\u263E' : '\u2699'}
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: t.primary, display: 'block' }} />
             </button>
           ))}
         </div>

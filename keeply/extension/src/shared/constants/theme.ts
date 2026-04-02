@@ -1,4 +1,6 @@
 export interface ThemeTokens {
+  readonly id: string
+  readonly name: string
   readonly bg: string
   readonly surface: string
   readonly elevated: string
@@ -19,6 +21,8 @@ export interface ThemeTokens {
 }
 
 export const lightTheme: ThemeTokens = {
+  id: 'light',
+  name: 'Light',
   bg: '#FFFFFF',
   surface: '#F5F6F1',
   elevated: '#EEEEE9',
@@ -38,7 +42,9 @@ export const lightTheme: ThemeTokens = {
   ctaIconColor: '#FFFFFF',
 }
 
-export const darkTheme: ThemeTokens = {
+export const softJadeTheme: ThemeTokens = {
+  id: 'soft-jade',
+  name: 'Soft Jade',
   bg: '#312F2C',
   surface: '#3D3B38',
   elevated: '#454340',
@@ -57,3 +63,27 @@ export const darkTheme: ThemeTokens = {
   ctaIcon: '✨',
   ctaIconColor: '#312F2C',
 }
+
+export const plumWineTheme: ThemeTokens = {
+  id: 'plum-wine',
+  name: 'Plum Wine',
+  bg: '#3A2650',
+  surface: '#4A3260',
+  elevated: '#5E4075',
+  border: '#6B4D85',
+  hoverBg: '#6B4D85',
+  text: '#F8F9ED',
+  text2: '#C8C9B8',
+  textMuted: '#9B8FAA',
+  primary: '#F8F9ED',
+  primaryHover: '#E8E9DD',
+  primaryText: '#3A2650',
+  danger: '#E57373',
+  dangerBg: '#4A2040',
+  warning: '#D4A56A',
+  success: '#F8F9ED',
+  ctaIcon: '⚡',
+  ctaIconColor: '#3A2650',
+}
+
+export const THEMES: readonly ThemeTokens[] = [lightTheme, softJadeTheme, plumWineTheme]
