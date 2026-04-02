@@ -422,10 +422,10 @@ body {
 .inbox-section { margin-top: 10px; }
 .inbox-tab {
   display: flex; align-items: center; gap: 7px;
-  padding: 5px 7px; border-radius: 6px;
-  cursor: grab; transition: background .12s; margin: 0 -7px;
+  padding: 4px 8px; border-radius: 6px;
+  cursor: grab; transition: background .12s; margin: 0 4px;
 }
-.inbox-tab:hover { background: var(--surface); }
+.inbox-tab:hover { background: var(--hover-bg); }
 .inbox-tab:active { cursor: grabbing; }
 .drag-hint { color: var(--border); font-size: 14px; margin-left: auto; }
 .inbox-section.drag-over {
