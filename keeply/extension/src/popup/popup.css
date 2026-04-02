@@ -415,7 +415,7 @@ body {
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { padding: 3px; min-height: 40px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
+.inbox-section { padding: 2px; min-height: 40px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
 .inbox-tab {
   display: flex; align-items: center; gap: 8px;
   padding: 5px 6px; border-radius: 6px;
