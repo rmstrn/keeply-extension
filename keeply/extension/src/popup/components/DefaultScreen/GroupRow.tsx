@@ -77,7 +77,7 @@ export function GroupRow({
 
   return (
     <div
-      className={`group-item${isDragOver ? ' drag-over' : ''}`}
+      className={`group-item${isDragOver ? ' drop-zone-active' : ''}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}

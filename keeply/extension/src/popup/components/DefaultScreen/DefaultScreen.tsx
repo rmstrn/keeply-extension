@@ -381,7 +381,7 @@ export function DefaultScreen() {
       {/* Ungrouped tabs */}
       {ungroupedTabs.length > 0 && (
         <div
-          className={`inbox-section${isDragOver === 'ungrouped' ? ' drag-over' : ''}`}
+          className={`inbox-section${isDragOver === 'ungrouped' ? ' drop-zone-active' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver('ungrouped') }}
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)
@@ -432,7 +432,7 @@ export function DefaultScreen() {
       {/* Empty ungrouped drop target while dragging */}
       {ungroupedTabs.length === 0 && isDragging && (
         <div
-          className={`inbox-section${isDragOver === 'ungrouped' ? ' drag-over' : ''}`}
+          className={`inbox-section${isDragOver === 'ungrouped' ? ' drop-zone-active' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver('ungrouped') }}
           onDragLeave={(e) => {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(null)

@@ -5,6 +5,7 @@
 :root {
   --f: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --row-px: 8px;
+  --emoji-center: 18px; /* --row-px (8) + half of 20px emoji (10) */
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -401,14 +402,17 @@ body {
   margin-bottom: 1px; border-radius: 8px; padding: 0;
   transition: background .15s ease;
 }
-.group-item.drag-over {
+.drop-zone-active {
+  padding: 6px 8px;
   box-shadow: inset 0 0 0 1.5px var(--border);
+  border-radius: 6px;
   background: var(--hover-bg);
 }
 .group-tabs-list {
-  padding: 2px 0 4px 8px;
+  padding: 2px 0 4px 0;
   border-left: 1.5px solid var(--elevated);
-  margin-left: 9px;
+  margin-left: var(--emoji-center);
+  padding-left: 10px;
 }
 .group-tab-row {
   display: flex; align-items: center; gap: 7px;
@@ -419,7 +423,7 @@ body {
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { margin-top: 10px; padding: 0; min-height: 48px; }
+.inbox-section { margin-top: 10px; padding: 0; min-height: 52px; }
 .inbox-tab {
   display: flex; align-items: center; gap: 7px;
   padding: 4px var(--row-px); border-radius: 6px;
@@ -429,11 +433,6 @@ body {
 .inbox-tab:active { cursor: grabbing; }
 .drag-hint { color: var(--text-2); font-size: 14px; margin-left: auto; opacity: 0; transition: opacity .15s ease; }
 .inbox-tab:hover .drag-hint { opacity: 1; }
-.inbox-section.drag-over {
-  box-shadow: inset 0 0 0 1.5px var(--border);
-  border-radius: 8px;
-  background: var(--hover-bg);
-}
 
 /* ── CLOSE / DELETE BUTTONS ─── */
 .tab-close-btn {
