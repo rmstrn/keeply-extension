@@ -29,3 +29,10 @@ export function isGroupableUrl(url: string | undefined): boolean {
   if (!url) return false
   return !SKIP_PREFIXES.some((p) => url.startsWith(p))
 }
+
+/**
+ * Returns "1 tab" or "N tabs" with correct pluralization
+ */
+export function tabCountLabel(n: number): string {
+  return n === 1 ? '1 tab' : `${n} tabs`
+}

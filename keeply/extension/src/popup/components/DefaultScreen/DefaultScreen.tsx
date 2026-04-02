@@ -7,6 +7,7 @@ import type { GroupWithTabs, TabInfoWithWindow } from '@/popup/hooks/useDefaultS
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { GROUP_COLOR_HEX } from '@/shared/constants'
+import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { removeGroupFromRecent, removeTabFromRecent } from '@/shared/utils/recentGroupsUtils'
 
 // =============================================================================
@@ -108,7 +109,7 @@ export function DefaultScreen() {
       <div className="tab-meta">
         <span className="tab-ct">
           <TabIcon />
-          {tabCount} tabs open
+          {tabCountLabel(tabCount)} open
         </span>
         <button
           className="fullpage-btn"
@@ -226,7 +227,7 @@ function GroupItem({
       <div className="rr group-header" onClick={onToggle}>
         <div className="rdot" style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }} aria-hidden="true" />
         <span className="rn">{group.name}</span>
-        <span className="rm">{group.tabs.length} tabs</span>
+        <span className="rm">{tabCountLabel(group.tabs.length)}</span>
         <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
           <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -285,7 +286,7 @@ function InboxSection({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <div className="slbl" style={{ color: '#9B9C96' }}>Ungrouped · {tabs.length} tabs</div>
+      <div className="slbl" style={{ color: '#9B9C96' }}>Ungrouped · {tabCountLabel(tabs.length)}</div>
       {tabs.map((tab) => (
         <div
           key={tab.id}

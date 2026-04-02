@@ -256,16 +256,6 @@ body {
 .color-swatch.selected .color-swatch-circle {
   box-shadow: 0 0 0 1px var(--w), 0 0 0 3px currentColor;
 }
-.color-swatch-add {
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 1.5px dashed var(--n3); background: transparent;
-}
-.color-swatch-add:hover { border-color: var(--n7); }
-.color-swatch-plus {
-  font-size: 14px; font-weight: 600; color: var(--n5); line-height: 1;
-}
-html.dark .color-swatch-add { border-color: #444444; }
-html.dark .color-swatch-add:hover { border-color: #707070; }
 html.dark .color-swatch.selected .color-swatch-circle {
   box-shadow: 0 0 0 1px #111111, 0 0 0 3px currentColor;
 }

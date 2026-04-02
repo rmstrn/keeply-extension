@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { extractGroupableTabs } from '@/shared/utils/tabUtils'
 import { GROUP_COLOR_HEX } from '@/shared/constants'
+import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { TabRow } from '@/popup/components/TabRow/TabRow'
 import type { TabInfo } from '@/shared/types'
 
@@ -40,7 +41,7 @@ export function ResultsScreen() {
           />
         </svg>
         <span className="done-text">
-          Done — {result.totalTabsGrouped} tabs → {result.groups.length} groups
+          Done — {tabCountLabel(result.totalTabsGrouped)} → {result.groups.length} groups
         </span>
       </div>
 
@@ -54,7 +55,7 @@ export function ResultsScreen() {
                 aria-hidden="true"
               />
               <span className="gn">{group.name}</span>
-              <span className="gbadge" aria-label={`${group.tabIds.length} tabs`}>
+              <span className="gbadge" aria-label={tabCountLabel(group.tabIds.length)}>
                 {group.tabIds.length}
               </span>
             </div>
@@ -73,7 +74,7 @@ export function ResultsScreen() {
             <div className="gh inbox-group">
               <div className="gdot" style={{ background: '#9B9C96' }} aria-hidden="true" />
               <span className="gn">Ungrouped</span>
-              <span className="gbadge" aria-label={`${inboxTabs.length} tabs`}>
+              <span className="gbadge" aria-label={tabCountLabel(inboxTabs.length)}>
                 {inboxTabs.length}
               </span>
             </div>

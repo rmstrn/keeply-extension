@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { STORAGE_KEYS, GROUP_COLOR_HEX } from '@/shared/constants'
-import { isGroupableUrl } from '@/shared/utils/chromeUtils'
+import { isGroupableUrl, tabCountLabel } from '@/shared/utils/chromeUtils'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import type { ChromeTabGroupColor, RecentGroup, TabInfo } from '@/shared/types'
 
@@ -14,7 +14,7 @@ interface TabInfoWithGroup extends TabInfo {
 }
 
 // =============================================================================
-// COLOR OPTIONS
+// COLOR OPTIONS — only valid Chrome tab group colors
 // =============================================================================
 
 const COLOR_SWATCHES: { color: ChromeTabGroupColor; label: string }[] = [
@@ -27,34 +27,6 @@ const COLOR_SWATCHES: { color: ChromeTabGroupColor; label: string }[] = [
   { color: 'pink',   label: 'Pink'   },
   { color: 'grey',   label: 'Grey'   },
 ]
-
-/** Parse hex "#RRGGBB" to [r, g, b] */
-function hexToRgb(hex: string): [number, number, number] {
-  const h = hex.replace('#', '')
-  return [
-    parseInt(h.substring(0, 2), 16),
-    parseInt(h.substring(2, 4), 16),
-    parseInt(h.substring(4, 6), 16),
-  ]
-}
-
-/** Find the nearest ChromeTabGroupColor for a given hex */
-function nearestChromeColor(hex: string): ChromeTabGroupColor {
-  const [r, g, b] = hexToRgb(hex)
-  let best: ChromeTabGroupColor = 'grey'
-  let bestDist = Infinity
-
-  for (const [color, colorHex] of Object.entries(GROUP_COLOR_HEX)) {
-    const [cr, cg, cb] = hexToRgb(colorHex)
-    const dist = (r - cr) ** 2 + (g - cg) ** 2 + (b - cb) ** 2
-    if (dist < bestDist) {
-      bestDist = dist
-      best = color as ChromeTabGroupColor
-    }
-  }
-
-  return best
-}
 
 function matchesSearch(tab: TabInfo, query: string): boolean {
   if (query === '') return true
@@ -72,17 +44,12 @@ export function ManualGroupScreen() {
 
   const [groupName, setGroupName] = useState('')
   const [selectedColor, setSelectedColor] = useState<ChromeTabGroupColor>('blue')
-  const [customHex, setCustomHex] = useState<string | null>(null)
   const [allTabs, setAllTabs] = useState<TabInfoWithGroup[]>([])
   const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
   const [showAllTabs, setShowAllTabs] = useState(false)
   const [search, setSearch] = useState('')
   const [groupMap, setGroupMap] = useState<Record<number, string>>({})
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['inbox']))
-  const colorInputRef = useRef<HTMLInputElement>(null)
-
-  // The hex to show in the preview dot
-  const previewHex = customHex ?? GROUP_COLOR_HEX[selectedColor] ?? '#6B7280'
 
   // Fetch tabs based on showAllTabs toggle
   useEffect(() => {
@@ -174,16 +141,6 @@ export function ManualGroupScreen() {
 
   const canCreate = groupName.trim().length > 0 && selectedTabIds.size > 0
 
-  const selectPresetColor = (color: ChromeTabGroupColor) => {
-    setSelectedColor(color)
-    setCustomHex(null)
-  }
-
-  const handleCustomColor = (hex: string) => {
-    setCustomHex(hex)
-    setSelectedColor(nearestChromeColor(hex))
-  }
-
   const handleCreate = () => {
     if (!canCreate) return
 
@@ -254,58 +211,26 @@ export function ManualGroupScreen() {
       {/* Live preview */}
       {groupName.trim() && (
         <div className="group-name-preview">
-          <div className="gdot" style={{ background: previewHex }} />
+          <div className="gdot" style={{ background: GROUP_COLOR_HEX[selectedColor] }} />
           <span className="gn">{groupName}</span>
         </div>
       )}
 
-      {/* Color picker */}
+      {/* Color picker — Chrome-supported colors only */}
       <div className="color-picker-label">Color</div>
       <div className="color-picker-grid">
         {COLOR_SWATCHES.map(({ color, label }) => (
           <button
             key={color}
-            className={`color-swatch${selectedColor === color && !customHex ? ' selected' : ''}`}
-            onClick={() => selectPresetColor(color)}
+            className={`color-swatch${selectedColor === color ? ' selected' : ''}`}
+            onClick={() => setSelectedColor(color)}
             title={label}
             aria-label={label}
-            aria-pressed={selectedColor === color && !customHex}
+            aria-pressed={selectedColor === color}
           >
             <div className="color-swatch-circle" style={{ background: GROUP_COLOR_HEX[color] }} />
           </button>
         ))}
-
-        {/* Custom color swatch (visible after picking) */}
-        {customHex && (
-          <button
-            className="color-swatch selected"
-            onClick={() => colorInputRef.current?.click()}
-            title="Custom color"
-            aria-label="Custom color"
-            aria-pressed={true}
-          >
-            <div className="color-swatch-circle" style={{ background: customHex }} />
-          </button>
-        )}
-
-        {/* "+" button to open native color picker */}
-        <button
-          className="color-swatch color-swatch-add"
-          onClick={() => colorInputRef.current?.click()}
-          title="Custom color"
-          aria-label="Pick custom color"
-        >
-          <span className="color-swatch-plus">+</span>
-        </button>
-
-        <input
-          ref={colorInputRef}
-          type="color"
-          value={customHex ?? '#0D7A5F'}
-          onChange={(e) => handleCustomColor(e.target.value)}
-          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-          tabIndex={-1}
-        />
       </div>
 
       <div className="divider" role="separator" />
@@ -347,7 +272,7 @@ export function ManualGroupScreen() {
                 <div key={key} className="manual-group-section">
                   <div className="manual-section-header" onClick={() => toggleSection(key)}>
                     <span className="manual-section-name">{section.name}</span>
-                    <span className="manual-section-count">{sectionTabs.length}</span>
+                    <span className="manual-section-count">{tabCountLabel(sectionTabs.length)}</span>
                     <svg
                       className={`expand-arrow${isExpanded ? ' expanded' : ''}`}
                       width="10" height="10" viewBox="0 0 10 10" fill="none"
