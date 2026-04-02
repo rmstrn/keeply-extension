@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { extractGroupableTabs } from '@/shared/utils/tabUtils'
+import { STORAGE_KEYS } from '@/shared/constants'
 import { TabRow } from '@/popup/components/TabRow/TabRow'
-import type { ChromeTabGroupColor, TabInfo } from '@/shared/types'
+import type { ChromeTabGroupColor, RecentGroup, TabInfo } from '@/shared/types'
 
 // =============================================================================
 // COLOR OPTIONS
@@ -25,6 +26,7 @@ const COLORS: { color: ChromeTabGroupColor; hex: string }[] = [
 
 export function ManualGroupScreen() {
   const setScreen = useTabStore((s) => s.setScreen)
+  const triggerRefresh = useTabStore((s) => s.triggerRefresh)
 
   const [groupName, setGroupName] = useState('')
   const [selectedColor, setSelectedColor] = useState<ChromeTabGroupColor>('blue')
@@ -68,7 +70,20 @@ export function ManualGroupScreen() {
         groupId,
         { title: groupName.trim(), color: selectedColor, collapsed: false },
         () => {
-          setScreen('default')
+          const newEntry: RecentGroup = {
+            id: crypto.randomUUID(),
+            timestamp: Date.now(),
+            groups: [{ name: groupName.trim(), color: selectedColor, tabIds }],
+            totalTabs: tabIds.length,
+          }
+          chrome.storage.local.get(STORAGE_KEYS.RECENT_GROUPS, (result) => {
+            const existing = (result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined) ?? []
+            const updated = [newEntry, ...existing].slice(0, 10)
+            chrome.storage.local.set({ [STORAGE_KEYS.RECENT_GROUPS]: updated }, () => {
+              triggerRefresh()
+              setScreen('default')
+            })
+          })
         },
       )
     })

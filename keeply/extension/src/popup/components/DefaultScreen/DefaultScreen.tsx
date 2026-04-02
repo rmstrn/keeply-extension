@@ -54,6 +54,7 @@ export function DefaultScreen() {
   const status = useUsageStore((s) => s.status)
   const isLoading = useUsageStore((s) => s.isLoading)
   const setScreen = useTabStore((s) => s.setScreen)
+  const lastRefresh = useTabStore((s) => s.lastRefresh)
 
   const [tabCount, setTabCount] = useState(0)
   const [recentGroups, setRecentGroups] = useState<RecentGroup[]>([])
@@ -70,7 +71,7 @@ export function DefaultScreen() {
     } catch {
       // Extension not loaded properly
     }
-  }, [])
+  }, [lastRefresh])
 
   // Load recent groups and total counter from storage
   useEffect(() => {
@@ -88,7 +89,7 @@ export function DefaultScreen() {
     } catch {
       // Extension not loaded properly
     }
-  }, [])
+  }, [lastRefresh])
 
   // Load current groups to detect inbox tabs
   useEffect(() => {
@@ -102,7 +103,7 @@ export function DefaultScreen() {
         // Extension not loaded properly
       }
     })()
-  }, [])
+  }, [lastRefresh])
 
   return (
     <div className="body">

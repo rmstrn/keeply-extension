@@ -21,7 +21,7 @@ function sendMessage(message: BackgroundMessage): Promise<PopupMessage> {
 }
 
 export function useTabGroups() {
-  const { startGrouping, setResult, setError } = useTabStore()
+  const { startGrouping, setResult, setError, triggerRefresh } = useTabStore()
   const { setStatus } = useUsageStore()
 
   const groupTabs = useCallback(async () => {
@@ -33,7 +33,7 @@ export function useTabGroups() {
       switch (response.type) {
         case 'GROUPING_COMPLETE':
           setResult(response.payload)
-          // Обновляем usage после успешной группировки
+          triggerRefresh()
           await refreshUsage()
           break
 
@@ -47,7 +47,7 @@ export function useTabGroups() {
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unknown error')
     }
-  }, [startGrouping, setResult, setError])
+  }, [startGrouping, setResult, setError, triggerRefresh])
 
   const refreshUsage = useCallback(async () => {
     try {

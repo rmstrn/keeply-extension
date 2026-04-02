@@ -16,18 +16,23 @@ interface TabState {
   // Сообщение об ошибке
   readonly errorMessage: string | null
 
+  // Timestamp to trigger data re-fetch in components
+  readonly lastRefresh: number
+
   // Actions
   setScreen: (screen: PopupScreen) => void
   setResult: (result: GroupingResult) => void
   setError: (message: string) => void
   reset: () => void
   startGrouping: () => void
+  triggerRefresh: () => void
 }
 
 const initialState = {
   screen: 'default' as PopupScreen,
   lastResult: null,
   errorMessage: null,
+  lastRefresh: 0,
 }
 
 export const useTabStore = create<TabState>((set) => ({
@@ -56,4 +61,6 @@ export const useTabStore = create<TabState>((set) => ({
       screen: 'loading',
       errorMessage: null,
     }),
+
+  triggerRefresh: () => set({ lastRefresh: Date.now() }),
 }))

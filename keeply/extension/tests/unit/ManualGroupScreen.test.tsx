@@ -7,10 +7,11 @@ import { ManualGroupScreen } from '@/popup/components/ManualGroupScreen/ManualGr
 // =============================================================================
 
 const mockSetScreen = vi.fn()
+const mockTriggerRefresh = vi.fn()
 
 vi.mock('@/popup/stores/tabStore', () => ({
-  useTabStore: (selector: (s: { setScreen: typeof mockSetScreen }) => unknown) =>
-    selector({ setScreen: mockSetScreen }),
+  useTabStore: (selector: (s: { setScreen: typeof mockSetScreen; triggerRefresh: typeof mockTriggerRefresh }) => unknown) =>
+    selector({ setScreen: mockSetScreen, triggerRefresh: mockTriggerRefresh }),
 }))
 
 // =============================================================================
@@ -35,6 +36,12 @@ describe('ManualGroupScreen', () => {
       tabGroups: {
         update: vi.fn(),
         TAB_GROUP_ID_NONE: -1,
+      },
+      storage: {
+        local: {
+          get: vi.fn((_: unknown, cb: (result: Record<string, unknown>) => void) => cb({})),
+          set: vi.fn((_: unknown, cb: () => void) => cb()),
+        },
       },
       runtime: { lastError: null },
     })
