@@ -21,11 +21,10 @@ describe('ManualGroupScreen', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    // Mock chrome.tabs.query to return some tabs
     const mockTabs = [
-      { id: 1, title: 'Linear — Q4 tracker', url: 'https://linear.app/q4', index: 0, pinned: false, highlighted: false, windowId: 1, active: true, incognito: false, selected: true, discarded: false, autoDiscardable: true, groupId: -1 },
-      { id: 2, title: 'Notion — Team wiki', url: 'https://notion.so/wiki', index: 1, pinned: false, highlighted: false, windowId: 1, active: false, incognito: false, selected: false, discarded: false, autoDiscardable: true, groupId: -1 },
-      { id: 3, title: 'GitHub — keeply-ext', url: 'https://github.com/keeply', index: 2, pinned: false, highlighted: false, windowId: 1, active: false, incognito: false, selected: false, discarded: false, autoDiscardable: true, groupId: -1 },
+      { id: 1, title: 'Linear — Q4 tracker', url: 'https://linear.app/q4', favIconUrl: 'https://linear.app/favicon.ico', index: 0, pinned: false, highlighted: false, windowId: 1, active: true, incognito: false, selected: true, discarded: false, autoDiscardable: true, groupId: -1 },
+      { id: 2, title: 'Notion — Team wiki', url: 'https://notion.so/wiki', favIconUrl: 'https://notion.so/favicon.ico', index: 1, pinned: false, highlighted: false, windowId: 1, active: false, incognito: false, selected: false, discarded: false, autoDiscardable: true, groupId: -1 },
+      { id: 3, title: 'GitHub — keeply-ext', url: 'https://github.com/keeply', favIconUrl: 'https://github.com/favicon.ico', index: 2, pinned: false, highlighted: false, windowId: 1, active: false, incognito: false, selected: false, discarded: false, autoDiscardable: true, groupId: -1 },
     ]
 
     vi.stubGlobal('chrome', {
@@ -65,21 +64,18 @@ describe('ManualGroupScreen', () => {
     render(<ManualGroupScreen />)
     const nameInput = screen.getByPlaceholderText(/work projects/i)
     fireEvent.change(nameInput, { target: { value: 'My Group' } })
-    const checkboxes = screen.getAllByRole('checkbox')
-    fireEvent.click(checkboxes[0]!)
+    // Click on tab row options to select
+    const tabOptions = screen.getAllByRole('option')
+    fireEvent.click(tabOptions[0]!)
     const createBtn = screen.getByRole('button', { name: /create group/i })
     expect(createBtn).toBeEnabled()
   })
 
   it('selecting all tabs works', () => {
     render(<ManualGroupScreen />)
-    const checkboxes = screen.getAllByRole('checkbox')
-    for (const cb of checkboxes) {
-      fireEvent.click(cb)
-    }
-    // All 3 should be checked
-    for (const cb of checkboxes) {
-      expect(cb).toBeChecked()
+    const tabOptions = screen.getAllByRole('option')
+    for (const opt of tabOptions) {
+      fireEvent.click(opt)
     }
     expect(screen.getByText(/3\/3/)).toBeTruthy()
   })

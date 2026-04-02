@@ -11,3 +11,10 @@ createRoot(root).render(
     <App />
   </StrictMode>,
 )
+
+if (import.meta.env.DEV) {
+  import('@/shared/utils/usageUtils').then(({ resetUsageForDev }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).keeplyResetUsage = resetUsageForDev
+  })
+}

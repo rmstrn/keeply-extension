@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { extractGroupableTabs } from '@/shared/utils/tabUtils'
+import { TabRow } from '@/popup/components/TabRow/TabRow'
 import type { ChromeTabGroupColor, TabInfo } from '@/shared/types'
 
 // =============================================================================
@@ -116,15 +117,13 @@ export function ManualGroupScreen() {
 
       <div className="tab-list" role="listbox" aria-label="Select tabs">
         {allTabs.map((tab) => (
-          <label key={tab.id} className="tab-row">
-            <input
-              type="checkbox"
-              checked={selectedTabIds.has(tab.id)}
-              onChange={() => toggleTab(tab.id)}
-              className="tab-check"
-            />
-            <span className="tab-title">{tab.title}</span>
-          </label>
+          <TabRow
+            key={tab.id}
+            tab={tab}
+            showCheckbox
+            selected={selectedTabIds.has(tab.id)}
+            onToggle={() => toggleTab(tab.id)}
+          />
         ))}
         {allTabs.length === 0 && (
           <div className="tab-row empty">

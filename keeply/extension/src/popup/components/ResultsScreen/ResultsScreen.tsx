@@ -1,4 +1,8 @@
+import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
+import { extractGroupableTabs } from '@/shared/utils/tabUtils'
+import { TabRow } from '@/popup/components/TabRow/TabRow'
+import type { TabInfo } from '@/shared/types'
 
 const GROUP_COLORS: Record<string, string> = {
   green: '#1D9E75',
@@ -15,6 +19,18 @@ export function ResultsScreen() {
   const result = useTabStore((s) => s.lastResult)
   const reset = useTabStore((s) => s.reset)
   const startGrouping = useTabStore((s) => s.startGrouping)
+  const [allTabs, setAllTabs] = useState<TabInfo[]>([])
+
+  useEffect(() => {
+    try {
+      chrome.tabs.query({}, (tabs) => {
+        if (chrome.runtime.lastError) return
+        setAllTabs(extractGroupableTabs(tabs))
+      })
+    } catch {
+      // Extension not loaded properly
+    }
+  }, [])
 
   if (!result) return null
 
@@ -52,6 +68,13 @@ export function ResultsScreen() {
                 {group.tabIds.length}
               </span>
             </div>
+            <div className="gtabs">
+              {group.tabIds.map((tabId) => {
+                const tab = allTabs.find((t) => t.id === tabId)
+                if (!tab) return null
+                return <TabRow key={tabId} tab={tab} />
+              })}
+            </div>
           </div>
         ))}
 
@@ -66,7 +89,7 @@ export function ResultsScreen() {
             </div>
             <div className="gtabs">
               {inboxTabs.map((tab) => (
-                <div key={tab.id} className="gtab">{tab.title}</div>
+                <TabRow key={tab.id} tab={tab} />
               ))}
             </div>
           </div>

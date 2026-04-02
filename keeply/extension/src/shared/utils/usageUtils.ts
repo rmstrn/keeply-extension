@@ -9,7 +9,15 @@ import type { UsageState, UsageStatus } from '@/shared/types'
  * Возвращает текущую дату в формате 'YYYY-MM-DD'
  */
 export function getTodayString(): string {
-  return new Date().toISOString().split('T')[0] ?? ''
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+export async function resetUsageForDev(): Promise<void> {
+  await chrome.storage.local.remove('keeply_usage')
 }
 
 // =============================================================================
