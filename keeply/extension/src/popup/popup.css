@@ -119,10 +119,10 @@ body {
   overflow: hidden; max-height: 0; opacity: 0;
   transition: max-height .15s ease, opacity .15s ease;
 }
-.section-body.open { max-height: 2000px; opacity: 1; }
+.section-body.open { max-height: 2000px; opacity: 1; overflow: visible; }
 
 /* ── RECENT ROWS ─── */
-.rr { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0; }
+.rr { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0; }
 .rr:hover { background: var(--hover-bg); }
 .rr:hover .rn { color: var(--primary); }
 .rn { font-size: 13px; font-weight: 600; color: var(--text-2); flex: 1; transition: color .12s; }
@@ -394,7 +394,7 @@ body {
 
 /* ── EXPANDABLE GROUPS ─── */
 .group-item {
-  margin-bottom: 0; border-radius: 8px; padding: 4px 6px;
+  border-radius: 8px; padding: 2px 4px;
   transition: background .15s ease, box-shadow .15s ease;
 }
 .drop-zone-active {
@@ -408,17 +408,17 @@ body {
 }
 .group-tab-row {
   display: flex; align-items: center; gap: 7px;
-  padding: 4px 0; border-radius: 6px; cursor: grab;
+  padding: 4px 4px; border-radius: 6px; cursor: grab;
   transition: background .15s ease; margin: 0;
 }
 .group-tab-row:active { cursor: grabbing; }
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { margin-top: 0; padding: 4px 6px; min-height: 40px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
+.inbox-section { padding: 2px 4px; min-height: 40px; border-radius: 8px; transition: background .15s ease, box-shadow .15s ease; }
 .inbox-tab {
   display: flex; align-items: center; gap: 7px;
-  padding: 4px 0; border-radius: 6px;
+  padding: 4px 4px; border-radius: 6px;
   cursor: grab; transition: background .15s ease; margin: 0;
 }
 .inbox-tab:hover { background: var(--hover-bg); }
