@@ -245,7 +245,7 @@ export function DefaultScreen() {
           }}
           onDrop={handleDropOnUngrouped}
         >
-          <div className="slbl" style={{ color: '#9B9C96' }}>Ungrouped · {tabCountLabel(ungroupedTabs.length)}</div>
+          <div className="slbl" >Ungrouped · {tabCountLabel(ungroupedTabs.length)}</div>
           {ungroupedTabs.map((tab) => (
             <div
               key={tab.id}
@@ -274,7 +274,7 @@ export function DefaultScreen() {
           onDragLeave={() => setIsDragOver(null)}
           onDrop={handleDropOnUngrouped}
         >
-          <div className="slbl" style={{ color: '#9B9C96' }}>Drop here to ungroup</div>
+          <div className="slbl" >Drop here to ungroup</div>
         </div>
       )}
     </div>
