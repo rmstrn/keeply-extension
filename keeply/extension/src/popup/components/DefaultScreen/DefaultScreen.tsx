@@ -261,6 +261,11 @@ export function DefaultScreen() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState<string | null>(null)
   const [showInlineForm, setShowInlineForm] = useState(false)
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editEmojiOpen, setEditEmojiOpen] = useState(false)
+  const editInputRef = useRef<HTMLInputElement>(null)
+  const editEmojiRef = useRef<HTMLDivElement>(null)
 
   const toggleGroup = (id: string) => {
     setExpandedGroups((prev) => {
@@ -270,6 +275,59 @@ export function DefaultScreen() {
       return next
     })
   }
+
+  const startEditing = (group: KeeplyGroup) => {
+    setEditingGroupId(group.id)
+    setEditName(group.name)
+    setEditEmojiOpen(false)
+  }
+
+  const commitRename = (groupId: string) => {
+    const trimmed = editName.trim()
+    if (trimmed.length === 0) {
+      cancelRename()
+      return
+    }
+    const updated = keeplyGroups.map((g) =>
+      g.id === groupId ? { ...g, name: trimmed } : g,
+    )
+    saveGroups(updated)
+    setEditingGroupId(null)
+  }
+
+  const cancelRename = () => {
+    setEditingGroupId(null)
+    setEditEmojiOpen(false)
+  }
+
+  const pickEditEmoji = (emoji: string, groupId: string) => {
+    const updated = keeplyGroups.map((g) =>
+      g.id === groupId ? { ...g, emoji } : g,
+    )
+    saveGroups(updated)
+    setEditEmojiOpen(false)
+  }
+
+  const openAllClosed = (e: React.MouseEvent, group: KeeplyGroup) => {
+    e.stopPropagation()
+    for (const gt of group.tabs) {
+      if (gt.tabId === undefined) {
+        chrome.tabs.create({ url: gt.url })
+      }
+    }
+  }
+
+  // Close edit emoji picker on outside click
+  useEffect(() => {
+    if (!editEmojiOpen) return
+    const handler = (e: MouseEvent) => {
+      if (editEmojiRef.current && !editEmojiRef.current.contains(e.target as Node)) {
+        setEditEmojiOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [editEmojiOpen])
 
   // Move tab into a Keeply group (storage-only)
   const handleDropOnGroup = (e: React.DragEvent, group: KeeplyGroup) => {
@@ -423,6 +481,8 @@ export function DefaultScreen() {
 
       {keeplyGroups.map((group) => {
         const isExpanded = expandedGroups.has(group.id)
+        const isEditing = editingGroupId === group.id
+        const closedCount = group.tabs.filter((t) => t.tabId === undefined).length
         return (
           <div
             key={group.id}
@@ -431,10 +491,86 @@ export function DefaultScreen() {
             onDragLeave={(e) => handleGroupDragLeave(e, group.id)}
             onDrop={(e) => handleDropOnGroup(e, group)}
           >
-            <div className="rr group-header" onClick={() => toggleGroup(group.id)}>
-              {group.emoji && <span className="group-emoji" aria-hidden="true">{group.emoji}</span>}
-              <span className="rn">{group.name}</span>
+            <div className="rr group-header" onClick={() => { if (!isEditing) toggleGroup(group.id) }}>
+              {isEditing ? (
+                <>
+                  <div className="emoji-picker-wrapper" ref={editEmojiRef}>
+                    <button
+                      type="button"
+                      className="group-emoji-btn"
+                      onClick={(e) => { e.stopPropagation(); setEditEmojiOpen((o) => !o) }}
+                      aria-label="Change emoji"
+                    >
+                      {group.emoji ?? '😀'}
+                    </button>
+                    {editEmojiOpen && (
+                      <div className="emoji-dropdown">
+                        {EMOJI_CATEGORIES.map((cat) => (
+                          <div key={cat.label} className="emoji-cat">
+                            <div className="emoji-cat-label">{cat.label}</div>
+                            <div className="emoji-grid">
+                              {cat.emojis.map((e) => (
+                                <button
+                                  key={e}
+                                  type="button"
+                                  className="emoji-cell"
+                                  onClick={(ev) => { ev.stopPropagation(); pickEditEmoji(e, group.id) }}
+                                >
+                                  {e}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={editInputRef}
+                    className="group-rename-input"
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') commitRename(group.id)
+                      if (e.key === 'Escape') cancelRename()
+                    }}
+                    onBlur={() => commitRename(group.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    maxLength={50}
+                    autoFocus
+                  />
+                </>
+              ) : (
+                <>
+                  {group.emoji && (
+                    <span
+                      className="group-emoji"
+                      role="button"
+                      aria-label="Change emoji"
+                      onClick={(e) => { e.stopPropagation(); startEditing(group) }}
+                    >
+                      {group.emoji}
+                    </span>
+                  )}
+                  <span
+                    className="rn"
+                    onClick={(e) => { e.stopPropagation(); startEditing(group) }}
+                  >
+                    {group.name}
+                  </span>
+                </>
+              )}
               <TabCountBadge count={group.tabs.length} />
+              {closedCount > 0 && (
+                <button
+                  className="group-open-all-btn"
+                  title="Open all closed tabs"
+                  onClick={(e) => openAllClosed(e, group)}
+                >
+                  Open all
+                </button>
+              )}
               <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

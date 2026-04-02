@@ -445,7 +445,26 @@ body {
   padding: 0 3px; border-radius: 3px;
   transition: all .12s; flex-shrink: 0;
 }
-.group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; }
+.group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; cursor: pointer; }
+.group-emoji-btn {
+  font-size: 14px; line-height: 1; flex-shrink: 0; border: none;
+  background: transparent; cursor: pointer; padding: 0;
+}
+.group-rename-input {
+  flex: 1; min-width: 0; font-size: 13px; font-weight: 600;
+  font-family: var(--f); color: var(--n9); background: var(--w);
+  border: 1.5px solid var(--t7); border-radius: 5px;
+  padding: 2px 6px; outline: none;
+}
+.group-open-all-btn {
+  font-size: 10px; font-weight: 600; color: var(--n4);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--f); padding: 1px 5px;
+  border-radius: 4px; white-space: nowrap;
+  opacity: 0; transition: opacity .12s;
+}
+.group-header:hover .group-open-all-btn { opacity: 1; }
+.group-open-all-btn:hover { color: var(--t7); background: var(--t1); }
 .group-header:hover .group-delete-btn { opacity: 1; }
 .group-delete-btn:hover { background: #FFE4E6; color: #DC2626; }
 
@@ -567,6 +586,8 @@ html.dark .tab-group-badge { background: #222222; color: #707070; }
 /* Delete buttons */
 html.dark .tab-close-btn:hover,
 html.dark .group-delete-btn:hover { background: #2A1515; color: #E24B4A; }
+html.dark .group-rename-input { background: #1A1A1A; border-color: #0D7A5F; color: #F0F0EF; }
+html.dark .group-open-all-btn:hover { color: #0D7A5F; background: #0D2420; }
 
 /* ── CUSTOM SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
