@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { applyTheme } from '@/shared/utils/themeUtils'
 import { useTheme } from '@/popup/hooks/useTheme'
+import { useSettingsStore } from '@/popup/stores/settingsStore'
 import { THEMES } from '@/shared/constants/theme'
 import type { Theme } from '@/shared/types'
 
@@ -28,6 +29,7 @@ export function SettingsScreen() {
   const [currentTheme, setCurrentTheme] = useState<Theme>('system')
   const tapCountRef = useRef(0)
   const theme = useTheme()
+  const updateSetting = useSettingsStore((s) => s.updateSetting)
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export function SettingsScreen() {
 
   const handleThemeChange = (newTheme: Theme) => {
     setCurrentTheme(newTheme)
-
+    updateSetting('theme', newTheme)
     applyTheme(newTheme)
 
     // Save to storage
@@ -112,20 +114,16 @@ export function SettingsScreen() {
           <p className="sr-label">Theme</p>
           <p className="sr-sub">Choose a color scheme</p>
         </div>
-        <div className="theme-picker">
+        <select
+          className="theme-select"
+          value={currentTheme === 'dark' ? 'soft-jade' : currentTheme}
+          onChange={(e) => handleThemeChange(e.target.value as Theme)}
+          style={{ background: theme.surface, color: theme.text, borderColor: theme.border }}
+        >
           {THEMES.map((t) => (
-            <button
-              key={t.id}
-              className={`theme-btn${currentTheme === t.id || (currentTheme === 'dark' && t.id === 'soft-jade') ? ' active' : ''}`}
-              onClick={() => handleThemeChange(t.id as Theme)}
-              aria-label={t.name}
-              title={t.name}
-              style={{ background: t.bg, borderColor: t.primary }}
-            >
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: t.primary, display: 'block' }} />
-            </button>
+            <option key={t.id} value={t.id}>{t.name}</option>
           ))}
-        </div>
+        </select>
       </div>
 
       <div className="sr">

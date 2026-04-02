@@ -522,17 +522,15 @@ body {
 .tab-closed { opacity: 0.5; }
 .tab-closed:hover { opacity: 0.7; }
 
-/* ── THEME PICKER ─── */
-.theme-picker { display: flex; gap: 4px; }
-.theme-btn {
-  width: 28px; height: 28px; border-radius: 7px;
-  border: 1.5px solid var(--border); background: var(--surface);
-  cursor: pointer; font-size: 13px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .15s;
+/* ── THEME SELECT ─── */
+.theme-select {
+  font-family: var(--f); font-size: 12px; font-weight: 500;
+  padding: 5px 8px; border-radius: 6px;
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+  cursor: pointer; outline: none; transition: border-color .15s;
 }
-.theme-btn:hover { border-color: var(--primary); background: var(--hover-bg); }
-.theme-btn.active { border-color: var(--primary); background: var(--hover-bg); }
+.theme-select:focus { border-color: var(--primary); }
+.theme-select option { background: var(--surface); color: var(--text); }
 
 /* ── CUSTOM SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
