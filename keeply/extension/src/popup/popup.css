@@ -400,7 +400,7 @@ body {
 .group-tabs-list {
   padding: 2px 0 4px 8px;
   border-left: 1.5px solid var(--elevated);
-  margin-left: 11px;
+  margin-left: 9px;
 }
 .group-tab-row {
   display: flex; align-items: center; gap: 7px;
@@ -439,7 +439,7 @@ body {
 .group-tab-row:hover .tab-close-btn { opacity: 1; }
 .tab-close-btn:hover { background: var(--danger-bg); color: var(--danger); }
 
-.group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; cursor: pointer; }
+.group-emoji { font-size: 14px; line-height: 1; flex-shrink: 0; cursor: pointer; width: 20px; text-align: center; }
 .group-emoji-btn {
   font-size: 14px; line-height: 1; flex-shrink: 0; border: none;
   background: transparent; cursor: pointer; padding: 0;
