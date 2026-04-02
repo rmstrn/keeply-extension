@@ -1,22 +1,45 @@
 import type { Theme } from '@/shared/types'
+import { lightTheme, darkTheme } from '@/shared/constants/theme'
+import type { ThemeTokens } from '@/shared/constants/theme'
+
+function applyThemeVars(tokens: ThemeTokens): void {
+  const s = document.documentElement.style
+  s.setProperty('--bg', tokens.bg)
+  s.setProperty('--surface', tokens.surface)
+  s.setProperty('--elevated', tokens.elevated)
+  s.setProperty('--border', tokens.border)
+  s.setProperty('--hover-bg', tokens.hoverBg)
+  s.setProperty('--text', tokens.text)
+  s.setProperty('--text-2', tokens.text2)
+  s.setProperty('--text-muted', tokens.textMuted)
+  s.setProperty('--primary', tokens.primary)
+  s.setProperty('--primary-hover', tokens.primaryHover)
+  s.setProperty('--primary-text', tokens.primaryText)
+  s.setProperty('--danger-bg', tokens.dangerBg)
+  s.setProperty('--danger-text', tokens.dangerText)
+  s.setProperty('--warn-text', tokens.warnText)
+  s.setProperty('--error-text', tokens.errorText)
+}
 
 /**
- * Apply theme class to document root
+ * Apply theme class to document root and set CSS variables
  */
 export function applyTheme(theme: Theme): void {
   if (theme === 'dark') {
     document.documentElement.classList.add('dark')
+    applyThemeVars(darkTheme)
   } else if (theme === 'light') {
     document.documentElement.classList.remove('dark')
+    applyThemeVars(lightTheme)
   } else {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     document.documentElement.classList.toggle('dark', prefersDark)
+    applyThemeVars(prefersDark ? darkTheme : lightTheme)
   }
 }
 
 /**
  * Initialize theme from storage, with system preference listener for 'system' mode.
- * Returns a cleanup function to remove the listener.
  */
 export function initThemeFromStorage(onReady: () => void): void {
   try {
@@ -30,6 +53,7 @@ export function initThemeFromStorage(onReady: () => void): void {
         window.matchMedia('(prefers-color-scheme: dark)')
           .addEventListener('change', (e) => {
             document.documentElement.classList.toggle('dark', e.matches)
+            applyThemeVars(e.matches ? darkTheme : lightTheme)
           })
       }
 

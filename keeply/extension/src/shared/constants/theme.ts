@@ -10,6 +10,10 @@ export interface ThemeTokens {
   readonly primary: string
   readonly primaryHover: string
   readonly primaryText: string
+  readonly dangerBg: string
+  readonly dangerText: string
+  readonly warnText: string
+  readonly errorText: string
 }
 
 export const lightTheme: ThemeTokens = {
@@ -24,6 +28,10 @@ export const lightTheme: ThemeTokens = {
   primary: '#0D7A5F',
   primaryHover: '#0A5C47',
   primaryText: '#FFFFFF',
+  dangerBg: '#FFE4E6',
+  dangerText: '#DC2626',
+  warnText: '#B45309',
+  errorText: '#C0392B',
 }
 
 export const darkTheme: ThemeTokens = {
@@ -38,4 +46,8 @@ export const darkTheme: ThemeTokens = {
   primary: '#ABD1C6',
   primaryHover: '#C5DDD8',
   primaryText: '#312F2C',
+  dangerBg: '#2A1515',
+  dangerText: '#E24B4A',
+  warnText: '#B45309',
+  errorText: '#C0392B',
 }
