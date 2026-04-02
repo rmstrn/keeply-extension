@@ -1,7 +1,7 @@
 import type { RefObject } from 'react'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
-import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
 import type { GroupTab, KeeplyGroup } from '@/shared/types'
+import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { EmojiPicker } from './EmojiPicker'
 import { ChevronIcon } from './Icons'
 import { ConfirmDeletePopover } from './ConfirmDeletePopover'
@@ -104,11 +104,8 @@ export function GroupRow({
             autoFocus
           />
         ) : (
-          <span className="rn">{group.name}</span>
+          <span className="rn">{group.name} <span className="group-count">· {tabCountLabel(group.tabs.length)}</span></span>
         )}
-
-        {/* [badge] — always visible */}
-        <TabCountBadge count={group.tabs.length} />
 
         {/* [pencil] — hover only, click → inline rename */}
         <button

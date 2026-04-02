@@ -147,6 +147,7 @@ body {
 .gh:hover { background: var(--hover-bg); }
 .gh:hover .gn { color: var(--primary); }
 .gn { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; transition: color .12s; }
+.group-count { font-weight: 500; color: var(--text-muted); }
 .tab-count-badge { font-size: 10px; font-weight: 600; color: var(--text-muted); background: var(--elevated); padding: 1px 6px; border-radius: 10px; text-transform: uppercase; letter-spacing: .04em; }
 .gtabs { padding: 1px 0 5px 8px; }
 .gtab { font-size: 11px; color: var(--text-muted); padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
