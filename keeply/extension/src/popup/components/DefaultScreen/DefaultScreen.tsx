@@ -401,7 +401,7 @@ export function DefaultScreen() {
                   chrome.tabs.remove(duplicateTabIds, () => triggerRefresh())
                 }}
               >
-                Remove duplicates
+                Remove duplicates ({duplicateTabIds.length})
               </button>
             )}
             <ChevronIcon expanded={sectionsOpen.ungrouped} />
