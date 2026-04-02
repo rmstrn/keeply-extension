@@ -227,7 +227,7 @@ function GroupItem({
       <div className="rr group-header" onClick={onToggle}>
         <div className="rdot" style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }} aria-hidden="true" />
         <span className="rn">{group.name}</span>
-        <span className="rm">{tabCountLabel(group.tabs.length)}</span>
+        <span className="gbadge">{tabCountLabel(group.tabs.length)}</span>
         <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
           <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
