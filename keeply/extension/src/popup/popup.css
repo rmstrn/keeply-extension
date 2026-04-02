@@ -110,10 +110,10 @@ body {
 }
 .chevron-icon.expanded { transform: rotate(90deg); }
 .section-body {
-  overflow: hidden; max-height: 0;
-  transition: max-height .25s ease;
+  overflow: hidden; max-height: 0; opacity: 0;
+  transition: max-height .15s ease, opacity .15s ease;
 }
-.section-body.open { max-height: 2000px; }
+.section-body.open { max-height: 2000px; opacity: 1; }
 
 /* ── RECENT ROWS ─── */
 .rr { display: flex; align-items: center; gap: 10px; padding: 6px 7px; border-radius: 7px; cursor: pointer; transition: background .12s; margin: 0 -7px; }
