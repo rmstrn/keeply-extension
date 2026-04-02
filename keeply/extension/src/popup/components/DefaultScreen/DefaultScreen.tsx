@@ -52,6 +52,7 @@ function sendMessage(message: BackgroundMessage): Promise<PopupMessage> {
 export function DefaultScreen() {
   const { groupTabs } = useTabGroups()
   const status = useUsageStore((s) => s.status)
+  const isLoading = useUsageStore((s) => s.isLoading)
   const setScreen = useTabStore((s) => s.setScreen)
 
   const [tabCount, setTabCount] = useState(0)
@@ -127,7 +128,7 @@ export function DefaultScreen() {
         onMouseOver={(e) => { e.currentTarget.style.background = '#0A5C47' }}
         onMouseOut={(e) => { e.currentTarget.style.background = '#0D7A5F' }}
         onClick={() => void groupTabs()}
-        disabled={status.isLimitReached}
+        disabled={!isLoading && status.isLimitReached}
         aria-label="Group tabs with AI"
       >
         <BulbIcon />
