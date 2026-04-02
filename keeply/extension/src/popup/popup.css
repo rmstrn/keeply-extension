@@ -196,3 +196,51 @@ body {
   box-shadow: 0 1px 4px rgba(0,0,0,.28), 0 0 0 .5px rgba(0,0,0,.08);
 }
 .toggle.on::after { transform: translateX(17px); }
+
+/* ── INBOX HINT ─── */
+.inbox-hint { font-size: 11px; color: #9B9C96; padding: 6px 0; }
+
+/* ── NEW GROUP BUTTON ─── */
+.new-group-btn {
+  font-size: 11px; font-weight: 600; color: var(--t7);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--f); padding: 2px 6px;
+  border-radius: 5px; transition: background .12s;
+}
+.new-group-btn:hover { background: var(--t1); }
+
+/* ── MANUAL GROUP SCREEN ─── */
+.manual-title { font-size: 15px; font-weight: 700; color: var(--n9); margin-bottom: 13px; letter-spacing: -.3px; }
+.manual-field { margin-bottom: 12px; }
+.manual-label { font-size: 11px; font-weight: 600; color: var(--n5); display: block; margin-bottom: 5px; }
+.manual-input {
+  width: 100%; padding: 9px 11px; font-family: var(--f); font-size: 13px;
+  border: 1.5px solid var(--bd); border-radius: 8px; background: var(--w);
+  color: var(--n9); outline: none; transition: border-color .15s;
+}
+.manual-input:focus { border-color: var(--t7); }
+.manual-input::placeholder { color: var(--n3); }
+
+/* Color picker */
+.color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-dot {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; transition: all .12s; outline: none;
+}
+.color-dot:hover { transform: scale(1.15); }
+.color-dot.selected { border-color: var(--n9); box-shadow: 0 0 0 2px var(--w), 0 0 0 3.5px currentColor; }
+
+/* Tab list */
+.tab-list { max-height: 180px; overflow-y: auto; margin: 0 -7px; }
+.tab-row {
+  display: flex; align-items: center; gap: 8px; padding: 5px 7px;
+  border-radius: 6px; cursor: pointer; transition: background .12s;
+}
+.tab-row:hover { background: var(--t1); }
+.tab-check { accent-color: var(--t7); flex-shrink: 0; cursor: pointer; }
+.tab-title {
+  font-size: 12px; color: var(--n7); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 240px;
+}
+
+.manual-create-btn:disabled { opacity: .5; cursor: not-allowed; }

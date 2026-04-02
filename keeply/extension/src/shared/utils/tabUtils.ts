@@ -123,6 +123,7 @@ export function parseAIResponse(
     groups,
     totalTabsGrouped,
     timestamp: Date.now(),
+    inboxTabs: [],
   })
 }
 

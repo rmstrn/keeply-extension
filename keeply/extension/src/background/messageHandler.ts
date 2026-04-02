@@ -34,6 +34,10 @@ export function handleMessage(
     case 'UNDO_GROUPING':
       // TODO: implement undo logic
       break
+
+    case 'GET_CURRENT_GROUPS':
+      handleGetCurrentGroups(sendResponse)
+      break
   }
 }
 
@@ -89,4 +93,18 @@ async function handleSaveSettings(
   const updated: Settings = { ...current, ...partial }
   await storageService.set(STORAGE_KEYS.SETTINGS, updated)
   sendResponse({ type: 'SETTINGS_RESPONSE', payload: updated })
+}
+
+async function handleGetCurrentGroups(
+  sendResponse: (response: PopupMessage) => void,
+): Promise<void> {
+  const result = await grouper.getCurrentGroups()
+  if (result.ok) {
+    sendResponse({ type: 'CURRENT_GROUPS_RESPONSE', payload: result.value })
+  } else {
+    sendResponse({
+      type: 'GROUPING_ERROR',
+      payload: { message: result.error.message },
+    })
+  }
 }

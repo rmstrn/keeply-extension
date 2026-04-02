@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useTabStore } from '@/popup/stores/tabStore'
 import { useUsageStore } from '@/popup/stores/usageStore'
 import { useTabGroups } from '@/popup/hooks/useTabGroups'
 import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { STORAGE_KEYS } from '@/shared/constants'
-import type { RecentGroup } from '@/shared/types'
+import type { BackgroundMessage, PopupMessage, RecentGroup, TabInfo } from '@/shared/types'
 
 // =============================================================================
 // COLOR MAP — hex values for display
@@ -35,6 +36,15 @@ function timeAgo(timestamp: number): string {
   return `${days}d ago`
 }
 
+function sendMessage(message: BackgroundMessage): Promise<PopupMessage> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(message, (response: PopupMessage) => {
+      if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message))
+      else resolve(response)
+    })
+  })
+}
+
 // =============================================================================
 // DEFAULT SCREEN
 // =============================================================================
@@ -42,10 +52,12 @@ function timeAgo(timestamp: number): string {
 export function DefaultScreen() {
   const { groupTabs } = useTabGroups()
   const status = useUsageStore((s) => s.status)
+  const setScreen = useTabStore((s) => s.setScreen)
 
   const [tabCount, setTabCount] = useState(0)
   const [recentGroups, setRecentGroups] = useState<RecentGroup[]>([])
   const [totalTabsGrouped, setTotalTabsGrouped] = useState(0)
+  const [inboxTabs, setInboxTabs] = useState<TabInfo[]>([])
 
   // Fetch real tab count
   useEffect(() => {
@@ -75,6 +87,20 @@ export function DefaultScreen() {
     } catch {
       // Extension not loaded properly
     }
+  }, [])
+
+  // Load current groups to detect inbox tabs
+  useEffect(() => {
+    void (async () => {
+      try {
+        const response = await sendMessage({ type: 'GET_CURRENT_GROUPS' })
+        if (response.type === 'CURRENT_GROUPS_RESPONSE') {
+          setInboxTabs([...response.payload.inboxTabs])
+        }
+      } catch {
+        // Extension not loaded properly
+      }
+    })()
   }, [])
 
   return (
@@ -127,7 +153,16 @@ export function DefaultScreen() {
         </div>
       </div>
 
-      <div className="slbl" aria-label="Recent groups section">Recent groups</div>
+      {inboxTabs.length > 0 && (
+        <div className="inbox-hint">
+          {inboxTabs.length} tabs in Inbox — not grouped yet
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="slbl" aria-label="Recent groups section">Groups</div>
+        <button className="new-group-btn" onClick={() => setScreen('manual')}>+ New</button>
+      </div>
       {recentGroups.length === 0 ? (
         <div className="rr empty">
           <span className="rm">No groups yet. Click Group tabs to start.</span>

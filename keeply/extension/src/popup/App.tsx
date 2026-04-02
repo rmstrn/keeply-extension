@@ -7,6 +7,7 @@ import { LoadingScreen } from '@/popup/components/LoadingScreen/LoadingScreen'
 import { ResultsScreen } from '@/popup/components/ResultsScreen/ResultsScreen'
 import { PaywallScreen } from '@/popup/components/PaywallScreen/PaywallScreen'
 import { SettingsScreen } from '@/popup/components/SettingsScreen/SettingsScreen'
+import { ManualGroupScreen } from '@/popup/components/ManualGroupScreen/ManualGroupScreen'
 import { Header } from '@/popup/components/Header/Header'
 import type { BackgroundMessage, PopupMessage } from '@/shared/types'
 
@@ -52,6 +53,7 @@ export function App() {
       {screen === 'results' && <ResultsScreen />}
       {screen === 'paywall' && <PaywallScreen />}
       {screen === 'settings' && <SettingsScreen />}
+      {screen === 'manual' && <ManualGroupScreen />}
     </div>
   )
 }

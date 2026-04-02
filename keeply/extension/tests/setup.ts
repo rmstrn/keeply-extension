@@ -22,6 +22,7 @@ const chromeMock = {
   tabGroups: {
     query: vi.fn(),
     update: vi.fn(),
+    TAB_GROUP_ID_NONE: -1,
   },
   runtime: {
     lastError: null as chrome.runtime.LastError | null,

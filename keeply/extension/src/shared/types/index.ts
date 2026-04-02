@@ -46,6 +46,7 @@ export interface GroupingResult {
   readonly groups: readonly TabGroup[]
   readonly totalTabsGrouped: number
   readonly timestamp: number
+  readonly inboxTabs: readonly TabInfo[]
 }
 
 // AI ответ до парсинга
@@ -111,6 +112,12 @@ export type BackgroundMessage =
   | { readonly type: 'GET_USAGE' }
   | { readonly type: 'GET_SETTINGS' }
   | { readonly type: 'SAVE_SETTINGS'; readonly payload: Partial<Settings> }
+  | { readonly type: 'GET_CURRENT_GROUPS' }
+
+export interface CurrentGroupsPayload {
+  readonly groups: readonly TabGroup[]
+  readonly inboxTabs: readonly TabInfo[]
+}
 
 export type PopupMessage =
   | { readonly type: 'GROUPING_STARTED' }
@@ -118,6 +125,7 @@ export type PopupMessage =
   | { readonly type: 'GROUPING_ERROR'; readonly payload: { readonly message: string } }
   | { readonly type: 'USAGE_RESPONSE'; readonly payload: UsageStatus }
   | { readonly type: 'SETTINGS_RESPONSE'; readonly payload: Settings }
+  | { readonly type: 'CURRENT_GROUPS_RESPONSE'; readonly payload: CurrentGroupsPayload }
 
 // -----------------------------------------------------------------------------
 // Storage Keys — type-safe ключи для chrome.storage
@@ -143,6 +151,7 @@ export type PopupScreen =
   | 'results'
   | 'paywall'
   | 'settings'
+  | 'manual'
 
 // -----------------------------------------------------------------------------
 // Recent Group (хранится локально для истории)

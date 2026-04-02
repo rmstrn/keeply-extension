@@ -18,6 +18,8 @@ export function ResultsScreen() {
 
   if (!result) return null
 
+  const inboxTabs = result.inboxTabs
+
   return (
     <div className="body">
       <div className="done-chip" role="status">
@@ -52,6 +54,23 @@ export function ResultsScreen() {
             </div>
           </div>
         ))}
+
+        {inboxTabs.length > 0 && (
+          <div className="gr" role="listitem">
+            <div className="gh inbox-group">
+              <div className="gdot" style={{ background: '#9B9C96' }} aria-hidden="true" />
+              <span className="gn">Inbox</span>
+              <span className="gbadge" aria-label={`${inboxTabs.length} tabs`}>
+                {inboxTabs.length}
+              </span>
+            </div>
+            <div className="gtabs">
+              {inboxTabs.map((tab) => (
+                <div key={tab.id} className="gtab">{tab.title}</div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="res-acts">

@@ -1,11 +1,13 @@
-import { extractGroupableTabs, parseAIResponse } from '@/shared/utils/tabUtils'
+import { extractGroupableTabs, parseAIResponse, toTabInfo } from '@/shared/utils/tabUtils'
 import { buildPrompt } from '@/shared/utils/promptBuilder'
 import { recordUsage, getUsageStatus, createInitialUsage } from '@/shared/utils/usageUtils'
 import { ok, err } from '@/shared/types'
 import { STORAGE_KEYS, EDGE_FUNCTION_URL, AI_REQUEST_TIMEOUT_MS, MAX_RECENT_GROUPS } from '@/shared/constants'
 import type {
+  CurrentGroupsPayload,
   GroupingResult,
   RecentGroup,
+  TabInfo,
   TabGroup,
   UsageState,
   Settings,
@@ -115,10 +117,18 @@ export class TabGrouper {
     const applyResult = await this.applyGroups(parseResult.value.groups)
     if (!applyResult.ok) return applyResult
 
-    // 8. Сохраняем в историю и обновляем счётчик
-    await this.saveRecentGroup(parseResult.value)
+    // 8. Собираем ungrouped tabs (Inbox)
+    const inboxTabs = await this.getUngroupedTabs()
 
-    return parseResult
+    const resultWithInbox: GroupingResult = {
+      ...parseResult.value,
+      inboxTabs,
+    }
+
+    // 9. Сохраняем в историю и обновляем счётчик
+    await this.saveRecentGroup(resultWithInbox)
+
+    return ok(resultWithInbox)
   }
 
   /**
@@ -153,6 +163,53 @@ export class TabGrouper {
         }
         const tabs = extractGroupableTabs(chromeTabs)
         resolve(ok(tabs))
+      })
+    })
+  }
+
+  /**
+   * Возвращает текущие группы и ungrouped tabs из Chrome
+   */
+  async getCurrentGroups(): Promise<Result<CurrentGroupsPayload>> {
+    try {
+      const chromeGroups = await new Promise<chrome.tabGroups.TabGroup[]>((resolve) => {
+        chrome.tabGroups.query({}, resolve)
+      })
+
+      const groups: TabGroup[] = []
+      for (const cg of chromeGroups) {
+        const tabsInGroup = await new Promise<chrome.tabs.Tab[]>((resolve) => {
+          chrome.tabs.query({ groupId: cg.id }, resolve)
+        })
+        groups.push({
+          name: cg.title ?? 'Untitled',
+          color: (cg.color ?? 'grey') as TabGroup['color'],
+          tabIds: tabsInGroup.map((t) => t.id).filter((id): id is number => id !== undefined),
+        })
+      }
+
+      const inboxTabs = await this.getUngroupedTabs()
+
+      return ok({ groups, inboxTabs })
+    } catch (e) {
+      return err(e instanceof Error ? e : new Error(String(e)))
+    }
+  }
+
+  /**
+   * Возвращает вкладки, не принадлежащие ни одной группе
+   */
+  private async getUngroupedTabs(): Promise<TabInfo[]> {
+    return new Promise((resolve) => {
+      chrome.tabs.query({ groupId: chrome.tabGroups.TAB_GROUP_ID_NONE }, (tabs) => {
+        if (chrome.runtime.lastError) {
+          resolve([])
+          return
+        }
+        const infos = tabs
+          .map((t) => toTabInfo(t))
+          .filter((t): t is TabInfo => t !== null)
+        resolve(infos)
       })
     })
   }
