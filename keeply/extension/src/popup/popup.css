@@ -148,7 +148,7 @@ body {
 .gh:hover .gn { color: var(--t7); }
 .gdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .gn { font-size: 13px; font-weight: 700; color: var(--n9); flex: 1; transition: color .12s; }
-.tab-count-badge { font-size: 10px; font-weight: 600; color: var(--n5); background: var(--n1); padding: 1px 6px; border-radius: 10px; }
+.tab-count-badge { font-size: 10px; font-weight: 600; color: var(--n5); background: var(--n1); padding: 1px 6px; border-radius: 10px; text-transform: none; letter-spacing: normal; }
 .gtabs { padding: 1px 0 5px 8px; }
 .gtab { font-size: 11px; color: var(--n5); padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
 .res-acts { display: flex; gap: 6px; margin-top: 13px; }
