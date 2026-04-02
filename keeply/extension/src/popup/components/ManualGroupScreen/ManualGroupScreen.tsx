@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { STORAGE_KEYS } from '@/shared/constants'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import type { ChromeTabGroupColor, RecentGroup, TabInfo } from '@/shared/types'
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
+interface TabInfoWithGroup extends TabInfo {
+  readonly chromeGroupId?: number | undefined
+}
 
 // =============================================================================
 // COLOR OPTIONS
@@ -26,6 +34,12 @@ function isGroupableUrl(url: string | undefined): boolean {
   return !SKIP_PREFIXES.some((p) => url.startsWith(p))
 }
 
+function matchesSearch(tab: TabInfo, query: string): boolean {
+  if (query === '') return true
+  const q = query.toLowerCase()
+  return tab.title.toLowerCase().includes(q) || tab.url.toLowerCase().includes(q)
+}
+
 // =============================================================================
 // MANUAL GROUP SCREEN
 // =============================================================================
@@ -36,12 +50,12 @@ export function ManualGroupScreen() {
 
   const [groupName, setGroupName] = useState('')
   const [selectedColor, setSelectedColor] = useState<ChromeTabGroupColor>('blue')
-  const [allTabs, setAllTabs] = useState<TabInfo[]>([])
+  const [allTabs, setAllTabs] = useState<TabInfoWithGroup[]>([])
   const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set())
   const [showAllTabs, setShowAllTabs] = useState(false)
   const [search, setSearch] = useState('')
-  const [tabGroupIds, setTabGroupIds] = useState<Record<number, number>>({})
   const [groupMap, setGroupMap] = useState<Record<number, string>>({})
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['inbox']))
 
   // Fetch tabs based on showAllTabs toggle
   useEffect(() => {
@@ -52,23 +66,20 @@ export function ManualGroupScreen() {
 
       chrome.tabs.query(query, (tabs) => {
         if (chrome.runtime.lastError) return
-        const filtered = tabs.filter((t) => t.id && isGroupableUrl(t.url))
         setAllTabs(
-          filtered.map((t) => ({
-            id: t.id!,
-            title: t.title ?? t.url ?? '',
-            url: t.url ?? '',
-            favIconUrl: t.favIconUrl,
-          })),
+          tabs
+            .filter((t) => t.id && isGroupableUrl(t.url))
+            .map((t) => ({
+              id: t.id!,
+              title: t.title ?? t.url ?? '',
+              url: t.url ?? '',
+              favIconUrl: t.favIconUrl,
+              chromeGroupId:
+                t.groupId !== undefined && t.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE
+                  ? t.groupId
+                  : undefined,
+            })),
         )
-        // Track which group each tab belongs to
-        const gids: Record<number, number> = {}
-        for (const t of filtered) {
-          if (t.id && t.groupId !== undefined && t.groupId !== -1) {
-            gids[t.id] = t.groupId
-          }
-        }
-        setTabGroupIds(gids)
       })
     } catch {
       // Extension not loaded properly
@@ -98,21 +109,42 @@ export function ManualGroupScreen() {
   const toggleTab = (tabId: number) => {
     setSelectedTabIds((prev) => {
       const next = new Set(prev)
-      if (next.has(tabId)) {
-        next.delete(tabId)
-      } else {
-        next.add(tabId)
-      }
+      if (next.has(tabId)) next.delete(tabId)
+      else next.add(tabId)
       return next
     })
   }
 
-  const visibleTabs = allTabs.filter(
-    (tab) =>
-      search === '' ||
-      tab.title.toLowerCase().includes(search.toLowerCase()) ||
-      tab.url.toLowerCase().includes(search.toLowerCase()),
-  )
+  const toggleSection = (key: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  // Build grouped sections when showAllTabs is true
+  const sections = useMemo(() => {
+    if (!showAllTabs) return null
+
+    const grouped: Record<string, { name: string; tabs: TabInfoWithGroup[] }> = {}
+
+    for (const tab of allTabs) {
+      if (tab.chromeGroupId !== undefined && groupMap[tab.chromeGroupId]) {
+        const key = String(tab.chromeGroupId)
+        if (!grouped[key]) grouped[key] = { name: groupMap[tab.chromeGroupId]!, tabs: [] }
+        grouped[key]!.tabs.push(tab)
+      } else {
+        if (!grouped['inbox']) grouped['inbox'] = { name: 'Inbox', tabs: [] }
+        grouped['inbox']!.tabs.push(tab)
+      }
+    }
+
+    return grouped
+  }, [allTabs, groupMap, showAllTabs])
+
+  const visibleTabs = allTabs.filter((tab) => matchesSearch(tab, search))
 
   const canCreate = groupName.trim().length > 0 && selectedTabIds.size > 0
 
@@ -145,6 +177,25 @@ export function ManualGroupScreen() {
       )
     })
   }
+
+  const renderTabRow = (tab: TabInfoWithGroup) => (
+    <div
+      key={tab.id}
+      className="tab-row"
+      onClick={() => toggleTab(tab.id)}
+      role="option"
+      aria-selected={selectedTabIds.has(tab.id)}
+    >
+      <div
+        className={`tab-checkbox${selectedTabIds.has(tab.id) ? ' checked' : ''}`}
+        aria-hidden="true"
+      >
+        {selectedTabIds.has(tab.id) && <CheckIcon />}
+      </div>
+      <TabFavicon url={tab.favIconUrl} />
+      <span className="tab-title">{tab.title}</span>
+    </div>
+  )
 
   return (
     <div className="body">
@@ -187,6 +238,15 @@ export function ManualGroupScreen() {
         Select tabs ({selectedTabIds.size}/{allTabs.length})
       </div>
 
+      <label className="show-all-toggle">
+        <input
+          type="checkbox"
+          checked={showAllTabs}
+          onChange={(e) => setShowAllTabs(e.target.checked)}
+        />
+        <span>Show tabs already in groups</span>
+      </label>
+
       <input
         className="tab-search"
         type="text"
@@ -198,57 +258,48 @@ export function ManualGroupScreen() {
       {allTabs.length === 0 ? (
         <div className="empty-state">
           <p>All tabs are already grouped</p>
-          <label className="show-all-toggle">
-            <input
-              type="checkbox"
-              checked={showAllTabs}
-              onChange={(e) => setShowAllTabs(e.target.checked)}
-            />
-            <span>Show tabs already in groups</span>
-          </label>
         </div>
       ) : (
-        <>
-          <div className="tab-list" role="listbox" aria-label="Select tabs">
-            {visibleTabs.map((tab) => {
-              const gid = tabGroupIds[tab.id]
-              const gName = gid !== undefined ? groupMap[gid] : undefined
+        <div className="tab-list" role="listbox" aria-label="Select tabs">
+          {showAllTabs && sections ? (
+            Object.entries(sections).map(([key, section]) => {
+              const sectionTabs = section.tabs.filter((t) => matchesSearch(t, search))
+              if (sectionTabs.length === 0) return null
+              const isExpanded = expandedSections.has(key)
+
               return (
-                <div
-                  key={tab.id}
-                  className="tab-row"
-                  onClick={() => toggleTab(tab.id)}
-                  role="option"
-                  aria-selected={selectedTabIds.has(tab.id)}
-                >
-                  <div
-                    className={`tab-checkbox${selectedTabIds.has(tab.id) ? ' checked' : ''}`}
-                    aria-hidden="true"
-                  >
-                    {selectedTabIds.has(tab.id) && <CheckIcon />}
+                <div key={key} className="manual-group-section">
+                  <div className="manual-section-header" onClick={() => toggleSection(key)}>
+                    <span className="manual-section-name">{section.name}</span>
+                    <span className="manual-section-count">{sectionTabs.length}</span>
+                    <svg
+                      className={`expand-arrow${isExpanded ? ' expanded' : ''}`}
+                      width="10" height="10" viewBox="0 0 10 10" fill="none"
+                    >
+                      <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3"
+                        strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
-                  <TabFavicon url={tab.favIconUrl} />
-                  <span className="tab-title">{tab.title}</span>
-                  {gName && <span className="tab-group-badge">{gName}</span>}
+                  {isExpanded && (
+                    <div className="manual-section-tabs">
+                      {sectionTabs.map(renderTabRow)}
+                    </div>
+                  )}
                 </div>
               )
-            })}
-            {visibleTabs.length === 0 && search !== '' && (
-              <div className="empty-state" style={{ padding: '10px 0' }}>
-                <p>No tabs match "{search}"</p>
-              </div>
-            )}
-          </div>
+            })
+          ) : (
+            visibleTabs.map(renderTabRow)
+          )}
 
-          <label className="show-all-toggle">
-            <input
-              type="checkbox"
-              checked={showAllTabs}
-              onChange={(e) => setShowAllTabs(e.target.checked)}
-            />
-            <span>Show tabs already in groups</span>
-          </label>
-        </>
+          {((showAllTabs && sections && Object.values(sections).every(
+            (s) => s.tabs.filter((t) => matchesSearch(t, search)).length === 0,
+          )) || (!showAllTabs && visibleTabs.length === 0)) && search !== '' && (
+            <div className="empty-state" style={{ padding: '10px 0' }}>
+              <p>No tabs match &ldquo;{search}&rdquo;</p>
+            </div>
+          )}
+        </div>
       )}
 
       <button

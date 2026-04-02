@@ -291,6 +291,25 @@ body {
 }
 .empty-state p { margin-bottom: 10px; }
 
+/* Manual group sections */
+.manual-group-section { margin-bottom: 4px; }
+.manual-section-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 0; cursor: pointer;
+  font-size: 11px; font-weight: 700; color: var(--n5);
+  text-transform: uppercase; letter-spacing: .06em;
+  user-select: none;
+}
+.manual-section-header:hover { color: var(--n9); }
+.manual-section-name { flex: 1; }
+.manual-section-count {
+  font-size: 10px; background: var(--n1); color: var(--n5);
+  padding: 1px 6px; border-radius: 10px; font-weight: 600;
+}
+.manual-section-tabs {
+  padding-left: 8px; border-left: 1.5px solid var(--n1); margin-left: 4px;
+}
+
 /* Group badge on tabs */
 .tab-group-badge {
   font-size: 9px; font-weight: 600;
