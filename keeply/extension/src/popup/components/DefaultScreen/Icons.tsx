@@ -39,6 +39,29 @@ export function ChevronIcon({ expanded }: { expanded: boolean }) {
   )
 }
 
+export function BulbLightningIcon({ color }: { color: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 2C8.5 2 6 4.5 6 8C6 11 8 13.5 8 13.5V16H16V13.5C16 13.5 18 11 18 8C18 4.5 15.5 2 12 2Z"
+        fill={color}
+      />
+      <rect x="8.5" y="16" width="7" height="2" rx="1" fill={color} />
+      <rect x="9.5" y="18.5" width="5" height="1.5" rx="0.75" fill={color} />
+      <path
+        d="M13.5 5.5L10.5 10H12.5L11 15L16 8H13.5L15 5.5Z"
+        fill="transparent"
+        stroke={color === '#312F2C' ? '#ABD1C6' : '#312F2C'}
+        strokeWidth="0.8"
+      />
+      <path
+        d="M13.5 5.5L10.5 10H12.5L11 15L16 8H13.5Z"
+        fill={color === '#312F2C' ? '#ABD1C6' : '#312F2C'}
+      />
+    </svg>
+  )
+}
+
 export function CheckIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">

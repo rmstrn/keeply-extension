@@ -15,6 +15,7 @@ export interface ThemeTokens {
   readonly warning: string
   readonly success: string
   readonly ctaIcon: string
+  readonly ctaIconColor: string
 }
 
 export const lightTheme: ThemeTokens = {
@@ -34,6 +35,7 @@ export const lightTheme: ThemeTokens = {
   warning: '#B45309',
   success: '#0D7A5F',
   ctaIcon: '✨',
+  ctaIconColor: '#FFFFFF',
 }
 
 export const darkTheme: ThemeTokens = {
@@ -53,4 +55,5 @@ export const darkTheme: ThemeTokens = {
   warning: '#D4956A',
   success: '#ABD1C6',
   ctaIcon: '✨',
+  ctaIconColor: '#312F2C',
 }

@@ -11,7 +11,7 @@ import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import type { GroupTab, KeeplyGroup, RecentGroup } from '@/shared/types'
-import { TabIcon, ExternalIcon, CheckIcon, ChevronIcon } from './Icons'
+import { TabIcon, ExternalIcon, CheckIcon, ChevronIcon, BulbLightningIcon } from './Icons'
 import { EmojiPicker } from './EmojiPicker'
 import { GroupRow } from './GroupRow'
 
@@ -282,7 +282,7 @@ export function DefaultScreen() {
         disabled={!isLoading && status.isLimitReached}
         aria-label="Group tabs with AI"
       >
-        <span>{theme.ctaIcon}</span>
+        <BulbLightningIcon color={theme.ctaIconColor} />
         Group tabs with AI
       </button>
 
