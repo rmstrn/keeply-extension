@@ -1,10 +1,4 @@
-const TAG_COLORS = [
-  { bg: '#E4F4EE', color: '#0D7A5F', label: 'Work' },
-  { bg: '#EDE9FF', color: '#5B21B6', label: 'Research' },
-  { bg: '#FEF3C7', color: '#92400E', label: 'Shopping' },
-  { bg: '#FFE4E6', color: '#9F1239', label: 'Social' },
-  { bg: '#DBEAFE', color: '#1E40AF', label: 'Docs' },
-]
+import { LOADING_TAGS } from '@/shared/constants'
 
 export function LoadingScreen() {
   return (
@@ -19,7 +13,7 @@ export function LoadingScreen() {
         </p>
       </div>
       <div className="tags" aria-hidden="true">
-        {TAG_COLORS.map((tag) => (
+        {LOADING_TAGS.map((tag) => (
           <span
             key={tag.label}
             className="tag"

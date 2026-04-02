@@ -1,24 +1,7 @@
 import { useCallback } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { useUsageStore } from '@/popup/stores/usageStore'
-import type { BackgroundMessage, PopupMessage } from '@/shared/types'
-
-// =============================================================================
-// useTabGroups Hook
-// Отправляет сообщения в background и обновляет store
-// =============================================================================
-
-function sendMessage(message: BackgroundMessage): Promise<PopupMessage> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(message, (response: PopupMessage) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message))
-      } else {
-        resolve(response)
-      }
-    })
-  })
-}
+import { sendMessage } from '@/shared/utils/chromeUtils'
 
 export function useTabGroups() {
   const { startGrouping, setResult, setError, triggerRefresh } = useTabStore()

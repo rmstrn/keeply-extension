@@ -9,20 +9,7 @@ import { PaywallScreen } from '@/popup/components/PaywallScreen/PaywallScreen'
 import { SettingsScreen } from '@/popup/components/SettingsScreen/SettingsScreen'
 import { ManualGroupScreen } from '@/popup/components/ManualGroupScreen/ManualGroupScreen'
 import { Header } from '@/popup/components/Header/Header'
-import type { BackgroundMessage, PopupMessage } from '@/shared/types'
-
-// =============================================================================
-// APP — Screen Router
-// =============================================================================
-
-function sendMessage(msg: BackgroundMessage): Promise<PopupMessage> {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(msg, (response: PopupMessage) => {
-      if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message))
-      else resolve(response)
-    })
-  })
-}
+import { sendMessage } from '@/shared/utils/chromeUtils'
 
 export function App() {
   const screen = useTabStore((s) => s.screen)

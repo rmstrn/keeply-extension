@@ -1,19 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
 import { extractGroupableTabs } from '@/shared/utils/tabUtils'
+import { GROUP_COLOR_HEX } from '@/shared/constants'
 import { TabRow } from '@/popup/components/TabRow/TabRow'
 import type { TabInfo } from '@/shared/types'
-
-const GROUP_COLORS: Record<string, string> = {
-  green: '#1D9E75',
-  blue: '#2563EB',
-  purple: '#6D4AFF',
-  yellow: '#D97706',
-  red: '#DC2626',
-  pink: '#D4537E',
-  cyan: '#0891B2',
-  grey: '#6B7280',
-}
 
 export function ResultsScreen() {
   const result = useTabStore((s) => s.lastResult)
@@ -60,7 +50,7 @@ export function ResultsScreen() {
             <div className="gh">
               <div
                 className="gdot"
-                style={{ background: GROUP_COLORS[group.color] ?? '#6B7280' }}
+                style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }}
                 aria-hidden="true"
               />
               <span className="gn">{group.name}</span>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { applyTheme } from '@/shared/utils/themeUtils'
 import type { Theme } from '@/shared/types'
 
 interface ToggleSwitchProps {
@@ -45,15 +46,7 @@ export function SettingsScreen() {
   const handleThemeChange = (newTheme: Theme) => {
     setCurrentTheme(newTheme)
 
-    // Apply immediately
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else if (newTheme === 'light') {
-      document.documentElement.classList.remove('dark')
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      document.documentElement.classList.toggle('dark', prefersDark)
-    }
+    applyTheme(newTheme)
 
     // Save to storage
     try {

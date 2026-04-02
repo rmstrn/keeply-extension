@@ -34,6 +34,27 @@ export const VALID_COLORS: readonly ChromeTabGroupColor[] = [
 
 export const DEFAULT_COLOR: ChromeTabGroupColor = 'grey'
 
+// Chrome group color → hex for UI display
+export const GROUP_COLOR_HEX: Record<ChromeTabGroupColor, string> = {
+  green: '#1D9E75',
+  blue: '#2563EB',
+  purple: '#6D4AFF',
+  yellow: '#D97706',
+  red: '#DC2626',
+  pink: '#D4537E',
+  cyan: '#0891B2',
+  grey: '#6B7280',
+} as const
+
+// Loading screen preview tags
+export const LOADING_TAGS = [
+  { bg: '#E4F4EE', color: '#0D7A5F', label: 'Work' },
+  { bg: '#EDE9FF', color: '#5B21B6', label: 'Research' },
+  { bg: '#FEF3C7', color: '#92400E', label: 'Shopping' },
+  { bg: '#FFE4E6', color: '#9F1239', label: 'Social' },
+  { bg: '#DBEAFE', color: '#1E40AF', label: 'Docs' },
+] as const
+
 // Маппинг от ключевых слов к цветам для умного выбора
 export const CATEGORY_COLOR_MAP: Record<string, ChromeTabGroupColor> = {
   work: 'blue',

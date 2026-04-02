@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
-import { STORAGE_KEYS } from '@/shared/constants'
+import { STORAGE_KEYS, GROUP_COLOR_HEX } from '@/shared/constants'
+import { isGroupableUrl } from '@/shared/utils/chromeUtils'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import type { ChromeTabGroupColor, RecentGroup, TabInfo } from '@/shared/types'
 
@@ -23,27 +24,16 @@ interface ExistingGroup {
 // COLOR OPTIONS
 // =============================================================================
 
-const CHROME_COLORS: { color: ChromeTabGroupColor; hex: string; label: string }[] = [
-  { color: 'blue',   hex: '#2563EB', label: 'Blue'   },
-  { color: 'purple', hex: '#6D4AFF', label: 'Purple' },
-  { color: 'green',  hex: '#1D9E75', label: 'Green'  },
-  { color: 'cyan',   hex: '#0891B2', label: 'Cyan'   },
-  { color: 'yellow', hex: '#D97706', label: 'Yellow' },
-  { color: 'red',    hex: '#DC2626', label: 'Red'    },
-  { color: 'pink',   hex: '#D4537E', label: 'Pink'   },
-  { color: 'grey',   hex: '#6B7280', label: 'Grey'   },
+const COLOR_SWATCHES: { color: ChromeTabGroupColor; label: string }[] = [
+  { color: 'blue',   label: 'Blue'   },
+  { color: 'purple', label: 'Purple' },
+  { color: 'green',  label: 'Green'  },
+  { color: 'cyan',   label: 'Cyan'   },
+  { color: 'yellow', label: 'Yellow' },
+  { color: 'red',    label: 'Red'    },
+  { color: 'pink',   label: 'Pink'   },
+  { color: 'grey',   label: 'Grey'   },
 ]
-
-const GROUP_HEX: Record<string, string> = Object.fromEntries(
-  CHROME_COLORS.map(({ color, hex }) => [color, hex]),
-)
-
-const SKIP_PREFIXES = ['chrome://', 'chrome-extension://'] as const
-
-function isGroupableUrl(url: string | undefined): boolean {
-  if (!url) return false
-  return !SKIP_PREFIXES.some((p) => url.startsWith(p))
-}
 
 function matchesSearch(tab: TabInfo, query: string): boolean {
   if (query === '') return true
@@ -246,7 +236,7 @@ export function ManualGroupScreen() {
               <div key={group.id} className="existing-group-chip">
                 <div
                   className="existing-group-dot"
-                  style={{ background: GROUP_HEX[group.color] ?? '#6B7280' }}
+                  style={{ background: GROUP_COLOR_HEX[group.color] ?? '#6B7280' }}
                 />
                 <span className="existing-group-name">{group.name}</span>
                 <span className="existing-group-count">{group.tabCount}</span>
@@ -273,7 +263,7 @@ export function ManualGroupScreen() {
       {/* Live preview */}
       {groupName.trim() && (
         <div className="group-name-preview">
-          <div className="gdot" style={{ background: GROUP_HEX[selectedColor] ?? '#6B7280' }} />
+          <div className="gdot" style={{ background: GROUP_COLOR_HEX[selectedColor] ?? '#6B7280' }} />
           <span className="gn">{groupName}</span>
         </div>
       )}
@@ -281,7 +271,7 @@ export function ManualGroupScreen() {
       {/* Color picker — 4x2 grid */}
       <div className="color-picker-label">Color</div>
       <div className="color-picker-grid">
-        {CHROME_COLORS.map(({ color, hex, label }) => (
+        {COLOR_SWATCHES.map(({ color, label }) => (
           <button
             key={color}
             className={`color-swatch${selectedColor === color ? ' selected' : ''}`}
@@ -290,7 +280,7 @@ export function ManualGroupScreen() {
             aria-label={label}
             aria-pressed={selectedColor === color}
           >
-            <div className="color-swatch-circle" style={{ background: hex }} />
+            <div className="color-swatch-circle" style={{ background: GROUP_COLOR_HEX[color] }} />
             <span className="color-swatch-label">{label}</span>
             {selectedColor === color && (
               <div className="color-swatch-check">
