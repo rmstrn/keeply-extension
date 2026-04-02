@@ -399,11 +399,11 @@ body {
 }
 .group-item.drop-zone-active {
   outline: 1.5px dashed var(--border);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 .inbox-section.drop-zone-active {
   outline: 1.5px dashed var(--border);
-  outline-offset: 4px;
+  outline-offset: 5px;
 }
 .group-tabs-list {
   padding: 2px 0 4px 12px;
