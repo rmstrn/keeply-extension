@@ -11,7 +11,7 @@ import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { STORAGE_KEYS } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import type { GroupTab, KeeplyGroup, RecentGroup } from '@/shared/types'
-import { TabIcon, BulbIcon, ExternalIcon, CheckIcon } from './Icons'
+import { TabIcon, BulbIcon, ExternalIcon, CheckIcon, ChevronIcon } from './Icons'
 import { EmojiPicker } from './EmojiPicker'
 import { GroupRow } from './GroupRow'
 
@@ -299,7 +299,7 @@ export function DefaultScreen() {
         >
           + Add Group
         </button>
-        <span className={`section-chevron${sectionsOpen.groups ? ' open' : ''}`}>›</span>
+        <ChevronIcon expanded={sectionsOpen.groups} />
       </div>
 
       <div className={`section-body${sectionsOpen.groups ? ' open' : ''}`}>
@@ -382,7 +382,7 @@ export function DefaultScreen() {
           >
             <span className="section-label">Ungrouped · {tabCountLabel(ungroupedTabs.length)}</span>
             <span className="section-line" />
-            <span className={`section-chevron${sectionsOpen.ungrouped ? ' open' : ''}`}>›</span>
+            <ChevronIcon expanded={sectionsOpen.ungrouped} />
           </div>
           <div className={`section-body${sectionsOpen.ungrouped ? ' open' : ''}`}>
           {ungroupedTabs.map((tab) => (

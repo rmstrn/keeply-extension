@@ -34,6 +34,21 @@ export function PencilIcon() {
   )
 }
 
+export function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      className={`chevron-icon${expanded ? ' expanded' : ''}`}
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M4.5 2.5L8 6l-3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function CheckIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">

@@ -184,7 +184,7 @@ describe('Group tab rendering', () => {
 
   it('renders closed tabs with dimmed class', () => {
     render(<DefaultScreen />)
-    const arrow = document.querySelector('.group-header .expand-arrow')!
+    const arrow = document.querySelector('.group-header .chevron-icon')!
     fireEvent.click(arrow)
     const closedRow = document.querySelector('.tab-closed')
     expect(closedRow).toBeInTheDocument()
@@ -193,7 +193,7 @@ describe('Group tab rendering', () => {
 
   it('renders open tabs without dimmed class', () => {
     render(<DefaultScreen />)
-    const arrow = document.querySelector('.group-header .expand-arrow')!
+    const arrow = document.querySelector('.group-header .chevron-icon')!
     fireEvent.click(arrow)
     const rows = document.querySelectorAll('.group-tab-row')
     expect(rows).toHaveLength(2)

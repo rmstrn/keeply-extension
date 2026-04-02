@@ -3,6 +3,7 @@ import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { TabCountBadge } from '@/popup/components/TabCountBadge/TabCountBadge'
 import type { GroupTab, KeeplyGroup } from '@/shared/types'
 import { EmojiPicker } from './EmojiPicker'
+import { ChevronIcon } from './Icons'
 import { ConfirmDeletePopover } from './ConfirmDeletePopover'
 import { PencilIcon } from './Icons'
 
@@ -157,10 +158,7 @@ export function GroupRow({
           )}
         </div>
 
-        {/* [›] — always visible chevron */}
-        <svg className={`expand-arrow${isExpanded ? ' expanded' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ChevronIcon expanded={isExpanded} />
       </div>
 
       {isConfirmingDelete && (

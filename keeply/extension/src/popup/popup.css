@@ -104,12 +104,11 @@ body {
   flex: 1; height: 1px; min-width: 12px;
   background: var(--border);
 }
-.section-chevron {
-  font-size: 14px; font-weight: 600; color: var(--text-muted);
-  transition: transform .2s ease; display: inline-block;
-  flex-shrink: 0;
+.chevron-icon {
+  color: var(--text-muted); flex-shrink: 0;
+  transition: transform .2s ease;
 }
-.section-chevron.open { transform: rotate(90deg); }
+.chevron-icon.expanded { transform: rotate(90deg); }
 .section-body {
   overflow: hidden; max-height: 0;
   transition: max-height .25s ease;
@@ -409,8 +408,6 @@ body {
 }
 .group-tab-row:active { cursor: grabbing; }
 .group-tab-row:hover { background: var(--hover-bg); }
-.expand-arrow { color: var(--text-muted); flex-shrink: 0; transition: transform .2s; }
-.expand-arrow.expanded { transform: rotate(180deg); }
 
 /* ── INBOX DRAG & DROP ─── */
 .inbox-section { margin-top: 10px; }
