@@ -154,6 +154,13 @@ export function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGr
               role="option"
               aria-selected={selectedTabIds.has(tab.id)}
             >
+              <span className={`igf-check${selectedTabIds.has(tab.id) ? ' checked' : ''}`}>
+                {selectedTabIds.has(tab.id) && (
+                  <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true">
+                    <path d="M1.5 4L3 5.5L6.5 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  </svg>
+                )}
+              </span>
               <TabFavicon url={tab.favIconUrl} />
               <span className="tab-title">{tab.title}</span>
             </div>
