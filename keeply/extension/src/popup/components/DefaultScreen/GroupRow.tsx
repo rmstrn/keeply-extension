@@ -2,7 +2,7 @@ import { type RefObject, useRef, useLayoutEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import type { GroupTab, KeeplyGroup } from '@/shared/types'
-import { MAX_GROUP_NAME_LENGTH } from '@/shared/constants'
+import { MAX_GROUP_NAME_LENGTH, GROUP_NAME_COUNTER_THRESHOLD } from '@/shared/constants'
 import { tabCountLabel } from '@/shared/utils/chromeUtils'
 import { EmojiPicker } from './EmojiPicker'
 import { ChevronIcon } from './Icons'
@@ -99,21 +99,26 @@ export function GroupRow({
 
         {/* [name] — flex-grow, or inline rename input */}
         {isEditing ? (
-          <input
-            ref={editInputRef}
-            className="group-rename-input"
-            type="text"
-            value={editName}
-            onChange={(e) => onEditNameChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') onCommitRename()
-              if (e.key === 'Escape') onCancelRename()
-            }}
-            onBlur={onCommitRename}
-            onClick={(e) => e.stopPropagation()}
-            maxLength={MAX_GROUP_NAME_LENGTH}
-            autoFocus
-          />
+          <>
+            <input
+              ref={editInputRef}
+              className="group-rename-input"
+              type="text"
+              value={editName}
+              onChange={(e) => onEditNameChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onCommitRename()
+                if (e.key === 'Escape') onCancelRename()
+              }}
+              onBlur={onCommitRename}
+              onClick={(e) => e.stopPropagation()}
+              maxLength={MAX_GROUP_NAME_LENGTH}
+              autoFocus
+            />
+            {editName.length >= GROUP_NAME_COUNTER_THRESHOLD && (
+              <span className="igf-counter">{editName.length}/{MAX_GROUP_NAME_LENGTH}</span>
+            )}
+          </>
         ) : (
           <span className="rn">{group.name} <span className="group-count">· {tabCountLabel(group.tabs.length)}</span></span>
         )}

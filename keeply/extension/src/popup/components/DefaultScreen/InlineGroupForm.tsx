@@ -3,7 +3,7 @@ import { useTabStore } from '@/popup/stores/tabStore'
 import type { TabInfoWithWindow } from '@/popup/hooks/useDefaultScreenData'
 import { useOutsideClick } from '@/popup/hooks/useOutsideClick'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
-import { STORAGE_KEYS, MAX_GROUP_NAME_LENGTH, MAX_RECENT_GROUPS } from '@/shared/constants'
+import { STORAGE_KEYS, MAX_GROUP_NAME_LENGTH, GROUP_NAME_COUNTER_THRESHOLD, MAX_RECENT_GROUPS } from '@/shared/constants'
 import type { GroupTab, KeeplyGroup, RecentGroup } from '@/shared/types'
 import { EmojiPicker } from './EmojiPicker'
 
@@ -130,6 +130,9 @@ export function InlineGroupForm({ ungroupedTabs, onCreated, onCancel }: InlineGr
           onKeyDown={(e) => { if (e.key === 'Enter') handleCreate() }}
           maxLength={MAX_GROUP_NAME_LENGTH}
         />
+        {groupName.length >= GROUP_NAME_COUNTER_THRESHOLD && (
+          <span className="igf-counter">{groupName.length}/{MAX_GROUP_NAME_LENGTH}</span>
+        )}
         <button
           type="button"
           className="igf-confirm"

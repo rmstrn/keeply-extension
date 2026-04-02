@@ -6,7 +6,8 @@ export { DEFAULT_SETTINGS, STORAGE_KEYS } from '@/shared/types'
 // -----------------------------------------------------------------------------
 
 export const FREE_DAILY_LIMIT = 5
-export const MAX_GROUP_NAME_LENGTH = 50
+export const MAX_GROUP_NAME_LENGTH = 30
+export const GROUP_NAME_COUNTER_THRESHOLD = 20
 
 // -----------------------------------------------------------------------------
 // API
