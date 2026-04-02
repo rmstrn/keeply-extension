@@ -37,7 +37,7 @@ html.dark {
 
 body {
   font-family: var(--f);
-  width: 320px;
+  width: 360px;
   min-height: 400px;
   background: var(--w);
   color: var(--n9);
@@ -45,7 +45,7 @@ body {
 }
 
 /* ── POPUP SHELL ─── */
-.popup { width: 320px; background: var(--w); }
+.popup { width: 360px; background: var(--w); }
 
 /* ── HEADER ─── */
 .hdr {
@@ -150,7 +150,7 @@ body {
 .gn { font-size: 13px; font-weight: 700; color: var(--n9); flex: 1; transition: color .12s; }
 .gbadge { font-size: 10px; font-weight: 600; color: var(--n5); background: var(--n0); border-radius: 20px; padding: 2px 7px; }
 .gtabs { padding: 1px 0 5px 8px; }
-.gtab { font-size: 11px; color: var(--n5); padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+.gtab { font-size: 11px; color: var(--n5); padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
 .res-acts { display: flex; gap: 6px; margin-top: 13px; }
 .ract { flex: 1; padding: 9px; border-radius: 9px; font-family: var(--f); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; border: 1px solid #DDDDD8; background: var(--n0); color: var(--n5); text-align: center; }
 .ract:hover { background: var(--t1); border-color: var(--t7); color: var(--t7); }
@@ -299,7 +299,7 @@ html.dark .color-swatch.selected .color-swatch-circle {
 .tab-title {
   font-size: 12px; color: var(--n7); flex: 1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 220px;
+  max-width: 260px;
 }
 .tab-checkbox {
   width: 16px; height: 16px; border-radius: 4px;

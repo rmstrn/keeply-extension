@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTabStore } from '@/popup/stores/tabStore'
-import { STORAGE_KEYS } from '@/shared/constants'
 import { isGroupableUrl } from '@/shared/utils/chromeUtils'
-import type { ChromeTabGroupColor, RecentGroup, TabInfo } from '@/shared/types'
+import type { ChromeTabGroupColor, TabInfo } from '@/shared/types'
 
 // =============================================================================
 // TYPES
@@ -28,8 +27,6 @@ export function useDefaultScreenData() {
   const lastRefresh = useTabStore((s) => s.lastRefresh)
 
   const [tabCount, setTabCount] = useState(0)
-  const [recentGroups, setRecentGroups] = useState<RecentGroup[]>([])
-  const [totalTabsGrouped, setTotalTabsGrouped] = useState(0)
   const [currentGroups, setCurrentGroups] = useState<GroupWithTabs[]>([])
   const [inboxTabs, setInboxTabs] = useState<TabInfoWithWindow[]>([])
 
@@ -62,24 +59,6 @@ export function useDefaultScreenData() {
       chrome.tabs.onUpdated.removeListener(updateCount)
     }
   }, [])
-
-  // Load recent groups and total counter from storage
-  useEffect(() => {
-    try {
-      chrome.storage.local.get(
-        [STORAGE_KEYS.RECENT_GROUPS, STORAGE_KEYS.TOTAL_TABS_GROUPED],
-        (result) => {
-          if (chrome.runtime.lastError) return
-          const groups = result[STORAGE_KEYS.RECENT_GROUPS] as RecentGroup[] | undefined
-          if (groups) setRecentGroups(groups)
-          const total = result[STORAGE_KEYS.TOTAL_TABS_GROUPED] as number | undefined
-          if (typeof total === 'number') setTotalTabsGrouped(total)
-        },
-      )
-    } catch {
-      // Extension not loaded properly
-    }
-  }, [lastRefresh])
 
   // Load current Chrome groups with their tabs
   useEffect(() => {
@@ -137,5 +116,5 @@ export function useDefaultScreenData() {
     }
   }, [lastRefresh])
 
-  return { tabCount, recentGroups, totalTabsGrouped, currentGroups, inboxTabs }
+  return { tabCount, currentGroups, inboxTabs }
 }

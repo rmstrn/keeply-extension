@@ -45,8 +45,7 @@ export function DefaultScreen() {
   const setScreen = useTabStore((s) => s.setScreen)
   const triggerRefresh = useTabStore((s) => s.triggerRefresh)
 
-  const { tabCount, recentGroups, totalTabsGrouped, currentGroups, inboxTabs } =
-    useDefaultScreenData()
+  const { tabCount, currentGroups, inboxTabs } = useDefaultScreenData()
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isDragOver, setIsDragOver] = useState<string | null>(null)
@@ -137,21 +136,6 @@ export function DefaultScreen() {
       <UsageDots status={status} />
 
       <div className="divider" role="separator" />
-
-      <div className="stats" role="region" aria-label="Tab statistics">
-        <div className="stat">
-          <span className="sn">{tabCount}</span>
-          <span className="sl">Open tabs</span>
-        </div>
-        <div className="stat">
-          <span className="sn">{recentGroups.length}</span>
-          <span className="sl">Sessions</span>
-        </div>
-        <div className="stat">
-          <span className="sn">{totalTabsGrouped}</span>
-          <span className="sl">All time</span>
-        </div>
-      </div>
 
       {/* Groups section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
