@@ -4,6 +4,7 @@
 /* CSS variables are set programmatically from theme.ts via themeUtils.ts */
 :root {
   --f: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --row-px: 8px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -91,7 +92,7 @@ body {
 .section-header {
   display: flex; align-items: center; gap: 8px;
   cursor: pointer; user-select: none;
-  padding: 0; margin: 14px 0 6px;
+  padding: 0 var(--row-px); margin: 14px 0 6px;
 }
 .section-header:first-child { margin-top: 6px; }
 .section-label {
@@ -116,7 +117,7 @@ body {
 .section-body.open { max-height: 2000px; opacity: 1; }
 
 /* ── RECENT ROWS ─── */
-.rr { display: flex; align-items: center; gap: 10px; padding: 6px 7px; border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0 -7px; }
+.rr { display: flex; align-items: center; gap: 10px; padding: 6px var(--row-px); border-radius: 7px; cursor: pointer; transition: background .15s ease; margin: 0; }
 .rr:hover { background: var(--hover-bg); }
 .rr:hover .rn { color: var(--primary); }
 .rn { font-size: 13px; font-weight: 600; color: var(--text-2); flex: 1; transition: color .12s; }
@@ -397,7 +398,7 @@ body {
 
 /* ── EXPANDABLE GROUPS ─── */
 .group-item {
-  margin-bottom: 1px; border-radius: 8px; padding: 6px 12px;
+  margin-bottom: 1px; border-radius: 8px; padding: 0;
   transition: background .15s ease;
 }
 .group-item.drag-over {
@@ -411,18 +412,18 @@ body {
 }
 .group-tab-row {
   display: flex; align-items: center; gap: 7px;
-  padding: 4px 7px; border-radius: 6px; cursor: grab;
-  transition: background .15s ease; margin: 0 -7px;
+  padding: 4px var(--row-px); border-radius: 6px; cursor: grab;
+  transition: background .15s ease; margin: 0;
 }
 .group-tab-row:active { cursor: grabbing; }
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { margin-top: 10px; padding: 6px 8px; min-height: 48px; }
+.inbox-section { margin-top: 10px; padding: 0; min-height: 48px; }
 .inbox-tab {
   display: flex; align-items: center; gap: 7px;
-  padding: 4px 8px; border-radius: 6px;
-  cursor: grab; transition: background .15s ease; margin: 0 4px;
+  padding: 4px var(--row-px); border-radius: 6px;
+  cursor: grab; transition: background .15s ease; margin: 0;
 }
 .inbox-tab:hover { background: var(--hover-bg); }
 .inbox-tab:active { cursor: grabbing; }
