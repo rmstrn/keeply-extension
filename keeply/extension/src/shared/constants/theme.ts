@@ -14,6 +14,7 @@ export interface ThemeTokens {
   readonly dangerBg: string
   readonly warning: string
   readonly success: string
+  readonly ctaIcon: string
 }
 
 export const lightTheme: ThemeTokens = {
@@ -32,6 +33,7 @@ export const lightTheme: ThemeTokens = {
   dangerBg: '#FFE4E6',
   warning: '#B45309',
   success: '#0D7A5F',
+  ctaIcon: '✨',
 }
 
 export const darkTheme: ThemeTokens = {
@@ -50,4 +52,5 @@ export const darkTheme: ThemeTokens = {
   dangerBg: '#3D2B2B',
   warning: '#D4956A',
   success: '#ABD1C6',
+  ctaIcon: '✨',
 }

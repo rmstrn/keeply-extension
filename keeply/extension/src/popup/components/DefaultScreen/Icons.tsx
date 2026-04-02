@@ -8,16 +8,6 @@ export function TabIcon() {
   )
 }
 
-export function BulbIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M8 2C5.8 2 4 3.8 4 6c0 1.7.9 3.1 2.3 3.9V11h3.4V9.9C11.1 9.1 12 7.7 12 6c0-2.2-1.8-4-4-4z" fill="white" fillOpacity=".9" />
-      <rect x="5.8" y="11" width="4.4" height="1.5" rx=".75" fill="white" fillOpacity=".7" />
-      <rect x="6.3" y="12.5" width="3.4" height="1" rx=".5" fill="white" fillOpacity=".5" />
-    </svg>
-  )
-}
-
 export function ExternalIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
