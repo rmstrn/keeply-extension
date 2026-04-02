@@ -419,7 +419,7 @@ body {
 .group-tab-row:hover { background: var(--hover-bg); }
 
 /* ── INBOX DRAG & DROP ─── */
-.inbox-section { margin-top: 10px; }
+.inbox-section { margin-top: 10px; padding: 4px; }
 .inbox-tab {
   display: flex; align-items: center; gap: 7px;
   padding: 4px 8px; border-radius: 6px;
@@ -430,8 +430,8 @@ body {
 .drag-hint { color: var(--text-2); font-size: 14px; margin-left: auto; opacity: 0; transition: opacity .15s ease; }
 .inbox-tab:hover .drag-hint { opacity: 1; }
 .inbox-section.drag-over {
-  outline: 1.5px dashed var(--primary);
-  outline-offset: -2px;
+  outline: 1.5px dashed var(--border);
+  outline-offset: 2px;
   border-radius: 8px;
   background: var(--hover-bg);
 }
