@@ -17,19 +17,10 @@ export function InlineGroupForm({ onCreated, onCancel }: InlineGroupFormProps) {
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null)
   const [emojiOpen, setEmojiOpen] = useState(false)
 
-  const formRef = useRef<HTMLDivElement>(null)
   const emojiRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (formRef.current && !formRef.current.contains(e.target as Node)) onCancel()
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [onCancel])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -88,7 +79,7 @@ export function InlineGroupForm({ onCreated, onCancel }: InlineGroupFormProps) {
   }
 
   return (
-    <div className="igf" ref={formRef}>
+    <div className="igf">
       <div className="igf-sep" />
       <div className="igf-name-row">
         <div className="emoji-picker-wrapper" ref={emojiRef}>
