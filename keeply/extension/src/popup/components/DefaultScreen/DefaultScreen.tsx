@@ -8,7 +8,6 @@ import { UsageDots } from '@/popup/components/UsageDots/UsageDots'
 import { TabFavicon } from '@/popup/components/TabRow/TabRow'
 import { GROUP_COLOR_HEX } from '@/shared/constants'
 import { removeGroupFromRecent, removeTabFromRecent } from '@/shared/utils/recentGroupsUtils'
-import type { RecentGroup } from '@/shared/types'
 
 // =============================================================================
 // HELPERS
@@ -17,17 +16,6 @@ import type { RecentGroup } from '@/shared/types'
 interface DragData {
   readonly tabId: number
   readonly sourceGroupId: string
-}
-
-function timeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000)
-  if (seconds < 60) return 'just now'
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
 }
 
 function parseDragData(e: React.DragEvent): DragData | null {
@@ -204,7 +192,7 @@ export function DefaultScreen() {
         onCloseTab={closeTab}
       />
 
-      {/* Empty inbox drop target while dragging */}
+      {/* Empty ungrouped drop target while dragging */}
       {inboxTabs.length === 0 && isDragOver === 'inbox' && (
         <div
           className="inbox-section drag-over"
@@ -215,9 +203,6 @@ export function DefaultScreen() {
           <div className="slbl" style={{ color: '#9B9C96' }}>Drop here to ungroup</div>
         </div>
       )}
-
-      {/* Recent sessions */}
-      <RecentSessions groups={recentGroups} />
     </div>
   )
 }
@@ -316,7 +301,7 @@ function InboxSection({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <div className="slbl" style={{ color: '#9B9C96' }}>Inbox · {tabs.length} ungrouped</div>
+      <div className="slbl" style={{ color: '#9B9C96' }}>Ungrouped · {tabs.length} tabs</div>
       {tabs.map((tab) => (
         <div
           key={tab.id}
@@ -335,27 +320,6 @@ function InboxSection({
         </div>
       ))}
     </div>
-  )
-}
-
-function RecentSessions({ groups }: { groups: readonly RecentGroup[] }) {
-  if (groups.length === 0) return null
-
-  return (
-    <>
-      <div className="slbl" style={{ marginTop: 10 }}>Recent sessions</div>
-      {groups.map((entry) => (
-        <div key={entry.id} className="rr" tabIndex={0}>
-          <div
-            className="rdot"
-            style={{ background: GROUP_COLOR_HEX[entry.groups[0]?.color ?? 'grey'] ?? '#6B7280' }}
-            aria-hidden="true"
-          />
-          <span className="rn">{entry.groups.map((g) => g.name).join(', ')}</span>
-          <span className="rm">{entry.totalTabs} tabs · {timeAgo(entry.timestamp)}</span>
-        </div>
-      ))}
-    </>
   )
 }
 

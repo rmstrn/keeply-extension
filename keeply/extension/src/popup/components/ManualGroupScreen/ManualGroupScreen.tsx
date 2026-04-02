@@ -162,7 +162,7 @@ export function ManualGroupScreen() {
         if (!grouped[key]) grouped[key] = { name: groupMap[tab.chromeGroupId]!, tabs: [] }
         grouped[key]!.tabs.push(tab)
       } else {
-        if (!grouped['inbox']) grouped['inbox'] = { name: 'Inbox', tabs: [] }
+        if (!grouped['inbox']) grouped['inbox'] = { name: 'Ungrouped', tabs: [] }
         grouped['inbox']!.tabs.push(tab)
       }
     }

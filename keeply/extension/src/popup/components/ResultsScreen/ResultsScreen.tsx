@@ -72,7 +72,7 @@ export function ResultsScreen() {
           <div className="gr" role="listitem">
             <div className="gh inbox-group">
               <div className="gdot" style={{ background: '#9B9C96' }} aria-hidden="true" />
-              <span className="gn">Inbox</span>
+              <span className="gn">Ungrouped</span>
               <span className="gbadge" aria-label={`${inboxTabs.length} tabs`}>
                 {inboxTabs.length}
               </span>
